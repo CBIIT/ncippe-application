@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net http://dozer.sourceforge.net/schema/beanmapping.xsd">
+	<configuration>
+		<stop-on-errors>true</stop-on-errors>
+		<wildcard>true</wildcard>
+		<custom-converters>
+			<converter type="gov.nci.ppe.data.dozer.UserToUserUUIDDozerConverter">
+			    <class-a>gov.nci.ppe.data.entity.User</class-a>
+			    <class-b>java.lang.String</class-b>
+			</converter>
+		</custom-converters>
+	</configuration>
+
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.User</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.UserDTO</class-b>
+		<field>
+			<a is-accessible="true">userUUID</a>
+			<b is-accessible="true">uuid</b>
+		</field>
+		<field>
+			<a is-accessible="true">role.roleName</a>
+			<b is-accessible="true">roleName</b>
+		</field>
+		<field>
+			<a is-accessible="true">userType.codeName</a>
+			<b is-accessible="true">userType</b>
+		</field>
+		<field>
+			<a is-accessible="true">portalAccountStatus.codeName</a>
+			<b is-accessible="true">portalAccountStatus</b>
+		</field>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.Participant</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.ParticipantDTO</class-b>
+		<field>
+			<a is-accessible="true">crc</a>
+			<b is-accessible="true">crc</b>
+		</field>		
+		<field>
+			<a is-accessible="true">providers</a>
+			<b is-accessible="true">providers</b>
+			<b-hint>gov.nci.ppe.data.entity.dto.ProviderDTO</b-hint>
+		</field>
+		<field>
+			<a is-accessible="true">otherDocuments</a>
+			<b is-accessible="true">otherDocuments</b>
+			<b-hint>gov.nci.ppe.data.entity.dto.FileDTO</b-hint>
+		</field>
+	</mapping>	
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.Provider</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.ProviderDTO</class-b>	
+		<field>
+			<a is-accessible="true">patients</a>
+			<b is-accessible="true">patients</b>
+		</field>
+	</mapping>		
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.CRC</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.CrcDTO</class-b>	
+	</mapping>	
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.FileMetadata</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.FileDTO</class-b>
+		<field>
+			<a is-accessible="true">viewedBy</a>
+			<b is-accessible="true">viewedBy</b>
+		</field>
+		<field>
+			<a is-accessible="true">fileType.codeName</a>
+			<b is-accessible="true">fileType</b>
+		</field>		
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.PortalNotification</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.PortalNotificationDTO
+		</class-b>
+		<field>
+			<a is-accessible="true">dateGenerated</a>
+			<b is-accessible="true">dateGenerated</b>
+		</field>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.QuestionAnswer</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.QuestionAnswerDTO</class-b>
+	</mapping>		
+</mappings>
