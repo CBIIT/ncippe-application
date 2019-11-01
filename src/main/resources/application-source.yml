@@ -1,0 +1,6 @@
+app:
+  jwt:
+    algName: RS512
+    tokenType: JWT
+    issuer: ncippe
+    expirationMillis: 1800000
