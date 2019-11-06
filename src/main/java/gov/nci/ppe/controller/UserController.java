@@ -26,18 +26,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nci.ppe.auth.jwt.TokenUtil;
-import gov.nci.ppe.auth.jwt.UserToken;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
@@ -56,7 +49,15 @@ import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.CodeService;
+import gov.nci.ppe.services.JWTManagementService;
 import gov.nci.ppe.services.UserService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * Controller class for User related actions.
@@ -79,15 +80,15 @@ public class UserController {
 	public UserService userService;
 
 	@Autowired
-	private TokenUtil tokenUtil;
-
-	@Autowired
 	private CodeService codeService;
 
 	@Autowired
 	private AuditService auditService;
+	
+	@Autowired
+	private  JWTManagementService jwtMgmtService;
 
-	private final String AUTHORIZATIOIN = "Authorization";
+	private final String AUTHORIZATION = "Authorization";
 	private final String SUCCESS = "Success";
 	private final String ERROR = "Error";
 	private final String TOKEN_ERROR_MSG = "{\n\"error\" : \"Refresh your token \"\n}";
@@ -144,10 +145,11 @@ public class UserController {
 
 		User user = userOptional.get();
 
-		ObjectNode responseJsonWithToken = createJWT(uuid, user);
+		String jwt = jwtMgmtService.createJWT(user);
 		raiseLoginAuditEvent(uuid, email);
-		String jsonFormat = mapper.writeValueAsString(responseJsonWithToken);
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		ObjectNode responseJsonWithToken = mapper.createObjectNode();
+		responseJsonWithToken.put("token", jwt);
+		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
 	}
 
 	/**
@@ -158,11 +160,11 @@ public class UserController {
 	 */
 	private String verifyToken(String authString) {
 		try {
-			UserToken authToken = new UserToken(tokenUtil, authString);
-			logger.log(Level.WARNING, authToken.toString());
-		} catch (JWTVerificationException jwtException) {
+			Jws<Claims> claims = jwtMgmtService.validateJWT(authString);
+			logger.log(Level.INFO, claims.toString());
+		} catch (JwtException jwtException) {
 			logger.log(Level.WARNING, jwtException.getMessage());
-			return SUCCESS;
+			return ERROR;
 		}
 		return SUCCESS;
 	}
@@ -213,7 +215,7 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 
-		String value = request.getHeader(AUTHORIZATIOIN);
+		String value = request.getHeader(AUTHORIZATION);
 		if (StringUtils.isEmpty(value)
 				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
@@ -257,7 +259,7 @@ public class UserController {
 	}
 
 	/**
-	 * Method to deactive/close online account for the user.
+	 * Method to deactivate/close online account for the user.
 	 * 
 	 * @param request  - HTTPRequest object
 	 * @param userUUID - uuid for the user who is deactivating the account.
@@ -273,7 +275,7 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String value = request.getHeader(AUTHORIZATIOIN);
+		String value = request.getHeader(AUTHORIZATION);
 		if (StringUtils.isEmpty(value)
 				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
@@ -326,9 +328,9 @@ public class UserController {
 			return new ResponseEntity<String>(INACTIVE_USER_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
-		ObjectNode responseJsonWithToken = createJWT(uuid, user);
+		String responseJsonWithToken = jwtMgmtService.createJWT(user);
 		raiseLoginAuditEvent(uuid, email);
-		return ResponseEntity.ok(mapper.writeValueAsString(responseJsonWithToken));
+		return ResponseEntity.ok(responseJsonWithToken);
 	}
 
 	/**
@@ -352,7 +354,7 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String value = request.getHeader(AUTHORIZATIOIN);
+		String value = request.getHeader(AUTHORIZATION);
 		if (StringUtils.isEmpty(value)
 				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
@@ -403,7 +405,7 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String value = request.getHeader(AUTHORIZATIOIN);
+		String value = request.getHeader(AUTHORIZATION);
 		if (StringUtils.isEmpty(value)
 				|| (StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS"))) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
@@ -489,26 +491,13 @@ public class UserController {
 
 	}
 
-	private ObjectNode createJWT(String uuid, User user) {
-		ObjectNode userDesc = mapper.createObjectNode();
-
-		userDesc.put(UserToken.TOKEN_CLAIM_USERNAME, uuid);
-		userDesc.put(UserToken.TOKEN_CLAIM_ROLE, user.getRole().getRoleName());
-		userDesc.put(UserToken.TOKEN_CLAIM_FIRSTNAME, user.getFirstName());
-		userDesc.put(UserToken.TOKEN_CLAIM_LASTNAME, user.getLastName());
-
-		UserToken token = new UserToken(tokenUtil, userDesc);
-		ObjectNode responseJsonWithToken = mapper.createObjectNode();
-		responseJsonWithToken.put("token", token.build());
-		return responseJsonWithToken;
-	}
 
 	private void raiseLoginAuditEvent(String uuid, String email) throws JsonProcessingException {
 		ObjectNode auditDetail = mapper.createObjectNode();
 
 		auditDetail.put("UUID", uuid).put("email", email);
 		String auditDetailString = mapper.writeValueAsString(auditDetail);
-		//auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_LOGIN.name());
+		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_LOGIN.name());
 	}
 
 	private void raiseWithdrawParticipationAuditEvent(String patientId, String uuid) throws JsonProcessingException {
@@ -523,7 +512,7 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String authToken = request.getHeader(AUTHORIZATIOIN);
+		String authToken = request.getHeader(AUTHORIZATION);
 		System.out.println("TOKEN #########"+authToken);
 		if (StringUtils.isEmpty(authToken) || (StringUtils.isNotEmpty(verifyToken(authToken))
 				&& !verifyToken(authToken).equalsIgnoreCase(SUCCESS))) {
