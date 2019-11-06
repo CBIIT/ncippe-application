@@ -145,10 +145,11 @@ public class UserController {
 
 		User user = userOptional.get();
 
-		String responseJsonWithToken = jwtMgmtService.createJWT(user);
+		String jwt = jwtMgmtService.createJWT(user);
 		raiseLoginAuditEvent(uuid, email);
-		
-		return new ResponseEntity<String>(responseJsonWithToken, httpHeaders, HttpStatus.OK);
+		ObjectNode responseJsonWithToken = mapper.createObjectNode();
+		responseJsonWithToken.put("token", jwt);
+		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
 	}
 
 	/**
