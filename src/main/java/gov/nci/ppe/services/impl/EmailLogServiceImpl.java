@@ -6,9 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.simpleemail.model.Body;
@@ -39,16 +36,11 @@ public class EmailLogServiceImpl implements EmailLogService{
 	
 	@Autowired
 	private EmailServiceConfig emailServiceConfig;
-
-	private AWSCredentialsProvider awsCreds;
 	
-	public EmailLogServiceImpl() {
-		awsCreds = new ClasspathPropertiesFileCredentialsProvider();
-	}
+	public EmailLogServiceImpl() {}
 	
 	public EmailLogServiceImpl(EmailLogRepository emailLogRepository) {
 		this.emailLogRepository = emailLogRepository;
-		awsCreds = new ClasspathPropertiesFileCredentialsProvider();
 	}
 	
 	/**
@@ -93,8 +85,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 	 */
 	private String sendEmail(String recipientEmail,String senderEmail,String subject, String htmlBody, String textBody) {
 		try {
-			AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard().withCredentials(awsCreds)
-					.withRegion(Regions.US_EAST_1).build();
+			AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.defaultClient();
 
 			SendEmailRequest request = new SendEmailRequest()
 					.withDestination(new Destination().withToAddresses(recipientEmail))
