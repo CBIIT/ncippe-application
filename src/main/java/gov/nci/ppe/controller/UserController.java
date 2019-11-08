@@ -445,10 +445,11 @@ public class UserController {
 		userEnrollmentData.forEach(patientData ->{
 			Optional<User> patientOptional = userService.findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
 			if(patientOptional.isEmpty()) {
-				Optional<User> newPatientOptional = userService.insertNewPatientDetailsFromOpen(patientData.getPatientId());
-				newUsersList.add(newPatientOptional.get());
+				patientOptional = userService.insertNewPatientDetailsFromOpen(patientData.getPatientId());
+				newUsersList.add(patientOptional.get());
+			}else {
+				newUsersList.add(patientOptional.get());
 			}
-			newUsersList.add(patientOptional.get());
 		});
 		
 		HttpHeaders httpHeaders = new HttpHeaders();
