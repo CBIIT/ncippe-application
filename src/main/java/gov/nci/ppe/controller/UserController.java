@@ -140,24 +140,8 @@ public class UserController {
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
 		if (userOptional.isEmpty()) {
-			//Check if the User needs to be activated
-			userOptional = userService.activateUser(email, uuid);
-
-			if (!userOptional.isPresent()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
-			}
-
-			User user = userOptional.get();
-			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(USER_UUID_ALREADY_USED_MSG);
-			}
-			List<User> userList = new ArrayList<>();
-			userList.add(user);
-			String jsonFormat = convertUsersToJSON(userList);
-
-			return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
-			
-		} else {
+			return ResponseEntity.notFound().headers(httpHeaders).build();
+		}
 
 		User user = userOptional.get();
 
@@ -166,7 +150,6 @@ public class UserController {
 		ObjectNode responseJsonWithToken = mapper.createObjectNode();
 		responseJsonWithToken.put("token", jwt);
 		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
-		}
 	}
 
 	/**
