@@ -528,6 +528,8 @@ public class UserServiceImpl implements UserService {
 	public Optional<User> insertNewPatientDetailsFromOpen(String patientId) {
 		Participant newPatient = new Participant();
 		newPatient.setPatientId(patientId);
+		newPatient.setFirstName(StringUtils.EMPTY);
+		newPatient.setLastName(StringUtils.EMPTY);
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
 		newPatient.setRole(role);
 		Code userType =  codeRepository.findByCodeName(UserType.PPE_PARTICIPANT.name());
