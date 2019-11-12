@@ -19,6 +19,7 @@ import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
+import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -26,10 +27,12 @@ import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
+import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.data.repository.ParticipantRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
+import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
@@ -50,6 +53,8 @@ public class UserServiceImpl implements UserService {
 	private UserRepository userRepository;
 
 	private CodeRepository codeRepository;
+	
+	private RoleRepository roleRepository;
 
 	private ParticipantRepository participantRepository;
 
@@ -77,12 +82,13 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
-			QuestionAnswerRepository qsAnsRepo) {
+			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
 		this.participantRepository = participantRepo;
 		this.qsAnsRepo = qsAnsRepo;
+		this.roleRepository = _roleRepository;
 	}
 
 	/**
@@ -513,6 +519,29 @@ public class UserServiceImpl implements UserService {
 		}
 
 		return participantOptional;
+	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> insertNewPatientDetailsFromOpen(String patientId) {
+		Participant newPatient = new Participant();
+		newPatient.setPatientId(patientId);
+		newPatient.setFirstName(StringUtils.EMPTY);
+		newPatient.setLastName(StringUtils.EMPTY);
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
+		newPatient.setRole(role);
+		Code userType =  codeRepository.findByCodeName(UserType.PPE_PARTICIPANT.name());
+		newPatient.setUserType(userType);
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		newPatient.setPortalAccountStatus(portalAccountStatusCode);	
+		newPatient.setAllowEmailNotification(true);
+		newPatient.setIsActiveBiobankParticipant(true);
+		newPatient.setDateCreated(new Timestamp(System.currentTimeMillis()));
+		newPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		
+		return  Optional.of(userRepository.save(newPatient));
 	}
 
 	private void raiseInvitedParticipationAuditEvent(String patientId, String uuid, String patientEmail,

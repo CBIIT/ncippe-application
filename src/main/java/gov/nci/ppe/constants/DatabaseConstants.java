@@ -1,5 +1,12 @@
 package gov.nci.ppe.constants;
 
+/**
+ * This is a constant class representing ENUMs of variable database constants.
+ * 
+ * @author PublicisSapient
+ * @version 1.0
+ * @since 2019-08-22
+ */
 public class DatabaseConstants {
 
 	public enum PortalAccountStatus {
@@ -18,6 +25,11 @@ public class DatabaseConstants {
 		public String getQuestionAnswerType() {
 			return questionAnswerType;
 		}
+	}
+	
+	/* Represents the UserType mentioned in User Table */
+	public enum UserType{
+		PPE_PARTICIPANT, PPE_PROVIDER, PPE_ADMIN, PPE_CRC, PPE_BSSC, PPE_MOCHA_ADMIN;
 	}
 
 }

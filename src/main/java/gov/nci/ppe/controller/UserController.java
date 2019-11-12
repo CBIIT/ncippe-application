@@ -47,6 +47,8 @@ import gov.nci.ppe.data.entity.dto.ParticipantDTO;
 import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
+import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
+import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.JWTManagementService;
@@ -416,6 +418,43 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
 		}
 		String jsonFormat = convertUserToJSON(participantOptional.get());
+		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+	}
+	
+	/**
+	 * This method will insert new patient details into PPE Database if it doesn't exists.
+	 * The data will be fetched from OPEN.
+	 * @param openResponseDTO - Patient details in JSON Format.
+	 * @return -  HTTP Response with appropriate message.
+	 * @throws JsonProcessingException
+	 */
+	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
+	@PostMapping(value = "/api/v1/user/insert-open-data")
+	public ResponseEntity<String> insertDataFromOpen(
+			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO) 
+					throws JsonProcessingException {
+		List<String> validAccountStatusList = new ArrayList<>();
+		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_LOGIN_GOV.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+		
+		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
+		List<User> newUsersList = new ArrayList<>();
+		userEnrollmentData.forEach(patientData ->{
+			Optional<User> patientOptional = userService.findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
+			if(patientOptional.isEmpty()) {
+				patientOptional = userService.insertNewPatientDetailsFromOpen(patientData.getPatientId());
+				newUsersList.add(patientOptional.get());
+			}else {
+				newUsersList.add(patientOptional.get());
+			}
+		});
+		
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		String jsonFormat = convertUsersToJSON(newUsersList);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
