@@ -230,8 +230,7 @@ public class UserServiceImpl implements UserService {
 		if (!userOptional.isPresent()) {
 			return userOptional;
 		}
-		Code portalAccountStatusCode = codeRepository
-				.findByCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
 		User user = userOptional.get();
 		user.setPortalAccountStatus(portalAccountStatusCode);
 		user.setLastRevisedUser(user.getUserId());
@@ -285,8 +284,7 @@ public class UserServiceImpl implements UserService {
 		// activate the user if they are not already done
 		if (StringUtils.isAllBlank(user.getUserUUID())) {
 			user.setUserUUID(uuid);
-			user.setPortalAccountStatus(
-					codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
+			user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
 			user.setDateActivated(updatedTime);
 			userUpdatedFlag = true;
 		}
@@ -345,9 +343,9 @@ public class UserServiceImpl implements UserService {
 		Participant withdrawnPatient = (Participant) userOptional.get();
 		StringBuilder questionAnswers = new StringBuilder();
 		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
-			questionAnswers.append("\u2022").append(" ")
-							.append(qs.getQuestion()).append(" : ").append(qs.getAnswer()).append("<br/>");
-		});		
+			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ").append(qs.getAnswer())
+					.append("<br/>");
+		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
 			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
 				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
@@ -358,8 +356,8 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject().concat(StringUtils.CR)
-						+ LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject()
+						.concat(StringUtils.CR) + LocalDate.now();
 				notificationTitle = StringUtils.replace(notificationTitle, "%{FullName}",
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
@@ -378,8 +376,8 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject().concat(StringUtils.CR)
-						+ LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject()
+						.concat(StringUtils.CR) + LocalDate.now();
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
 						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
 						withdrawnPatient.getUserId(), withdrawnPatient.getCRC().getFirstName(),
@@ -502,9 +500,12 @@ public class UserServiceImpl implements UserService {
 			for (Provider provider : participant.getProviders()) {
 				if (provider.getAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
-					String message = StringUtils.replace(notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
+					String message = StringUtils.replace(
+							notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
 							participant.getFullName());
-					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(), notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
+					message = StringUtils.replace(message, "%{PatientID}", participant.getPatientId());
+					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(),
+							notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
 									+ LocalDate.now(),
 							message, provider.getUserId(), provider.getFirstName(), participant.getFullName(),
 							patientId);
