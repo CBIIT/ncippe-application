@@ -208,7 +208,6 @@ public class UserController {
 	 */
 	@ApiOperation(value = "update the registered user's email notification preference and phone number.")
 	@PutMapping(value = "/api/v1/user/{userGUID}")
-
 	public ResponseEntity<String> updateUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
