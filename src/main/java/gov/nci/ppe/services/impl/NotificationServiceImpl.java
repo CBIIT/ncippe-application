@@ -37,10 +37,10 @@ public class NotificationServiceImpl implements NotificationService {
 		String replaceStringWith[] = { userName, patientName, patientId };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
 		String updatedMessage = StringUtils.replaceEach(message, replaceThisString, replaceStringWith);
-
+		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		PortalNotification notificationObj = new PortalNotification();
 		notificationObj.setMessageFrom(from);
-		notificationObj.setSubject(subject);
+		notificationObj.setSubject(updatedSubject);
 		notificationObj.setMessage(updatedMessage);
 		notificationObj.setUserId(userId);
 		notificationObj.setDateGenerated(new Timestamp(System.currentTimeMillis()));
