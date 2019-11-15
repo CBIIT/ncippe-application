@@ -3,7 +3,12 @@ package gov.nci.ppe.services.impl;
 import java.sql.Timestamp;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
@@ -37,6 +42,11 @@ public class EmailLogServiceImpl implements EmailLogService{
 	@Autowired
 	private EmailServiceConfig emailServiceConfig;
 	
+	@Autowired
+    private JavaMailSender nihMailSender;
+	
+	private static final Logger logger = LogManager.getLogger(EmailLogServiceImpl.class);
+
 	public EmailLogServiceImpl() {}
 	
 	public EmailLogServiceImpl(EmailLogRepository emailLogRepository) {
@@ -63,15 +73,16 @@ public class EmailLogServiceImpl implements EmailLogService{
      * {@inheritDoc}
      */	
 	@Override
-	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patientName, String senderEmail,String subject, String htmlBody, String textBody) {
-			String replaceStringWith[] = {userFirstName, patientName};
-			String replaceThisString[] = {"%{FirstName}", "%{PatientName}"};
-			String updatedTextBody = StringUtils.replaceEach(textBody, replaceThisString, replaceStringWith);
-			String emailStatus = sendEmail(recipientEmail, senderEmail, subject, updatedTextBody, updatedTextBody);
-			if(emailStatus.contains(CommonConstants.SUCCESS)) {
-				logEmailStatus(recipientEmail, subject, updatedTextBody);
-			}
-			return emailStatus;
+	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patientName,
+			String senderEmail, String subject, String htmlBody, String textBody) {
+		String replaceStringWith[] = { userFirstName, patientName };
+		String replaceThisString[] = { "%{FirstName}", "%{PatientName}" };
+		String updatedTextBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedTextBody);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedTextBody);
+		}
+		return emailStatus;
 	}
 	
 	/**
@@ -162,5 +173,19 @@ public class EmailLogServiceImpl implements EmailLogService{
 		return emailStatus;
 
 	}	
+	
+	private String sendEmail(String recipientEmail, String subject, String htmlBody) {
+		try {
+			SimpleMailMessage message = new SimpleMailMessage();
+			message.setTo(recipientEmail);
+			message.setSubject(subject);
+			message.setText(htmlBody);
+			nihMailSender.send(message);
+			return CommonConstants.SUCCESS;
+		} catch (MailException e) {
+			logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), e);
+			return StringUtils.join(CommonConstants.ERROR, " : Failed to Send email ", e.getMessage());
+		}
+    }
 
 }
