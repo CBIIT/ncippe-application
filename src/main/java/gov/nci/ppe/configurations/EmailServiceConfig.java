@@ -88,6 +88,16 @@ public class EmailServiceConfig {
 
 	@Value("${email.provider.patient.invite.portal.textBody}")
 	private String emailTextBodyForProviderPatientInvite;
+	
+	/* Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the Portal */
+	@Value("${email.nonpatient.invite.portal.subject}")
+	private String emailSubjectForNonPatientInvite;
+
+	@Value("${email.nonpatient.invite.portal.textBody}")
+	private String emailTextBodyForNonPatientInvite;
+
+	@Value("${email.nonpatient.invite.portal.htmlBody}")
+	private String emailHtmlBodyForNonPatientInvite;
 
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
@@ -214,5 +224,26 @@ public class EmailServiceConfig {
 
 	public String getEmailHtmlBodyForPatientInvite() {
 		return emailHtmlBodyForPatientInvite;
+	}
+
+	/**
+	 * @return the emailSubjectForNonPatientInvite
+	 */
+	public String getEmailSubjectForNonPatientInvite() {
+		return emailSubjectForNonPatientInvite;
+	}
+
+	/**
+	 * @return the emailTextBodyForNonPatientInvite
+	 */
+	public String getEmailTextBodyForNonPatientInvite() {
+		return emailTextBodyForNonPatientInvite;
+	}
+
+	/**
+	 * @return the emailHtmlBodyForNonPatientInvite
+	 */
+	public String getEmailHtmlBodyForNonPatientInvite() {
+		return emailHtmlBodyForNonPatientInvite;
 	}
 }

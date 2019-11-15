@@ -53,5 +53,14 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToProviderOnPatientInvitation(String recipientEmail, String providerFirstName);
+	
+	/**
+	 * Method to send an Invitation email to HCP, CRC, BSSC and Admins
+	 * 
+	 * @param recipientEmail    - Recipient's email address
+	 * @param providerFirstName - Recipient's first name
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName);
 
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import gov.nci.ppe.data.entity.Participant;
+import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.User;
 
@@ -189,5 +190,19 @@ public interface UserService {
 	 * @param patientId - Unique patientId that OPEN sends.
 	 * @return - User object
 	 */
-	public Optional<User> insertNewPatientDetailsFromOpen(String patientId);
+	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient);
+	
+	/**
+	 * Inserts a new provider record into PPE database
+	 * @param provider - An entity object contain mandatory details.
+	 * @return Optional User object
+	 */
+	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider);
+	
+	/**
+	 * Find a provider based on the CtepId passed. CtepID is provided by OPEN.
+	 * @param ctepId
+	 * @return an optional User.
+	 */
+	public Optional<Provider> findProviderByCtepId(Long ctepId);
 }
