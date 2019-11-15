@@ -19,6 +19,7 @@ import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
+import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -26,10 +27,12 @@ import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
+import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.data.repository.ParticipantRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
+import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
@@ -50,6 +53,8 @@ public class UserServiceImpl implements UserService {
 	private UserRepository userRepository;
 
 	private CodeRepository codeRepository;
+	
+	private RoleRepository roleRepository;
 
 	private ParticipantRepository participantRepository;
 
@@ -77,12 +82,13 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
-			QuestionAnswerRepository qsAnsRepo) {
+			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
 		this.participantRepository = participantRepo;
 		this.qsAnsRepo = qsAnsRepo;
+		this.roleRepository = _roleRepository;
 	}
 
 	/**
@@ -230,8 +236,7 @@ public class UserServiceImpl implements UserService {
 		if (!userOptional.isPresent()) {
 			return userOptional;
 		}
-		Code portalAccountStatusCode = codeRepository
-				.findByCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
 		User user = userOptional.get();
 		user.setPortalAccountStatus(portalAccountStatusCode);
 		user.setLastRevisedUser(user.getUserId());
@@ -285,8 +290,7 @@ public class UserServiceImpl implements UserService {
 		// activate the user if they are not already done
 		if (StringUtils.isAllBlank(user.getUserUUID())) {
 			user.setUserUUID(uuid);
-			user.setPortalAccountStatus(
-					codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
+			user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
 			user.setDateActivated(updatedTime);
 			userUpdatedFlag = true;
 		}
@@ -345,9 +349,9 @@ public class UserServiceImpl implements UserService {
 		Participant withdrawnPatient = (Participant) userOptional.get();
 		StringBuilder questionAnswers = new StringBuilder();
 		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
-			questionAnswers.append("\u2022").append(" ")
-							.append(qs.getQuestion()).append(" : ").append(qs.getAnswer()).append("<br/>");
-		});		
+			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ").append(qs.getAnswer())
+					.append("<br/>");
+		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
 			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
 				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
@@ -358,8 +362,8 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject().concat(StringUtils.CR)
-						+ LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject()
+						.concat(StringUtils.CR) + LocalDate.now();
 				notificationTitle = StringUtils.replace(notificationTitle, "%{FullName}",
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
@@ -378,8 +382,8 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject().concat(StringUtils.CR)
-						+ LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject()
+						.concat(StringUtils.CR) + LocalDate.now();
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
 						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
 						withdrawnPatient.getUserId(), withdrawnPatient.getCRC().getFirstName(),
@@ -502,9 +506,12 @@ public class UserServiceImpl implements UserService {
 			for (Provider provider : participant.getProviders()) {
 				if (provider.getAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
-					String message = StringUtils.replace(notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
+					String message = StringUtils.replace(
+							notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
 							participant.getFullName());
-					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(), notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
+					message = StringUtils.replace(message, "%{PatientID}", participant.getPatientId());
+					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(),
+							notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
 									+ LocalDate.now(),
 							message, provider.getUserId(), provider.getFirstName(), participant.getFullName(),
 							patientId);
@@ -513,6 +520,29 @@ public class UserServiceImpl implements UserService {
 		}
 
 		return participantOptional;
+	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> insertNewPatientDetailsFromOpen(String patientId) {
+		Participant newPatient = new Participant();
+		newPatient.setPatientId(patientId);
+		newPatient.setFirstName(StringUtils.EMPTY);
+		newPatient.setLastName(StringUtils.EMPTY);
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
+		newPatient.setRole(role);
+		Code userType =  codeRepository.findByCodeName(UserType.PPE_PARTICIPANT.name());
+		newPatient.setUserType(userType);
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		newPatient.setPortalAccountStatus(portalAccountStatusCode);	
+		newPatient.setAllowEmailNotification(true);
+		newPatient.setIsActiveBiobankParticipant(true);
+		newPatient.setDateCreated(new Timestamp(System.currentTimeMillis()));
+		newPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		
+		return  Optional.of(userRepository.save(newPatient));
 	}
 
 	private void raiseInvitedParticipationAuditEvent(String patientId, String uuid, String patientEmail,
