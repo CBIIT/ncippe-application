@@ -133,6 +133,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 		try {
 			SimpleMailMessage message = new SimpleMailMessage();
 			message.setTo(recipientEmail);
+			message.setFrom(emailServiceConfig.getSenderEmailAddress());
 			message.setSubject(subject);
 			message.setText(htmlBody);
 			nihMailSender.send(message);
