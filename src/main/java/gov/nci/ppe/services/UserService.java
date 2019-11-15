@@ -182,4 +182,12 @@ public interface UserService {
 	 */
 	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
 			String patientFirstName, String patientLastName) throws JsonProcessingException;
+	
+	/**
+	 * Inserts a new patient record into PPE database based on the patient ID if one doesn't
+	 * already exist. The patient details are fetched from OPEN.
+	 * @param patientId - Unique patientId that OPEN sends.
+	 * @return - User object
+	 */
+	public Optional<User> insertNewPatientDetailsFromOpen(String patientId);
 }
