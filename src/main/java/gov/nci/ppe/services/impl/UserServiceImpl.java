@@ -555,8 +555,16 @@ public class UserServiceImpl implements UserService{
 		newPatient.setIsActiveBiobankParticipant(true);
 		newPatient.setDateCreated(new Timestamp(System.currentTimeMillis()));
 		newPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		Optional<User> patientOptional =  Optional.of(userRepository.save(newPatient));
+		newPatient.getCRC().getCrcId();
 		
-		return  Optional.of(userRepository.save(newPatient));
+		notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(), notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR)
+				+ LocalDate.now(), notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(), StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
+		
+		emailService.sendEmailNotification( newPatient.getCRC().getEmail(), StringUtils.EMPTY, emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject(), 
+				emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody(), emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenTextBody());
+		
+		return patientOptional;
 	}
 	
 	/*
@@ -648,15 +656,16 @@ public class UserServiceImpl implements UserService{
 				providerSet.add((Provider)creditProviderOptional.get());
 			}
 			Optional<CRC> crcOptional = findCRCByCtepId(patientData.getCraCtepId());
-			Optional<User> _crcOpt = Optional.empty();
+			CRC crc = new CRC();
 			if(crcOptional.isEmpty()) {
-				CRC crc = new CRC();
 				crc.setOpenCtepID(patientData.getCraCtepId());
 				crc.setFirstName(patientData.getCraFirstName());
 				crc.setLastName(patientData.getCraLastName());
 				crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
 				crc.setEmail(patientData.getCraEmail());
-				_crcOpt = insertNewCRCDetailsFromOpen(crc);
+				crc = (CRC)insertNewCRCDetailsFromOpen(crc).get();
+			}else {
+				crc = crcOptional.get();
 			}
 			Optional<User> patientOptional = findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
 			if(patientOptional.isEmpty()) {
@@ -664,7 +673,7 @@ public class UserServiceImpl implements UserService{
 				newPatient.setPatientId(patientData.getPatientId());
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
-				newPatient.setCRC((CRC)_crcOpt.get());
+				newPatient.setCRC(crc);
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 				newUsersList.add(patientOptional.get());
 			}else {

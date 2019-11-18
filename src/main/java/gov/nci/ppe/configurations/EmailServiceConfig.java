@@ -98,6 +98,15 @@ public class EmailServiceConfig {
 
 	@Value("${email.nonpatient.invite.portal.htmlBody}")
 	private String emailHtmlBodyForNonPatientInvite;
+	
+	@Value("${email.crc.new.patient.from.open.subject}")
+	private String emailCRCAboutNewPatientDataFromOpenSubject;
+	
+	@Value("${email.crc.new.patient.from.open.textBody}")
+	private String emailCRCAboutNewPatientDataFromOpenTextBody;
+			
+	@Value("${email.crc.new.patient.from.open.htmlBody}")
+	private String emailCRCAboutNewPatientDataFromOpenHtmlBody;
 
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
@@ -245,5 +254,26 @@ public class EmailServiceConfig {
 	 */
 	public String getEmailHtmlBodyForNonPatientInvite() {
 		return emailHtmlBodyForNonPatientInvite;
+	}
+
+	/**
+	 * @return the emailCRCAboutNewPatientDataFromOpenSubject
+	 */
+	public String getEmailCRCAboutNewPatientDataFromOpenSubject() {
+		return emailCRCAboutNewPatientDataFromOpenSubject;
+	}
+
+	/**
+	 * @return the emailCRCAboutNewPatientDataFromOpenTextBody
+	 */
+	public String getEmailCRCAboutNewPatientDataFromOpenTextBody() {
+		return emailCRCAboutNewPatientDataFromOpenTextBody;
+	}
+
+	/**
+	 * @return the emailCRCAboutNewPatientDataFromOpenHtmlBody
+	 */
+	public String getEmailCRCAboutNewPatientDataFromOpenHtmlBody() {
+		return emailCRCAboutNewPatientDataFromOpenHtmlBody;
 	}
 }

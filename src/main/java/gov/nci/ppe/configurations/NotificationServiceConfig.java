@@ -59,6 +59,15 @@ public class NotificationServiceConfig {
 
 	@Value("${patient.receives.invitation.message}")
 	private String patientReceivesInvitationMessage;
+	
+	@Value("${patient.added.from.open.title}")
+	private String patientAddedFromOpenTitle;
+	
+	@Value("${patient.added.from.open.from}")
+	private String patientAddedFromOpenFrom;
+	
+	@Value("${patient.added.from.open.message}")
+	private String patientAddedFromOpenMessage;
 
 	public String getUploadTestReportNotificationMessage() {
 		return uploadTestReportNotificationMessage;
@@ -145,6 +154,27 @@ public class NotificationServiceConfig {
 
 	public String getPatientReceivesInvitationMessage() {
 		return patientReceivesInvitationMessage;
+	}
+
+	/**
+	 * @return the patientAddedFromOpenTitle
+	 */
+	public String getPatientAddedFromOpenTitle() {
+		return patientAddedFromOpenTitle;
+	}
+
+	/**
+	 * @return the patientAddedFromOpenFrom
+	 */
+	public String getPatientAddedFromOpenFrom() {
+		return patientAddedFromOpenFrom;
+	}
+
+	/**
+	 * @return the patientAddedFromOpenMessage
+	 */
+	public String getPatientAddedFromOpenMessage() {
+		return patientAddedFromOpenMessage;
 	}
 
 }
