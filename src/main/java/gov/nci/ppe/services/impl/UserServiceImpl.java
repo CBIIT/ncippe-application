@@ -31,6 +31,7 @@ import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.data.repository.ParticipantRepository;
+import gov.nci.ppe.data.repository.ProviderRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
@@ -48,7 +49,7 @@ import gov.nci.ppe.services.UserService;
  * @since 2019-07-22
  */
 @Component
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService{
 
 	private UserRepository userRepository;
 
@@ -59,6 +60,8 @@ public class UserServiceImpl implements UserService {
 	private ParticipantRepository participantRepository;
 
 	private QuestionAnswerRepository qsAnsRepo;
+	
+	private ProviderRepository providerRepository;
 
 	@Autowired
 	public EmailLogService emailService;
@@ -82,13 +85,14 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
-			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository) {
+			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository, ProviderRepository _providerRepository) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
 		this.participantRepository = participantRepo;
 		this.qsAnsRepo = qsAnsRepo;
 		this.roleRepository = _roleRepository;
+		this.providerRepository = _providerRepository;
 	}
 
 	/**
@@ -526,9 +530,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> insertNewPatientDetailsFromOpen(String patientId) {
-		Participant newPatient = new Participant();
-		newPatient.setPatientId(patientId);
+	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient) {
 		newPatient.setFirstName(StringUtils.EMPTY);
 		newPatient.setLastName(StringUtils.EMPTY);
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
@@ -544,6 +546,36 @@ public class UserServiceImpl implements UserService {
 		
 		return  Optional.of(userRepository.save(newPatient));
 	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider){
+		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PROVIDER.getRoleName());
+		provider.setRole(role);
+		Code userType =  codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
+		provider.setUserType(userType);
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		provider.setPortalAccountStatus(portalAccountStatusCode);
+		provider.setAllowEmailNotification(true);
+		provider.setDateCreated(currentTimestamp);
+		provider.setLastRevisedDate(currentTimestamp);
+		Optional<User> providerOptional = Optional.of(userRepository.save(provider));
+		
+		// Send Notification to Patient & Providers
+		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName());
+		return providerOptional;
+	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<Provider> findProviderByCtepId(Long ctepId){
+		return providerRepository.findProviderByOpenCtepID(ctepId);
+	}
 
 	private void raiseInvitedParticipationAuditEvent(String patientId, String uuid, String patientEmail,
 			String patientFirstName, String patientLastName) throws JsonProcessingException {
@@ -554,5 +586,4 @@ public class UserServiceImpl implements UserService {
 		String auditDetailString = mapper.writeValueAsString(auditDetail);
 		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
 	}
-
 }

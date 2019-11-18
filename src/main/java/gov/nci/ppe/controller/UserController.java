@@ -2,8 +2,10 @@ package gov.nci.ppe.controller;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -421,9 +423,9 @@ public class UserController {
 	}
 	
 	/**
-	 * This method will insert new patient details into PPE Database if it doesn't exists.
+	 * This method will insert new patient, provider and CRC details into PPE Database if it doesn't exists.
 	 * The data will be fetched from OPEN.
-	 * @param openResponseDTO - Patient details in JSON Format.
+	 * @param openResponseDTO - Patient, Provider and CRC details in JSON Format.
 	 * @return -  HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
@@ -441,10 +443,43 @@ public class UserController {
 		
 		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
 		List<User> newUsersList = new ArrayList<>();
+		Set<Provider> providerSet = new HashSet<Provider>();
 		userEnrollmentData.forEach(patientData ->{
+			/* Verify if the provider for a particular patient is already in the system
+			 * If not insert the provider details and then associate it with them with the patient.
+			 * */
+			Optional<Provider> treatingProviderOptional = userService.findProviderByCtepId(patientData.getTreatingInvestigatorCtepId());
+			if(treatingProviderOptional.isEmpty()) {
+				Provider treatingProvider = new Provider();
+				treatingProvider.setOpenCtepID(patientData.getTreatingInvestigatorCtepId());
+				treatingProvider.setFirstName(patientData.getTreatingInvestigatorFirstName());
+				treatingProvider.setLastName(patientData.getTreatingInvestigatorLastName());
+				treatingProvider.setPhoneNumber(formatPhoneNumber(patientData.getTreatingInvestigatorPhone()));
+				treatingProvider.setEmail(patientData.getTreatingInvestigatorEmail());
+				providerSet.add((Provider)userService.insertNewProviderDetailsFromOpen(treatingProvider).get());
+			}else {
+				providerSet.add((Provider)treatingProviderOptional.get());
+			}
+			/* A patient can have upto 2 providers simultaneously */
+			Optional<Provider> creditProviderOptional = userService.findProviderByCtepId(patientData.getCreditInvestigatorCtepId());
+			if(creditProviderOptional.isEmpty()) {
+				Provider creditProvider = new Provider();
+				creditProvider.setOpenCtepID(patientData.getCreditInvestigatorCtepId());
+				creditProvider.setFirstName(patientData.getCreditInvestigatorFirstName());
+				creditProvider.setLastName(patientData.getCreditInvestigatorLastName());
+				creditProvider.setPhoneNumber(formatPhoneNumber(patientData.getCreditInvestigatorPhone()));
+				creditProvider.setEmail(patientData.getCreditInvestigatorEmail());
+				providerSet.add((Provider)userService.insertNewProviderDetailsFromOpen(creditProvider).get());
+			}else {
+				providerSet.add((Provider)creditProviderOptional.get());
+			}
 			Optional<User> patientOptional = userService.findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
 			if(patientOptional.isEmpty()) {
-				patientOptional = userService.insertNewPatientDetailsFromOpen(patientData.getPatientId());
+				Participant newPatient = new Participant();
+				newPatient.setPatientId(patientData.getPatientId());
+				// Associate the providers to the patient
+				newPatient.setProviders(providerSet);
+				patientOptional = userService.insertNewPatientDetailsFromOpen(newPatient);
 				newUsersList.add(patientOptional.get());
 			}else {
 				newUsersList.add(patientOptional.get());
@@ -585,4 +620,17 @@ public class UserController {
 		return new ResponseEntity<String>(userJson, httpHeaders, HttpStatus.OK);
 	}
 
+	/* Helper method to format phone number as 10 digits without any other characters */
+	private String formatPhoneNumber(String phoneNumber) {
+		StringBuilder formattedPhoneNumber = new StringBuilder();
+		
+		for(int index = 0; index < phoneNumber.length();index++) {
+			if(Character.isDigit(phoneNumber.charAt(index))) {
+				formattedPhoneNumber.append(phoneNumber.charAt(index));
+			}
+		}
+		String formattedNumber = formattedPhoneNumber.toString().substring(0, 10);
+		logger.log(Level.INFO, "Formatted Phone number is {}",formattedNumber);
+		return formattedNumber;
+	}
 }

@@ -9,6 +9,11 @@ import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.User;
 
+/**
+ * @author PublicisSapient
+ * @version 1.0
+ * @since 2019-09-29
+ */
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
 	/**
 	 * Returns an User entity matching the supplied patient id and
