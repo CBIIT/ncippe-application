@@ -66,10 +66,10 @@ public class EmailLogServiceImpl implements EmailLogService{
 			String senderEmail, String subject, String htmlBody, String textBody) {
 		String replaceStringWith[] = { userFirstName, patientName };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}" };
-		String updatedTextBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedTextBody);
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedTextBody);
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
 		return emailStatus;
 	}
@@ -144,4 +144,22 @@ public class EmailLogServiceImpl implements EmailLogService{
 		}
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName) {
+		String replaceStringWith[] = { firstName };
+		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForNonPatientInvite();
+		String subject = emailServiceConfig.getEmailSubjectForNonPatientInvite();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+
+	}
 }
