@@ -786,6 +786,7 @@ public class UserServiceImpl implements UserService{
 	 * @param userTypeId - String representing the specific userId
 	 * @param id - Id for the user
 	 * @param auditEvntType - Insert event or Update Event
+	 * @throws JsonProcessingException
 	 */
 	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
