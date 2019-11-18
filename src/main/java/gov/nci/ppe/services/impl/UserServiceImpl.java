@@ -96,15 +96,15 @@ public class UserServiceImpl implements UserService{
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
-			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository, ProviderRepository _providerRepository, CRCRepository _crcRepository) {
+			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository, CRCRepository crcRepository) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
 		this.participantRepository = participantRepo;
 		this.qsAnsRepo = qsAnsRepo;
-		this.roleRepository = _roleRepository;
-		this.providerRepository = _providerRepository;
-		this.crcRepository = _crcRepository;
+		this.roleRepository = roleRepository;
+		this.providerRepository = providerRepository;
+		this.crcRepository = crcRepository;
 	}
 
 	/**
