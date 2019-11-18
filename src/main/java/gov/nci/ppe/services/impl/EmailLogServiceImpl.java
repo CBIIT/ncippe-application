@@ -2,13 +2,16 @@ package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import gov.nci.ppe.configurations.EmailServiceConfig;
@@ -67,7 +70,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 		String replaceStringWith[] = { userFirstName, patientName };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}" };
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
@@ -80,7 +83,7 @@ public class EmailLogServiceImpl implements EmailLogService{
      */	
 	@Override
 	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody, String textBody) {
-		String emailStatus = sendEmail(recipientEmail, subject, htmlBody);
+		String emailStatus = sendEmail(recipientEmail, subject, htmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, htmlBody);
 		}
@@ -103,7 +106,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 		StringUtils.replaceEach(textBody, replaceThisString, replaceStringWith);
 
 
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
@@ -121,7 +124,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite();
 		String subject = emailServiceConfig.getEmailSubjectForProviderPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
@@ -129,16 +132,18 @@ public class EmailLogServiceImpl implements EmailLogService{
 
 	}	
 	
-	private String sendEmail(String recipientEmail, String subject, String htmlBody) {
+	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat) {
 		try {
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setTo(recipientEmail);
-			message.setFrom(emailServiceConfig.getSenderEmailAddress());
-			message.setSubject(subject);
-			message.setText(htmlBody);
+			MimeMessage message = nihMailSender.createMimeMessage();
+			MimeMessageHelper htmlMailHelper = new MimeMessageHelper(message, true);
+			htmlMailHelper.setTo(recipientEmail);
+			htmlMailHelper.setFrom(emailServiceConfig.getSenderEmailAddress());
+			htmlMailHelper.setSubject(subject);
+			htmlMailHelper.setText(messageBody, true);
 			nihMailSender.send(message);
+			logger.info("Send email Re: {} to recipient {}", subject, recipientEmail);
 			return CommonConstants.SUCCESS;
-		} catch (MailException e) {
+		} catch (MailException | MessagingException e) {
 			logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), e);
 			return StringUtils.join(CommonConstants.ERROR, " : Failed to Send email ", e.getMessage());
 		}
@@ -155,7 +160,7 @@ public class EmailLogServiceImpl implements EmailLogService{
 		String subject = emailServiceConfig.getEmailSubjectForNonPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
