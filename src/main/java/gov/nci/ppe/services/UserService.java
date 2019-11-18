@@ -7,10 +7,12 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 
 /**
  * @author PublicisSapient
@@ -205,4 +207,25 @@ public interface UserService {
 	 * @return an optional User.
 	 */
 	public Optional<Provider> findProviderByCtepId(Long ctepId);
+	
+	/**
+	 * Inserts a new CRC record into PPE database
+	 * @param provider - An entity object contain mandatory details.
+	 * @return Optional User object
+	 */
+	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc);
+	
+	/**
+	 * Find a CRC based on the CtepId passed. CtepID is provided by OPEN.
+	 * @param ctepId
+	 * @return an optional User.
+	 */
+	public Optional<CRC> findCRCByCtepId(Long ctepId);
+	
+	/**
+	 * Insert the data fetched from OPEN into PPE DB
+	 * @param openResponseDTO - Data from OPEN
+	 * @return List of Users that were inserted into PPE DB
+	 */
+	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO);
 }
