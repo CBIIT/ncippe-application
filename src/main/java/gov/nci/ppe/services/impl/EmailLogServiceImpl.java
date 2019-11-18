@@ -70,7 +70,8 @@ public class EmailLogServiceImpl implements EmailLogService{
 		String replaceStringWith[] = { userFirstName, patientName };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}" };
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
+		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
