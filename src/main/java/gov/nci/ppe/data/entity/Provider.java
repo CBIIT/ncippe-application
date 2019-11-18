@@ -23,6 +23,9 @@ public class Provider extends User {
 	@ManyToMany(mappedBy = "providers")
 	private Set<Participant> patients = new HashSet<>();
 	
+	@Column(name = "OpenCtepID", nullable = false, length = 32)
+	private Long openCtepID;
+	
 	public Long getProviderId() {
 		return providerId;
 	}
@@ -39,5 +42,17 @@ public class Provider extends User {
 		this.patients = patients;
 	}
 
-	
+	/**
+	 * @return the openCtepID
+	 */
+	public Long getOpenCtepID() {
+		return openCtepID;
+	}
+
+	/**
+	 * @param openCtepID the openCtepID to set
+	 */
+	public void setOpenCtepID(Long openCtepID) {
+		this.openCtepID = openCtepID;
+	}
 }
