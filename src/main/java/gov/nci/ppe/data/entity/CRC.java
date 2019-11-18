@@ -30,6 +30,9 @@ public class CRC extends User {
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "CRCId"), inverseJoinColumns = @JoinColumn(name = "ParticipantId"))
 	private Set<Participant> patients;	
+	
+	@Column(name = "OpenCtepID", nullable = false, length = 32)
+	private Long openCtepID;
 
 	public Long getCrcId() {
 		return crcId;
@@ -47,6 +50,20 @@ public class CRC extends User {
 	public void setPatients(Set<Participant> patients) {
 		this.patients = patients;
 	}
+	
+	/**
+	 * @return the openCtepID
+	 */
+	public Long getOpenCtepID() {
+		return openCtepID;
+	}
+
+	/**
+	 * @param openCtepID the openCtepID to set
+	 */
+	public void setOpenCtepID(Long openCtepID) {
+		this.openCtepID = openCtepID;
+	}	
 
 	public String toString() {
 		StringBuilder retValue = new StringBuilder("{") ;
