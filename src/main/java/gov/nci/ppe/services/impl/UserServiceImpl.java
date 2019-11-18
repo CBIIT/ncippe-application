@@ -23,7 +23,6 @@ import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
-import gov.nci.ppe.controller.UserController;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -558,9 +557,11 @@ public class UserServiceImpl implements UserService{
 		Optional<User> patientOptional =  Optional.of(userRepository.save(newPatient));
 		newPatient.getCRC().getCrcId();
 		
+		// Send System notification to CRC when a new patient is inserted into PPE from OPEN
 		notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(), notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR)
 				+ LocalDate.now(), notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(), StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 		
+		// Send Email notification to CRC when a new patient is inserted into PPE from OPEN
 		emailService.sendEmailNotification( newPatient.getCRC().getEmail(), StringUtils.EMPTY, emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject(), 
 				emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody(), emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenTextBody());
 		
@@ -643,6 +644,7 @@ public class UserServiceImpl implements UserService{
 				Provider treatingProvider = generateBasicProviderDetails(patientData.getTreatingInvestigatorCtepId(), patientData.getTreatingInvestigatorFirstName(), patientData.getTreatingInvestigatorLastName(),
 						patientData.getTreatingInvestigatorPhone(), patientData.getTreatingInvestigatorEmail());
 				providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
+				raiseInsertOrUpdateParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				providerSet.add((Provider)treatingProviderOptional.get());
 			}
@@ -652,6 +654,7 @@ public class UserServiceImpl implements UserService{
 				Provider creditProvider = generateBasicProviderDetails(patientData.getCreditInvestigatorCtepId(), patientData.getCreditInvestigatorFirstName(), patientData.getCreditInvestigatorLastName(),
 						patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
 				providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
+				raiseInsertOrUpdateParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				providerSet.add((Provider)creditProviderOptional.get());
 			}
@@ -664,6 +667,7 @@ public class UserServiceImpl implements UserService{
 				crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
 				crc.setEmail(patientData.getCraEmail());
 				crc = (CRC)insertNewCRCDetailsFromOpen(crc).get();
+				raiseInsertOrUpdateParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				crc = crcOptional.get();
 			}
@@ -676,8 +680,23 @@ public class UserServiceImpl implements UserService{
 				newPatient.setCRC(crc);
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 				newUsersList.add(patientOptional.get());
+				raiseInsertOrUpdateParticipantAuditEvent("PatientID", newPatient.getPatientId(), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
+				// If the patient exists, check for any changes in the relationship with Providers and CRC
+				Participant patient = (Participant)patientOptional.get();
+				Set<Provider> existingProviders = patient.getProviders();
+				CRC existingCRC = patient.getCRC();
+				if(existingProviders.size() != providerSet.size() || !providerSet.containsAll(existingProviders)) {
+					patient.setProviders(providerSet);
+				}
+				// Check if the CRC remains unchanged.
+				if(existingCRC.getOpenCtepID() != crc.getOpenCtepID()) {
+					patient.setCRC(crc);
+				}
+				
+				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
+				raiseInsertOrUpdateParticipantAuditEvent("PatientID",patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 			}
 		});
 		
@@ -701,6 +720,15 @@ public class UserServiceImpl implements UserService{
 		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
 	}
 	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient) {
+		existingPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		return  Optional.of(userRepository.save(existingPatient));
+	}
+	
 	/* Helper method to format phone number as 10 digits without any other characters */
 	private String formatPhoneNumber(String phoneNumber) {
 		StringBuilder formattedPhoneNumber = new StringBuilder();
@@ -715,6 +743,15 @@ public class UserServiceImpl implements UserService{
 		return formattedNumber;
 	}
 	
+	/**
+	 * Generate a Provider object with basic details.
+	 * @param ctepId
+	 * @param firstName
+	 * @param lastName
+	 * @param phone
+	 * @param email
+	 * @return
+	 */
 	private Provider generateBasicProviderDetails(Long ctepId, String firstName, String lastName, String phone, String email) {
 		Provider provider = new Provider();
 		provider.setOpenCtepID(ctepId);
@@ -724,5 +761,24 @@ public class UserServiceImpl implements UserService{
 		provider.setEmail(email);
 		logger.log(Level.INFO, "Provider with Basic Details is {}",provider.toString());
 		return provider;
+	}
+	
+	/**
+	 * Method to log details for audit purpose
+	 * @param userTypeId - String representing the specific userId
+	 * @param id - Id for the user
+	 * @param auditEvntType - Insert event or Update Event
+	 * @throws JsonProcessingException
+	 */
+	private void raiseInsertOrUpdateParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put(userTypeId, id);
+		String auditDetailString;
+		try {
+			auditDetailString = mapper.writeValueAsString(auditDetail);
+			auditService.logAuditEvent(auditDetailString, auditEvntType);
+		}  catch (JsonProcessingException jsonProsException) {
+			logger.log(Level.WARNING, jsonProsException.getMessage());
+		}
 	}
 }

@@ -434,8 +434,8 @@ public class UserController {
 	public ResponseEntity<String> insertDataFromOpen(
 			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO) 
 					throws JsonProcessingException {
-		
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
+		
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String jsonFormat = convertUsersToJSON(newUsersList);
@@ -569,6 +569,4 @@ public class UserController {
 		String userJson = convertUserToJSON(user);
 		return new ResponseEntity<String>(userJson, httpHeaders, HttpStatus.OK);
 	}
-
-
 }
