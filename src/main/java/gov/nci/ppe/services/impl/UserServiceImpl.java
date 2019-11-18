@@ -3,9 +3,12 @@ package gov.nci.ppe.services.impl;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
+import gov.nci.ppe.controller.UserController;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -29,12 +33,15 @@ import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.repository.CRCRepository;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.data.repository.ParticipantRepository;
 import gov.nci.ppe.data.repository.ProviderRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
+import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
+import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
@@ -50,6 +57,8 @@ import gov.nci.ppe.services.UserService;
  */
 @Component
 public class UserServiceImpl implements UserService{
+	
+	protected Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
 
@@ -62,7 +71,9 @@ public class UserServiceImpl implements UserService{
 	private QuestionAnswerRepository qsAnsRepo;
 	
 	private ProviderRepository providerRepository;
-
+	
+	private CRCRepository crcRepository;
+	
 	@Autowired
 	public EmailLogService emailService;
 
@@ -85,14 +96,15 @@ public class UserServiceImpl implements UserService{
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
-			QuestionAnswerRepository qsAnsRepo, RoleRepository _roleRepository, ProviderRepository _providerRepository) {
+			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository, CRCRepository crcRepository) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
 		this.participantRepository = participantRepo;
 		this.qsAnsRepo = qsAnsRepo;
-		this.roleRepository = _roleRepository;
-		this.providerRepository = _providerRepository;
+		this.roleRepository = roleRepository;
+		this.providerRepository = providerRepository;
+		this.crcRepository = crcRepository;
 	}
 
 	/**
@@ -564,7 +576,7 @@ public class UserServiceImpl implements UserService{
 		provider.setLastRevisedDate(currentTimestamp);
 		Optional<User> providerOptional = Optional.of(userRepository.save(provider));
 		
-		// Send Notification to Patient & Providers
+		// Send Email Notification to Providers
 		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName());
 		return providerOptional;
 	}
@@ -576,6 +588,99 @@ public class UserServiceImpl implements UserService{
 	public Optional<Provider> findProviderByCtepId(Long ctepId){
 		return providerRepository.findProviderByOpenCtepID(ctepId);
 	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc){
+		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_CRC.getRoleName());
+		crc.setRole(role);
+		Code userType =  codeRepository.findByCodeName(UserType.PPE_CRC.name());
+		crc.setUserType(userType);
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		crc.setPortalAccountStatus(portalAccountStatusCode);
+		crc.setAllowEmailNotification(true);
+		crc.setDateCreated(currentTimestamp);
+		crc.setLastRevisedDate(currentTimestamp);
+		Optional<User> providerOptional = Optional.of(userRepository.save(crc));
+		
+		// Send Email Notification to CRCs
+		emailService.sendEmailToInviteNonPatients(crc.getEmail(), crc.getFirstName());
+		return providerOptional;
+	}
+	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO) {
+		List<String> validAccountStatusList = new ArrayList<>();
+		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_LOGIN_GOV.name());
+		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+		
+		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
+		List<User> newUsersList = new ArrayList<>();
+		userEnrollmentData.forEach(patientData ->{
+			Set<Provider> providerSet = new HashSet<Provider>();
+			/* Verify if the provider for a particular patient is already in the system
+			 * If not insert the provider details and then associate it with them with the patient.
+			 * */
+			Optional<Provider> treatingProviderOptional = findProviderByCtepId(patientData.getTreatingInvestigatorCtepId());
+			if(treatingProviderOptional.isEmpty()) {
+				Provider treatingProvider = generateBasicProviderDetails(patientData.getTreatingInvestigatorCtepId(), patientData.getTreatingInvestigatorFirstName(), patientData.getTreatingInvestigatorLastName(),
+						patientData.getTreatingInvestigatorPhone(), patientData.getTreatingInvestigatorEmail());
+				providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
+			}else {
+				providerSet.add((Provider)treatingProviderOptional.get());
+			}
+			/* A patient can have upto 2 providers simultaneously */
+			Optional<Provider> creditProviderOptional = findProviderByCtepId(patientData.getCreditInvestigatorCtepId());
+			if(creditProviderOptional.isEmpty()) {
+				Provider creditProvider = generateBasicProviderDetails(patientData.getCreditInvestigatorCtepId(), patientData.getCreditInvestigatorFirstName(), patientData.getCreditInvestigatorLastName(),
+						patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
+				providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
+			}else {
+				providerSet.add((Provider)creditProviderOptional.get());
+			}
+			Optional<CRC> crcOptional = findCRCByCtepId(patientData.getCraCtepId());
+			Optional<User> _crcOpt = Optional.empty();
+			if(crcOptional.isEmpty()) {
+				CRC crc = new CRC();
+				crc.setOpenCtepID(patientData.getCraCtepId());
+				crc.setFirstName(patientData.getCraFirstName());
+				crc.setLastName(patientData.getCraLastName());
+				crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
+				crc.setEmail(patientData.getCraEmail());
+				_crcOpt = insertNewCRCDetailsFromOpen(crc);
+			}
+			Optional<User> patientOptional = findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
+			if(patientOptional.isEmpty()) {
+				Participant newPatient = new Participant();
+				newPatient.setPatientId(patientData.getPatientId());
+				// Associate the providers & CRC to the patient
+				newPatient.setProviders(providerSet);
+				newPatient.setCRC((CRC)_crcOpt.get());
+				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
+				newUsersList.add(patientOptional.get());
+			}else {
+				newUsersList.add(patientOptional.get());
+			}
+		});
+		
+		return newUsersList;
+	}
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<CRC> findCRCByCtepId(Long ctepId){
+		return crcRepository.findCRCByOpenCtepID(ctepId);
+	}	
 
 	private void raiseInvitedParticipationAuditEvent(String patientId, String uuid, String patientEmail,
 			String patientFirstName, String patientLastName) throws JsonProcessingException {
@@ -585,5 +690,30 @@ public class UserServiceImpl implements UserService{
 				.put("PatientFirstName", patientFirstName).put("PatientLastName", patientLastName);
 		String auditDetailString = mapper.writeValueAsString(auditDetail);
 		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
+	}
+	
+	/* Helper method to format phone number as 10 digits without any other characters */
+	private String formatPhoneNumber(String phoneNumber) {
+		StringBuilder formattedPhoneNumber = new StringBuilder();
+		
+		for(int index = 0; index < phoneNumber.length();index++) {
+			if(Character.isDigit(phoneNumber.charAt(index))) {
+				formattedPhoneNumber.append(phoneNumber.charAt(index));
+			}
+		}
+		String formattedNumber = formattedPhoneNumber.toString().substring(0, 10);
+		logger.log(Level.INFO, "Formatted Phone number is {}",formattedNumber);
+		return formattedNumber;
+	}
+	
+	private Provider generateBasicProviderDetails(Long ctepId, String firstName, String lastName, String phone, String email) {
+		Provider provider = new Provider();
+		provider.setOpenCtepID(ctepId);
+		provider.setFirstName(firstName);
+		provider.setLastName(lastName);
+		provider.setPhoneNumber(formatPhoneNumber(phone));
+		provider.setEmail(email);
+		logger.log(Level.INFO, "Provider with Basic Details is {}",provider.toString());
+		return provider;
 	}
 }
