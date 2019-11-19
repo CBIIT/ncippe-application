@@ -558,16 +558,16 @@ public class UserServiceImpl implements UserService{
 		newPatient.setDateCreated(new Timestamp(System.currentTimeMillis()));
 		newPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
 		Optional<User> patientOptional =  Optional.of(userRepository.save(newPatient));
-		newPatient.getCRC().getCrcId();
+		if(null != newPatient.getCRC()){
 		
-		// Send System notification to CRC when a new patient is inserted into PPE from OPEN
-		notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(), notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR)
-				+ LocalDate.now(), notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(), StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
-		
-		// Send Email notification to CRC when a new patient is inserted into PPE from OPEN
-		emailService.sendEmailNotification( newPatient.getCRC().getEmail(), StringUtils.EMPTY, emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject(), 
-				emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody(), emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenTextBody());
-		
+			// Send System notification to CRC when a new patient is inserted into PPE from OPEN
+			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(), notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR)
+					+ LocalDate.now(), notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(), StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
+			
+			// Send Email notification to CRC when a new patient is inserted into PPE from OPEN
+			emailService.sendEmailNotification( newPatient.getCRC().getEmail(), StringUtils.EMPTY, emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject(), 
+					emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody(), emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenTextBody());
+		}
 		return patientOptional;
 	}
 	
@@ -642,37 +642,44 @@ public class UserServiceImpl implements UserService{
 			/* Verify if the provider for a particular patient is already in the system
 			 * If not insert the provider details and then associate it with them with the patient.
 			 * */
-			Optional<Provider> treatingProviderOptional = findProviderByCtepId(patientData.getTreatingInvestigatorCtepId());
-			if(treatingProviderOptional.isEmpty()) {
-				Provider treatingProvider = generateBasicProviderDetails(patientData.getTreatingInvestigatorCtepId(), patientData.getTreatingInvestigatorFirstName(), patientData.getTreatingInvestigatorLastName(),
-						patientData.getTreatingInvestigatorPhone(), patientData.getTreatingInvestigatorEmail());
-				providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
-				raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
-			}else {
-				providerSet.add((Provider)treatingProviderOptional.get());
+			if(null!=patientData.getTreatingInvestigatorCtepId()) {
+				Optional<Provider> treatingProviderOptional = findProviderByCtepId(patientData.getTreatingInvestigatorCtepId());
+				if(treatingProviderOptional.isEmpty()) {
+					Provider treatingProvider = generateBasicProviderDetails(patientData.getTreatingInvestigatorCtepId(), patientData.getTreatingInvestigatorFirstName(), patientData.getTreatingInvestigatorLastName(),
+							patientData.getTreatingInvestigatorPhone(), patientData.getTreatingInvestigatorEmail());
+					providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
+					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+				}else {
+					providerSet.add((Provider)treatingProviderOptional.get());
+				}
 			}
 			/* A patient can have upto 2 providers simultaneously */
-			Optional<Provider> creditProviderOptional = findProviderByCtepId(patientData.getCreditInvestigatorCtepId());
-			if(creditProviderOptional.isEmpty()) {
-				Provider creditProvider = generateBasicProviderDetails(patientData.getCreditInvestigatorCtepId(), patientData.getCreditInvestigatorFirstName(), patientData.getCreditInvestigatorLastName(),
-						patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
-				providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
-				raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
-			}else {
-				providerSet.add((Provider)creditProviderOptional.get());
+			if(null!=patientData.getCreditInvestigatorCtepId()) {
+				Optional<Provider> creditProviderOptional = findProviderByCtepId(patientData.getCreditInvestigatorCtepId());
+				if(creditProviderOptional.isEmpty()) {
+					Provider creditProvider = generateBasicProviderDetails(patientData.getCreditInvestigatorCtepId(), patientData.getCreditInvestigatorFirstName(), patientData.getCreditInvestigatorLastName(),
+							patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
+					providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
+					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+				}else {
+					providerSet.add((Provider)creditProviderOptional.get());
+				}
 			}
-			Optional<CRC> crcOptional = findCRCByCtepId(patientData.getCraCtepId());
-			CRC crc = new CRC();
-			if(crcOptional.isEmpty()) {
-				crc.setOpenCtepID(patientData.getCraCtepId());
-				crc.setFirstName(patientData.getCraFirstName());
-				crc.setLastName(patientData.getCraLastName());
-				crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
-				crc.setEmail(patientData.getCraEmail());
-				crc = (CRC)insertNewCRCDetailsFromOpen(crc).get();
-				raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
-			}else {
-				crc = crcOptional.get();
+			CRC crc = null;
+			if(null!=patientData.getCraCtepId()) {
+				Optional<CRC> crcOptional = findCRCByCtepId(patientData.getCraCtepId());
+				if(crcOptional.isEmpty()) {
+					crc = new CRC();
+					crc.setOpenCtepID(patientData.getCraCtepId());
+					crc.setFirstName(patientData.getCraFirstName());
+					crc.setLastName(patientData.getCraLastName());
+					crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
+					crc.setEmail(patientData.getCraEmail());
+					crc = (CRC)insertNewCRCDetailsFromOpen(crc).get();
+					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+				}else {
+					crc = crcOptional.get();
+				}
 			}
 			Optional<User> patientOptional = findByPatientIdAndPortalAccountStatus(patientData.getPatientId(), validAccountStatusList);
 			if(patientOptional.isEmpty()) {
@@ -680,46 +687,63 @@ public class UserServiceImpl implements UserService{
 				newPatient.setPatientId(patientData.getPatientId());
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
-				newPatient.setCRC(crc);
+				if(null!=crc) {
+					newPatient.setCRC(crc);
+				}
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 				newUsersList.add(patientOptional.get());
 				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				// If the patient exists, check for any changes in the relationship with Providers and CRC
-				boolean providerFlag = false;
-				boolean crcFlag = false;
+				boolean providerUpdatedFlag = false;
+				boolean crcUpdatedFlag = false;
 				Participant patient = (Participant)patientOptional.get();
 				Set<Provider> existingProviders = patient.getProviders();
 				Map<String,Set<Long>> mapOFProviders = new HashMap<String, Set<Long>>();
 				
-				if(existingProviders.size() != providerSet.size() || !providerSet.containsAll(existingProviders)) {
+				if(!providerSet.isEmpty() || existingProviders.size() != providerSet.size() || !providerSet.containsAll(existingProviders)) {
 					patient.setProviders(providerSet);
 					mapOFProviders = findDifferenceInProviders(getProviderIds(existingProviders), getProviderIds(providerSet));
-					providerFlag = true;
+					providerUpdatedFlag = true;
 				}
 				
 				CRC existingCRC = patient.getCRC();
-				final Long crcOpentCtepId = crc.getOpenCtepID();
-				// Check if the CRC remains unchanged.
-				if(existingCRC.getOpenCtepID() != crcOpentCtepId) {
+				
+				// Adding a new CRC to a patient
+				if(null==existingCRC && null!=crc) {
 					patient.setCRC(crc);
-					crcFlag = true;
+					crcUpdatedFlag = true;
+				}
+				// Updating CRC for a patient
+				if(null!=crc && null!=existingCRC) {
+					// Check if the CRC remains unchanged.
+					if(existingCRC.getOpenCtepID() != crc.getOpenCtepID()) {
+						patient.setCRC(crc);
+						crcUpdatedFlag = true;
+					}
 				}
 				
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
-				if(providerFlag) {
+				if(providerUpdatedFlag) {
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId", mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"), patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
-				if(crcFlag) {
-					raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {{add(existingCRC.getOpenCtepID());}},new HashSet<Long>() {{add(crcOpentCtepId);}}, patient.getPatientId(), 
-							AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+				if(crcUpdatedFlag) {
+					final Long crcOpentCtepId = crc.getOpenCtepID();
+					if(null!=existingCRC) {
+						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {{add(existingCRC.getOpenCtepID());}},new HashSet<Long>() {{add(crcOpentCtepId);}}, patient.getPatientId(), 
+								AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+					}else {
+						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>(),new HashSet<Long>() {{add(crcOpentCtepId);}}, patient.getPatientId(), 
+								AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+					}
 				}
 			}
 		});
 		
 		return newUsersList;
 	}
+	
 	/*
 	 * {@inheritDoc}
 	 */
@@ -786,7 +810,6 @@ public class UserServiceImpl implements UserService{
 	 * @param userTypeId - String representing the specific userId
 	 * @param id - Id for the user
 	 * @param auditEvntType - Insert event or Update Event
-	 * @throws JsonProcessingException
 	 */
 	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
@@ -820,7 +843,7 @@ public class UserServiceImpl implements UserService{
 		
 		final AtomicInteger counter2 = new AtomicInteger(1);
 		newIds.forEach(id->{
-			auditDetail.put(newKey+counter, Long.toString(id));
+			auditDetail.put(newKey+counter2, Long.toString(id));
 			counter2.getAndAdd(1);
 		});
 		String auditDetailString;
@@ -866,7 +889,6 @@ public class UserServiceImpl implements UserService{
 		providerSet.forEach(provider -> {
 			providerIds.add(provider.getOpenCtepID());
 		});
-		
 		return providerIds;
 	}
 }
