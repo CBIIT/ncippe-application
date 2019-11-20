@@ -3,10 +3,13 @@ package gov.nci.ppe.services.impl;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +26,6 @@ import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
-import gov.nci.ppe.controller.UserController;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -558,9 +560,11 @@ public class UserServiceImpl implements UserService{
 		Optional<User> patientOptional =  Optional.of(userRepository.save(newPatient));
 		newPatient.getCRC().getCrcId();
 		
+		// Send System notification to CRC when a new patient is inserted into PPE from OPEN
 		notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(), notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR)
 				+ LocalDate.now(), notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(), StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 		
+		// Send Email notification to CRC when a new patient is inserted into PPE from OPEN
 		emailService.sendEmailNotification( newPatient.getCRC().getEmail(), StringUtils.EMPTY, emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject(), 
 				emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody(), emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenTextBody());
 		
@@ -643,6 +647,7 @@ public class UserServiceImpl implements UserService{
 				Provider treatingProvider = generateBasicProviderDetails(patientData.getTreatingInvestigatorCtepId(), patientData.getTreatingInvestigatorFirstName(), patientData.getTreatingInvestigatorLastName(),
 						patientData.getTreatingInvestigatorPhone(), patientData.getTreatingInvestigatorEmail());
 				providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
+				raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				providerSet.add((Provider)treatingProviderOptional.get());
 			}
@@ -652,6 +657,7 @@ public class UserServiceImpl implements UserService{
 				Provider creditProvider = generateBasicProviderDetails(patientData.getCreditInvestigatorCtepId(), patientData.getCreditInvestigatorFirstName(), patientData.getCreditInvestigatorLastName(),
 						patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
 				providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
+				raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				providerSet.add((Provider)creditProviderOptional.get());
 			}
@@ -664,6 +670,7 @@ public class UserServiceImpl implements UserService{
 				crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
 				crc.setEmail(patientData.getCraEmail());
 				crc = (CRC)insertNewCRCDetailsFromOpen(crc).get();
+				raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
 				crc = crcOptional.get();
 			}
@@ -676,8 +683,38 @@ public class UserServiceImpl implements UserService{
 				newPatient.setCRC(crc);
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 				newUsersList.add(patientOptional.get());
+				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 			}else {
+				// If the patient exists, check for any changes in the relationship with Providers and CRC
+				boolean providerFlag = false;
+				boolean crcFlag = false;
+				Participant patient = (Participant)patientOptional.get();
+				Set<Provider> existingProviders = patient.getProviders();
+				Map<String,Set<Long>> mapOFProviders = new HashMap<String, Set<Long>>();
+				
+				if(existingProviders.size() != providerSet.size() || !providerSet.containsAll(existingProviders)) {
+					patient.setProviders(providerSet);
+					mapOFProviders = findDifferenceInProviders(getProviderIds(existingProviders), getProviderIds(providerSet));
+					providerFlag = true;
+				}
+				
+				CRC existingCRC = patient.getCRC();
+				final Long crcOpentCtepId = crc.getOpenCtepID();
+				// Check if the CRC remains unchanged.
+				if(existingCRC.getOpenCtepID() != crcOpentCtepId) {
+					patient.setCRC(crc);
+					crcFlag = true;
+				}
+				
+				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
+				if(providerFlag) {
+					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId", mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"), patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+				}
+				if(crcFlag) {
+					raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {{add(existingCRC.getOpenCtepID());}},new HashSet<Long>() {{add(crcOpentCtepId);}}, patient.getPatientId(), 
+							AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+				}
 			}
 		});
 		
@@ -701,6 +738,15 @@ public class UserServiceImpl implements UserService{
 		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
 	}
 	
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient) {
+		existingPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		return  Optional.of(userRepository.save(existingPatient));
+	}
+	
 	/* Helper method to format phone number as 10 digits without any other characters */
 	private String formatPhoneNumber(String phoneNumber) {
 		StringBuilder formattedPhoneNumber = new StringBuilder();
@@ -715,6 +761,15 @@ public class UserServiceImpl implements UserService{
 		return formattedNumber;
 	}
 	
+	/**
+	 * Generate a Provider object with basic details.
+	 * @param ctepId
+	 * @param firstName
+	 * @param lastName
+	 * @param phone
+	 * @param email
+	 * @return
+	 */
 	private Provider generateBasicProviderDetails(Long ctepId, String firstName, String lastName, String phone, String email) {
 		Provider provider = new Provider();
 		provider.setOpenCtepID(ctepId);
@@ -724,5 +779,93 @@ public class UserServiceImpl implements UserService{
 		provider.setEmail(email);
 		logger.log(Level.INFO, "Provider with Basic Details is {}",provider.toString());
 		return provider;
+	}
+	
+	/**
+	 * Method to log details for audit purpose
+	 * @param userTypeId - String representing the specific userId
+	 * @param id - Id for the user
+	 * @param auditEvntType - Insert event or Update Event
+	 */
+	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put(userTypeId, id);
+		String auditDetailString;
+		try {
+			auditDetailString = mapper.writeValueAsString(auditDetail);
+			auditService.logAuditEvent(auditDetailString, auditEvntType);
+		}  catch (JsonProcessingException jsonProsException) {
+			logger.log(Level.WARNING, jsonProsException.getMessage());
+		}
+	}
+	
+	/**
+	 * Method to log update details for audit purpose.
+	 * @param oldKey - Key for exisitng Provider/CRC ids
+	 * @param newKey - Key for new Provider/CRC ids
+	 * @param oldIds - Set of existing Provider/CRC ids
+	 * @param newIds - Set of new Provider/CRC ids
+	 * @param patientId - patientId from OPEN
+	 * @param auditEvntType - AuditEventType enum
+	 */
+	private void raiseUpdateParticipantAuditEvent(String oldKey, String newKey, Set<Long> oldIds, Set<Long> newIds, String patientId, String auditEvntType) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put("PatientId", patientId);
+		final AtomicInteger counter = new AtomicInteger(1);
+		oldIds.forEach(id->{
+			auditDetail.put(oldKey+counter, Long.toString(id));
+			counter.getAndAdd(1);
+		});
+		
+		final AtomicInteger counter2 = new AtomicInteger(1);
+		newIds.forEach(id->{
+			auditDetail.put(newKey+counter, Long.toString(id));
+			counter2.getAndAdd(1);
+		});
+		String auditDetailString;
+		try {
+			auditDetailString = mapper.writeValueAsString(auditDetail);
+			auditService.logAuditEvent(auditDetailString, auditEvntType);
+		}  catch (JsonProcessingException jsonProsException) {
+			logger.log(Level.WARNING, jsonProsException.getMessage());
+		}
+	}	
+	
+	/**
+	 * Utility Method to extract existing ProviderIds that will be replaced with new ProviderIds
+	 * @param a - List of existing ProviderIds
+	 * @param b - List of new ProviderIds
+	 * @return map of existing and new ids that replaced the existing ones.
+	 */
+	private Map<String, Set<Long>> findDifferenceInProviders(Set<Long> a, Set<Long> b) {
+		Set<Long> newDataSet = new HashSet<Long>();
+	    Set<Long> result = new HashSet<Long>(a);
+	    for (Long element : b) {
+	        // .add() returns false if element already exists
+	        if (!result.add(element)) {
+	            result.remove(element);
+	        }else {
+	        	newDataSet.add(element);
+	        }
+	    }
+	    result.removeAll(newDataSet);
+	    Map<String, Set<Long>> mapOfPrviders = new HashMap<>();
+	    mapOfPrviders.put("NewProviders", newDataSet);
+	    mapOfPrviders.put("ExistingProviders", result);
+	    return mapOfPrviders;
+	}
+	
+	/**
+	 * Method to convert a Set of Providers into a Set of Long
+	 * @param providerSet - Set of providers
+	 * @return a Set of Long openCtepIds
+	 */
+	private Set<Long> getProviderIds(Set<Provider> providerSet) {
+		Set<Long> providerIds = new HashSet<Long>();
+		providerSet.forEach(provider -> {
+			providerIds.add(provider.getOpenCtepID());
+		});
+		
+		return providerIds;
 	}
 }
