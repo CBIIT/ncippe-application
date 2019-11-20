@@ -228,4 +228,11 @@ public interface UserService {
 	 * @return List of Users that were inserted into PPE DB
 	 */
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO);
+
+	/**
+	 * Update an existing patient with details fetched from OPEN 
+	 * @param existingPatient - Existing Patient in PPE
+	 * @return an optional User.
+	 */
+	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient);
 }
