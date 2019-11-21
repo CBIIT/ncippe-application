@@ -143,6 +143,21 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 	}
 
+	@Override
+	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName) {
+		String replaceStringWith[] = { firstName };
+		String replaceThisString[] = { "%{SalutationFirstName}" };
+
+		String htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody();
+		String subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}
+
 	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat) {
 
 		if (emailServiceConfig.getUseAWSSES()) {
@@ -200,4 +215,5 @@ public class EmailLogServiceImpl implements EmailLogService {
 		return emailStatus;
 
 	}
+
 }

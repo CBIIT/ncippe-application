@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public interface EmailLogService {
-	
+
 	/**
 	 * Method to send an email after participant's biomarker report is uploaded.
 	 * 
@@ -20,7 +20,8 @@ public interface EmailLogService {
 	 * @param htmlBody       - The text for the body (in HTML format) of the email
 	 * @param textBody       - The text for the body of the email
 	 */
-	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patienttName,String senderEmail,String subject, String htmlBody, String textBody);
+	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patienttName,
+			String senderEmail, String subject, String htmlBody, String textBody);
 
 	/**
 	 * Method to send an email to users of the portal
@@ -32,7 +33,7 @@ public interface EmailLogService {
 	 * @param textBody       - The text for the body of the email
 	 * 
 	 * @return Email Status if the email was sent out successfully
-	 */	
+	 */
 	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody,
 			String textBody);
 
@@ -53,7 +54,7 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToProviderOnPatientInvitation(String recipientEmail, String providerFirstName);
-	
+
 	/**
 	 * Method to send an Invitation email to HCP, CRC, BSSC and Admins
 	 * 
@@ -62,5 +63,7 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName);
+
+	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName);
 
 }
