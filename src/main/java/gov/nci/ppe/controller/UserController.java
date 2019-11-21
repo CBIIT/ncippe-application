@@ -2,10 +2,8 @@ package gov.nci.ppe.controller;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,7 +48,6 @@ import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
-import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.JWTManagementService;
@@ -135,22 +132,34 @@ public class UserController {
 	 * @return a JWT Token
 	 * @throws JsonProcessingException
 	 */
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "User logged in successfully"),
+			@ApiResponse(code = 409, message = "User has already been activated with a different UUID."),
+			@ApiResponse(code = 404, message = "User not found") })
 	@PostMapping(value = "/api/v1/login")
 	public ResponseEntity<String> login(@RequestParam(value = "uuid", required = true) String uuid,
-			@RequestParam(value = "email", required = false) String email) throws JsonProcessingException {
+			@RequestParam(value = "email", required = true) String email) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		List<String> accountStatusList = new ArrayList<String>();
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
 		if (userOptional.isEmpty()) {
-			return ResponseEntity.notFound().headers(httpHeaders).build();
+			userOptional = userService.activateUser(email, uuid);
+
+			if (!userOptional.isPresent()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+			}
+
+			User user = userOptional.get();
+			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(USER_UUID_ALREADY_USED_MSG);
+			}
 		}
 
 		User user = userOptional.get();
 
 		String jwt = jwtMgmtService.createJWT(user);
-		raiseLoginAuditEvent(uuid, email);
+		// raiseLoginAuditEvent(uuid, email);
 		ObjectNode responseJsonWithToken = mapper.createObjectNode();
 		responseJsonWithToken.put("token", jwt);
 		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
@@ -174,7 +183,7 @@ public class UserController {
 	}
 
 	/**
-	 * This method will generate the JSON response based on the user. v
+	 * This method will generate the JSON response based on the user.
 	 * 
 	 * @param userUUID - Unique Id for the User
 	 * @return a JSON Response
@@ -230,33 +239,6 @@ public class UserController {
 
 		User user = userOptional.get();
 		String jsonFormat = convertUserToJSON(user);
-
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
-	}
-
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "User has been activated"),
-			@ApiResponse(code = 401, message = "Bearer token is missing or expired."),
-			@ApiResponse(code = 409, message = "User has already been activated with a different UUID."),
-			@ApiResponse(code = 404, message = "User not found") })
-	@PatchMapping(value = "/api/v1/activate-user")
-	public ResponseEntity<String> activateUser(HttpServletRequest request,
-			@RequestParam(value = "email", required = true) String userEmail,
-			@RequestParam(value = "uuid", required = true) String userUUID) throws JsonProcessingException {
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		Optional<User> userOptional = userService.activateUser(userEmail, userUUID);
-
-		if (!userOptional.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
-		}
-
-		User user = userOptional.get();
-		if (!user.getUserUUID().equalsIgnoreCase(userUUID)) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(USER_UUID_ALREADY_USED_MSG);
-		}
-		List<User> userList = new ArrayList<>();
-		userList.add(user);
-		String jsonFormat = convertUsersToJSON(userList);
 
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
