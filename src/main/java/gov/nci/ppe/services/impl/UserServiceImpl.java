@@ -1,5 +1,6 @@
 package gov.nci.ppe.services.impl;
 
+
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
+import gov.nci.ppe.util.TimeUtil;
 
 /**
  * This is a Service class that orchestrates all the calls to entities and
@@ -139,7 +141,7 @@ public class UserServiceImpl implements UserService{
 		user.setAllowEmailNotification(userEmailNotification);
 		user.setPhoneNumber(phoneNumber);
 		user.setLastRevisedUser(user.getUserId());
-		user.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		user.setLastRevisedDate(TimeUtil.now());
 		User updateUser = userRepository.save(user);
 
 		return Optional.of(updateUser);
@@ -187,6 +189,11 @@ public class UserServiceImpl implements UserService{
 			if (StringUtils.isBlank(user.getUserUUID())) {
 				// Fill in the user's UUID and save.
 				user.setUserUUID(userUUID);
+				Timestamp currentTime = TimeUtil.now();
+				user.setDateActivated(currentTime);
+				user.setLastRevisedDate(currentTime);
+				user.setLastRevisedUser(user.getUserId());
+				user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
 				user = userRepository.save(user);
 				optionalUser = Optional.of(user);
 			}
@@ -259,7 +266,7 @@ public class UserServiceImpl implements UserService{
 		user.setPortalAccountStatus(portalAccountStatusCode);
 		user.setLastRevisedUser(user.getUserId());
 		user.setAllowEmailNotification(false);
-		user.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		user.setLastRevisedDate(TimeUtil.now());
 		User updateUser = userRepository.save(user);
 		return Optional.of(updateUser);
 	}
@@ -269,7 +276,7 @@ public class UserServiceImpl implements UserService{
 	 */
 	@Override
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList) {
-		Timestamp qsAnsInsertionTime = new Timestamp(System.currentTimeMillis());
+		Timestamp qsAnsInsertionTime = TimeUtil.now();
 		qsAnsList.forEach(qs -> {
 			qs.setDateAnswered(qsAnsInsertionTime);
 		});
@@ -286,7 +293,7 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public Optional<User> authorizeUser(String email, String uuid) {
 		boolean userUpdatedFlag = false;
-		Timestamp updatedTime = new Timestamp(System.currentTimeMillis());
+		Timestamp updatedTime = TimeUtil.now();
 		Optional<User> userOptional = findByUuid(uuid);
 		if (userOptional.isEmpty()) {
 			// No uuid match. Could be a first time user. Search by email.
@@ -424,7 +431,7 @@ public class UserServiceImpl implements UserService{
 	 */
 	@Override
 	public Optional<User> updateUser(User user) {
-		user.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		user.setLastRevisedDate(TimeUtil.now());
 		return Optional.of(userRepository.save(user));
 	}
 
@@ -508,7 +515,7 @@ public class UserServiceImpl implements UserService{
 		Optional<User> crcOptional = findByUuid(uuid);
 		if (crcOptional.isPresent()) {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
-			participant.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+			participant.setLastRevisedDate(TimeUtil.now());
 		}
 
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
@@ -555,8 +562,8 @@ public class UserServiceImpl implements UserService{
 		newPatient.setPortalAccountStatus(portalAccountStatusCode);	
 		newPatient.setAllowEmailNotification(true);
 		newPatient.setIsActiveBiobankParticipant(true);
-		newPatient.setDateCreated(new Timestamp(System.currentTimeMillis()));
-		newPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		newPatient.setDateCreated(TimeUtil.now());
+		newPatient.setLastRevisedDate(TimeUtil.now());
 		Optional<User> patientOptional =  Optional.of(userRepository.save(newPatient));
 		if(null != newPatient.getCRC()){
 		
@@ -576,7 +583,7 @@ public class UserServiceImpl implements UserService{
 	 */
 	@Override
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider){
-		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+		Timestamp currentTimestamp = TimeUtil.now();
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_PROVIDER.getRoleName());
 		provider.setRole(role);
 		Code userType =  codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
@@ -606,7 +613,7 @@ public class UserServiceImpl implements UserService{
 	 */
 	@Override
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc){
-		Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+		Timestamp currentTimestamp = TimeUtil.now();
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_CRC.getRoleName());
 		crc.setRole(role);
 		Code userType =  codeRepository.findByCodeName(UserType.PPE_CRC.name());
@@ -650,7 +657,7 @@ public class UserServiceImpl implements UserService{
 					providerSet.add((Provider)insertNewProviderDetailsFromOpen(treatingProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 				}else {
-					providerSet.add((Provider)treatingProviderOptional.get());
+					providerSet.add(treatingProviderOptional.get());
 				}
 			}
 			/* A patient can have upto 2 providers simultaneously */
@@ -662,7 +669,7 @@ public class UserServiceImpl implements UserService{
 					providerSet.add((Provider)insertNewProviderDetailsFromOpen(creditProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()), AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
 				}else {
-					providerSet.add((Provider)creditProviderOptional.get());
+					providerSet.add(creditProviderOptional.get());
 				}
 			}
 			CRC crc = null;
@@ -767,7 +774,7 @@ public class UserServiceImpl implements UserService{
 	 */
 	@Override
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient) {
-		existingPatient.setLastRevisedDate(new Timestamp(System.currentTimeMillis()));
+		existingPatient.setLastRevisedDate(TimeUtil.now());
 		return  Optional.of(userRepository.save(existingPatient));
 	}
 	
