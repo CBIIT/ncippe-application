@@ -588,7 +588,7 @@ public class UserServiceImpl implements UserService{
 		provider.setRole(role);
 		Code userType =  codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
 		provider.setUserType(userType);
-		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
 		provider.setPortalAccountStatus(portalAccountStatusCode);
 		provider.setAllowEmailNotification(true);
 		provider.setDateCreated(currentTimestamp);
@@ -618,7 +618,7 @@ public class UserServiceImpl implements UserService{
 		crc.setRole(role);
 		Code userType =  codeRepository.findByCodeName(UserType.PPE_CRC.name());
 		crc.setUserType(userType);
-		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
+		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
 		crc.setPortalAccountStatus(portalAccountStatusCode);
 		crc.setAllowEmailNotification(true);
 		crc.setDateCreated(currentTimestamp);
