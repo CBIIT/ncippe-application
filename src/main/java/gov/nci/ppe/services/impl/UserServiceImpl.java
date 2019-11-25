@@ -570,7 +570,7 @@ public class UserServiceImpl implements UserService {
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
-					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.CR) + LocalDate.now(),
+					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.SPACE).concat(StringUtils.LF).concat(LocalDate.now().toString()),
 					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
