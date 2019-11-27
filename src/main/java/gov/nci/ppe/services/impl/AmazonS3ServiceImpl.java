@@ -34,10 +34,6 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
-
-import gov.nci.ppe.configurations.EmailServiceConfig;
-import gov.nci.ppe.configurations.NotificationServiceConfig;
-
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
@@ -46,6 +42,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
+import gov.nci.ppe.configurations.EmailServiceConfig;
+import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
@@ -93,7 +91,6 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 	@Value("${patient.report.bucket.name}")
 	private String applicationDataBucket;
-
 
 	public AmazonS3ServiceImpl() {
 		amazonS3Client = AmazonS3ClientBuilder.defaultClient();
@@ -291,7 +288,6 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			String originalFileName, String uploadedFileType) throws ApiException {
 		putObjectOnS3(applicationDataBucket, inputStream, s3DestinationFolderKey, contentLength, contentType,
 				accessControl);
-		Map<String, String> emailIds = getEmailIds(patient, uploadedFileType);
 
 		// If the file been uploaded is a test report and the user has opted for email
 		// notification, then send a confirmation email to the Admin/User uploading the
@@ -303,7 +299,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		}
 
 		String fileSource = "Mocha";
-		sendEmailAfterFileUpload(emailIds, patient.getFullName(), uploadedFileType);
+		sendEmailAfterFileUpload(patient, uploadedFileType);
 
 		URL newUrl = getResourceUrl(applicationDataBucket, s3DestinationFolderKey);
 		try {
@@ -369,22 +365,22 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * @param emailIds        - list of emailIds to mail to
 	 * @param patientFullName - Full Name of the Patient (FirstName LastName)
 	 * @param actionFor       - File type Uploaded
+	 * @param patientId
 	 */
-	private void sendEmailAfterFileUpload(Map<String, String> emailIds, String patientFullName, String actionFor) {
+	private void sendEmailAfterFileUpload(Participant patient, String actionFor) {
 		if (StringUtils.isNotBlank(actionFor)
-				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)) {
-			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailAfterUploadingReport(name, emailId, patientFullName,
-						emailServiceConfig.getSenderEmailAddress(), emailServiceConfig.getEmailSubjectForEConsent(),
-						emailServiceConfig.getEmailBodyInHtmlFormatForEConsent(),
-						emailServiceConfig.getEmailBodyInTextFormatForEConsent());
-			});
+				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)
+				&& patient.getAllowEmailNotification()) {
+			// Send email to Patient only
+			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName());
+
 		} else {
+			Map<String, String> emailIds = getEmailIds(patient);
 			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailAfterUploadingReport(name, emailId, patientFullName,
+				emailLogService.sendEmailAfterUploadingReport(name, emailId, patient.getFullName(),
 						emailServiceConfig.getSenderEmailAddress(), emailServiceConfig.getEmailUploadFileSubject(),
 						emailServiceConfig.getEmailUploadFileHTMLBody(),
-						emailServiceConfig.getEmailUploadFileTextBody());
+						emailServiceConfig.getEmailUploadFileTextBody(), patient.getPatientId());
 			});
 		}
 	}
@@ -398,16 +394,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * @param uploadedFileType - For the type of report for which the email is being
 	 *                         sent.
 	 */
-	private Map<String, String> getEmailIds(Participant patient, String uploadedFileType) {
+	private Map<String, String> getEmailIds(Participant patient) {
 		Map<String, String> emailIds = new HashMap<String, String>();
-		if (patient.getAllowEmailNotification()) {
-			emailIds.put(patient.getFirstName(), patient.getEmail()); // email for patients
-		}
-		/* eConsent details are only sent to Patients */
-		if (StringUtils.isNotBlank(uploadedFileType)
-				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(uploadedFileType)) {
-			return emailIds;
-		}
+
 		Set<Provider> providers = patient.getProviders();
 		providers.forEach(provider -> {
 			if (provider.getAllowEmailNotification()) {
