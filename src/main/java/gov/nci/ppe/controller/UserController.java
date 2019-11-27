@@ -85,9 +85,9 @@ public class UserController {
 
 	@Autowired
 	private AuditService auditService;
-	
+
 	@Autowired
-	private  JWTManagementService jwtMgmtService;
+	private JWTManagementService jwtMgmtService;
 
 	private final String AUTHORIZATION = "Authorization";
 	private final String SUCCESS = "Success";
@@ -159,7 +159,7 @@ public class UserController {
 		User user = userOptional.get();
 
 		String jwt = jwtMgmtService.createJWT(user);
-		// raiseLoginAuditEvent(uuid, email);
+		raiseLoginAuditEvent(uuid, email);
 		ObjectNode responseJsonWithToken = mapper.createObjectNode();
 		responseJsonWithToken.put("token", jwt);
 		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
@@ -268,12 +268,6 @@ public class UserController {
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
 		String jsonFormat = convertUserToJSON(userOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
-	}
-
-	@PatchMapping(value = "/api/v1/user/{userUUID}")
-	public ResponseEntity<Void> changeEmail(@PathVariable String userUUID,
-			@RequestParam(value = "email", required = false) String newEmail) {
-		return null;
 	}
 
 	/**
@@ -403,21 +397,22 @@ public class UserController {
 		String jsonFormat = convertUserToJSON(participantOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
-	
+
 	/**
-	 * This method will insert new patient, provider and CRC details into PPE Database if it doesn't exists.
-	 * The data will be fetched from OPEN.
+	 * This method will insert new patient, provider and CRC details into PPE
+	 * Database if it doesn't exists. The data will be fetched from OPEN.
+	 * 
 	 * @param openResponseDTO - Patient, Provider and CRC details in JSON Format.
-	 * @return -  HTTP Response with appropriate message.
+	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
 	@PostMapping(value = "/api/v1/user/insert-open-data")
 	public ResponseEntity<String> insertDataFromOpen(
-			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO) 
-					throws JsonProcessingException {
+			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
+			throws JsonProcessingException {
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
-		
+
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String jsonFormat = convertUsersToJSON(newUsersList);
@@ -476,7 +471,14 @@ public class UserController {
 		switch (roleName) {
 		case ROLE_PPE_PROVIDER:
 			Provider provider = (Provider) usr;
-			userDTO = dozerBeanMapper.map(provider, ProviderDTO.class);
+			ProviderDTO providerDTO = dozerBeanMapper.map(provider, ProviderDTO.class);
+
+			// Special case for providers, filter out associated patients who have not been
+			// initiated.
+			providerDTO.getPatients().removeIf(
+					patient -> patient.getPortalAccountStatus().equalsIgnoreCase(PortalAccountStatus.ACCT_NEW.name()));
+
+			userDTO = providerDTO;
 			break;
 
 		case ROLE_PPE_PARTICIPANT:
@@ -495,7 +497,6 @@ public class UserController {
 		return userDTO;
 
 	}
-
 
 	private void raiseLoginAuditEvent(String uuid, String email) throws JsonProcessingException {
 		ObjectNode auditDetail = mapper.createObjectNode();
@@ -518,28 +519,20 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String authToken = request.getHeader(AUTHORIZATION);
-		System.out.println("TOKEN #########"+authToken);
+		logger.finest("TOKEN #########" + authToken);
 		if (StringUtils.isEmpty(authToken) || (StringUtils.isNotEmpty(verifyToken(authToken))
 				&& !verifyToken(authToken).equalsIgnoreCase(SUCCESS))) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(TOKEN_ERROR_MSG);
 		}
 
-		// Fetch only those users who are in ACTIVE or INITIATE status
-		List<String> validAccountStatusList = new ArrayList<>();
-		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
-		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
-		validAccountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
-		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_LOGIN_GOV.name());
-		validAccountStatusList.add(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
-
 		Optional<User> userOptional = null;
 		if (StringUtils.isNotBlank(uuid)) {
-			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, validAccountStatusList);
+			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());
 		} else if (StringUtils.isNotBlank(email)) {
-			userOptional = userService.findByEmailAndPortalAccountStatus(email, validAccountStatusList);
+			userOptional = userService.findByEmailAndPortalAccountStatus(email, PortalAccountStatus.names());
 
 		} else if (StringUtils.isNotBlank(patientId)) {
-			userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, validAccountStatusList);
+			userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names());
 		} else {
 			return ResponseEntity.badRequest().build();
 		}
