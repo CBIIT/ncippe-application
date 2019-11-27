@@ -349,6 +349,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 						patient.getFullName(), patient.getPatientId());
 			});
 		} else {
+			notificationService.addNotification(
+					notificationServiceConfig.getUploadTestReportPatientNotificationMessageFrom(),
+					notificationServiceConfig.getUploadTestReportPatientNotificationTitle(),
+					notificationServiceConfig.getUploadTestReportPatientNotificationMessage(), patient.getUserId(),
+					patient.getFirstName(), patient.getFullName(), patient.getPatientId());
 			userDetailMap.forEach((userId, userName) -> {
 				notificationService.addNotification(
 						notificationServiceConfig.getUploadTestReportNotificationMessageFrom(),
@@ -425,10 +430,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 */
 	private Map<Long, String> getUserIdAndFirstName(Participant patient, String uploadedFileType) {
 		Map<Long, String> userDetailMap = new HashMap<Long, String>();
-		userDetailMap.put(patient.getUserId(), patient.getFirstName());
+
 		/* eConsent details are only sent to Patients */
 		if (StringUtils.isNotBlank(uploadedFileType)
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(uploadedFileType)) {
+			userDetailMap.put(patient.getUserId(), patient.getFirstName());
 			return userDetailMap;
 		}
 		Set<Provider> providers = patient.getProviders();
