@@ -5,52 +5,54 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 /**
- * This is a configuration class that fetches all the required values from  NotificationService.properties in the classpath.
+ * This is a configuration class that fetches all the required values from
+ * NotificationService.properties in the classpath.
+ * 
  * @author PublicisSapient
- * @version 1.0 
- * @since   2019-08-15
+ * @version 1.0
+ * @since 2019-08-15
  */
 
 @Configuration
 @PropertySource("classpath:NotificationService.properties")
 public class NotificationServiceConfig {
-	
+
 	@Value("${biomark.test.result.upload}")
 	private String uploadTestReportNotificationMessage;
 
 	@Value("${biomark.test.result.upload.from}")
 	private String uploadTestReportNotificationMessageFrom;
-	
+
 	@Value("${biomark.test.result.upload.title}")
 	private String uploadTestReportNotificationMessageSubject;
-	
+
 	@Value("${eConsent.form.uploaded.notification.message}")
 	private String uploadEConsentFormNotificationMessage;
-	
+
 	@Value("${eConsent.form.uploaded.notification.from}")
 	private String uploadEConsentFormNotificationFrom;
-	
+
 	@Value("${eConsent.form.uploaded.notification.title}")
 	private String uploadEConsentFormNotificationSubject;
-	
+
 	@Value("${participant.withdraws.program.title}")
 	private String participantWithdrawsSelfSubject;
-	
+
 	@Value("${participant.withdraws.program.message}")
 	private String participantWithdrawsSelfMessage;
-	
+
 	@Value("${participant.withdraws.program.from}")
 	private String participantWithdrawsSelfFrom;
-	
+
 	@Value("${crc.withdraws.participant.program.title}")
 	private String participantWithdrawnByCRCSubject;
-	
+
 	@Value("${crc.withdraws.participant.program.from}")
 	private String participantWithdrawnByCRCFrom;
-	
+
 	@Value("${crc.withdraws.participant.program.message}")
 	private String participantWithdrawnByCRCMessage;
-	
+
 	@Value("${patient.receives.invitation.title}")
 	private String patientReceivesInvitationTitle;
 
@@ -59,15 +61,24 @@ public class NotificationServiceConfig {
 
 	@Value("${patient.receives.invitation.message}")
 	private String patientReceivesInvitationMessage;
-	
+
 	@Value("${patient.added.from.open.title}")
 	private String patientAddedFromOpenTitle;
-	
+
 	@Value("${patient.added.from.open.from}")
 	private String patientAddedFromOpenFrom;
-	
+
 	@Value("${patient.added.from.open.message}")
 	private String patientAddedFromOpenMessage;
+
+	@Value("${biomark.test.result.upload.patient.message}")
+	private String uploadTestReportPatientNotificationMessage;
+
+	@Value("${biomark.test.result.upload.patient.title}")
+	private String uploadTestReportPatientNotificationTitle;
+
+	@Value("${biomark.test.result.upload.patient.from}")
+	private String uploadTestReportPatientNotificationFrom;
 
 	public String getUploadTestReportNotificationMessage() {
 		return uploadTestReportNotificationMessage;
@@ -175,6 +186,18 @@ public class NotificationServiceConfig {
 	 */
 	public String getPatientAddedFromOpenMessage() {
 		return patientAddedFromOpenMessage;
+	}
+
+	public String getUploadTestReportPatientNotificationMessage() {
+		return uploadTestReportPatientNotificationMessage;
+	}
+
+	public String getUploadTestReportPatientNotificationTitle() {
+		return uploadTestReportPatientNotificationTitle;
+	}
+
+	public String getUploadTestReportPatientNotificationMessageFrom() {
+		return uploadTestReportPatientNotificationFrom;
 	}
 
 }
