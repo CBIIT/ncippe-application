@@ -19,9 +19,10 @@ public interface EmailLogService {
 	 * @param subject        - Subject for the email
 	 * @param htmlBody       - The text for the body (in HTML format) of the email
 	 * @param textBody       - The text for the body of the email
+	 * @param patientId      - The unique Patient Id
 	 */
 	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patienttName,
-			String senderEmail, String subject, String htmlBody, String textBody);
+			String senderEmail, String subject, String htmlBody, String textBody, String patientId);
 
 	/**
 	 * Method to send an email to users of the portal
@@ -47,7 +48,7 @@ public interface EmailLogService {
 	public String sendEmailToInvitePatient(String recipientEmail, String patientFirstName);
 
 	/**
-	 * Method to send an Invitation email to Patient
+	 * Method to send a Notification email to Provider when their Patient is invited
 	 * 
 	 * @param recipientEmail    - Recipient's email address
 	 * @param providerFirstName - Recipient's first name
@@ -64,6 +65,32 @@ public interface EmailLogService {
 	 */
 	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName);
 
+	/**
+	 * Method to send Email to associated CRC when a patient is imported from OPEN
+	 * 
+	 * @param recipientEmail - Recipient's email address
+	 * @param firstName      - Recipient's first name
+	 * @return Email Status if the email was sent out successfully
+	 */
 	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName);
+
+	/**
+	 * Method to send an email to participant after their biomarker report is
+	 * uploaded.
+	 * 
+	 * @param recipientEmail - Recipient's email address
+	 * @param userFirstName  - Recipient's first name
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToPatientAfterUploadingReport(String recipientEmail, String userFirstName);
+
+	/**
+	 * Method to send Email to patient when eConsent form is uploaded
+	 * 
+	 * @param recipientEmail - Recipient's email address
+	 * @param firstName      - Recipient's first name
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToPatientAfterUploadingEconsent(String recipientEmail, String firstName);
 
 }
