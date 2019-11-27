@@ -23,9 +23,12 @@ public class EmailServiceConfig {
 	@Value("${email.use.aws}")
 	private boolean useAWSSES;
 
+	@Value("${email.common.signature}")
+	private String commonSignature;
+
 	/*
-	 * The below properties are related to the action - upload test report for
-	 * participant
+	 * The below properties are related to the action - upload test report for CRC
+	 * and Provider
 	 */
 	@Value("${email.uploadFile.subject}")
 	private String emailUploadFileSubject;
@@ -35,10 +38,19 @@ public class EmailServiceConfig {
 
 	@Value("${email.uploadFile.htmlBody}")
 	private String emailUploadFileHTMLBody;
+
 	/*
-	 * The above properties are related to the action - upload test report for
+	 * The below properties are related to the action - upload test report for
 	 * participant
 	 */
+	@Value("${email.uploadReport.patient.subject}")
+	private String emailUploadReportPatientSubject;
+
+	@Value("${email.uploadReport.patient.textBody}")
+	private String emailUploadReportPatientTextBody;
+
+	@Value("${email.uploadReport.patient.htmlBody}")
+	private String emailUploadReportPatientHTMLBody;
 
 	/*
 	 * The below properties are related to the action - upload eConsent Form for
@@ -318,4 +330,21 @@ public class EmailServiceConfig {
 	public boolean getUseAWSSES() {
 		return useAWSSES;
 	}
+
+	public String getEmailUploadReportPatientSubject() {
+		return emailUploadReportPatientSubject;
+	}
+
+	public String getEmailUploadReportPatientTextBody() {
+		return emailUploadReportPatientTextBody;
+	}
+
+	public String getEmailUploadReportPatientHTMLBody() {
+		return emailUploadReportPatientHTMLBody;
+	}
+
+	public String getCommonSignature() {
+		return commonSignature;
+	}
+
 }

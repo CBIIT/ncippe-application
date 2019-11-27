@@ -74,13 +74,16 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * @param patientId
 	 */
 	@Override
 	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patientName,
-			String senderEmail, String subject, String htmlBody, String textBody) {
-		String replaceStringWith[] = { userFirstName, patientName };
-		String replaceThisString[] = { "%{FirstName}", "%{PatientName}" };
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+			String senderEmail, String subject, String htmlBody, String textBody, String patientId) {
+		String replaceStringWith[] = { userFirstName, patientName, patientId };
+		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
+		String signature = emailServiceConfig.getCommonSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
@@ -159,6 +162,15 @@ public class EmailLogServiceImpl implements EmailLogService {
 	}
 
 	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat) {
+		return sendEmail(recipientEmail, subject, messageBody, isHtmlFormat, null);
+	}
+
+	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat,
+			String signature) {
+		// If there is a signature, append to the message body
+		if (StringUtils.isNotBlank(signature)) {
+			messageBody = messageBody + signature;
+		}
 
 		if (emailServiceConfig.getUseAWSSES()) {
 			try {
@@ -214,6 +226,45 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToPatientAfterUploadingReport(String recipientEmail, String userFirstName) {
+		String replaceStringWith[] = { userFirstName };
+		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String htmlBody = emailServiceConfig.getEmailUploadReportPatientHTMLBody();
+		String signature = emailServiceConfig.getCommonSignature();
+		String subject = emailServiceConfig.getEmailUploadReportPatientSubject();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true, signature);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToPatientAfterUploadingEconsent(String recipientEmail, String firstName) {
+		String replaceStringWith[] = { firstName };
+		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String htmlBody = emailServiceConfig.getEmailBodyInHtmlFormatForEConsent();
+		String subject = emailServiceConfig.getEmailSubjectForEConsent();
+		String signature = emailServiceConfig.getCommonSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
+
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
 	}
 
 }
