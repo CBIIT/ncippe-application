@@ -81,7 +81,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patientName,
 			String senderEmail, String subject, String htmlBody, String textBody, String patientId) {
 		String replaceStringWith[] = { userFirstName, patientName, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{PatientName}, %{PatientId}" };
+		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
 		String signature = emailServiceConfig.getCommonSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);

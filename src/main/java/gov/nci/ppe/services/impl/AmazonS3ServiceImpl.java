@@ -375,6 +375,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName());
 
 		} else {
+			if (patient.getAllowEmailNotification()) {
+				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName());
+			}
 			Map<String, String> emailIds = getEmailIds(patient);
 			emailIds.forEach((name, emailId) -> {
 				emailLogService.sendEmailAfterUploadingReport(name, emailId, patient.getFullName(),
@@ -382,6 +385,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 						emailServiceConfig.getEmailUploadFileHTMLBody(),
 						emailServiceConfig.getEmailUploadFileTextBody(), patient.getPatientId());
 			});
+
 		}
 	}
 
