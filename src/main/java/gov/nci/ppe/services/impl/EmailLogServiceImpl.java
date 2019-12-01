@@ -113,7 +113,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { patientFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
-		String htmlBody = emailServiceConfig.getEmailHtmlBodyForPatientInvite();
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForPatientInvite()
+				+ emailServiceConfig.getCommonSignature();
 		String subject = emailServiceConfig.getEmailSubjectForPatientInvite();
 		String textBody = emailServiceConfig.getEmailTextBodyForPatientInvite();
 
