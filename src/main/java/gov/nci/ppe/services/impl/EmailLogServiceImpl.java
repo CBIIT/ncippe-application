@@ -82,7 +82,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 			String senderEmail, String subject, String htmlBody, String textBody, String patientId) {
 		String replaceStringWith[] = { userFirstName, patientName, patientId };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
-		String signature = emailServiceConfig.getCommonSignature();
+		String signature = emailServiceConfig.getJoiningSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
@@ -114,7 +114,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
 		String htmlBody = emailServiceConfig.getEmailHtmlBodyForPatientInvite()
-				+ emailServiceConfig.getCommonSignature();
+				+ emailServiceConfig.getJoiningSignature();
 		String subject = emailServiceConfig.getEmailSubjectForPatientInvite();
 		String textBody = emailServiceConfig.getEmailTextBodyForPatientInvite();
 
@@ -136,7 +136,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { providerFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
-		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite();
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite()
+				+ emailServiceConfig.getCommonSignature();
 		String subject = emailServiceConfig.getEmailSubjectForProviderPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -237,7 +238,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { userFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailUploadReportPatientHTMLBody();
-		String signature = emailServiceConfig.getCommonSignature();
+		String signature = emailServiceConfig.getJoiningSignature();
 		String subject = emailServiceConfig.getEmailUploadReportPatientSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
@@ -258,7 +259,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailBodyInHtmlFormatForEConsent();
 		String subject = emailServiceConfig.getEmailSubjectForEConsent();
-		String signature = emailServiceConfig.getCommonSignature();
+		String signature = emailServiceConfig.getJoiningSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);

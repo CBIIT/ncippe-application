@@ -26,6 +26,9 @@ public class EmailServiceConfig {
 	@Value("${email.common.signature}")
 	private String commonSignature;
 
+	@Value("${email.joining.signature}")
+	private String joiningSignature;
+
 	/*
 	 * The below properties are related to the action - upload test report for CRC
 	 * and Provider
@@ -345,6 +348,10 @@ public class EmailServiceConfig {
 
 	public String getCommonSignature() {
 		return commonSignature;
+	}
+
+	public String getJoiningSignature() {
+		return joiningSignature;
 	}
 
 }
