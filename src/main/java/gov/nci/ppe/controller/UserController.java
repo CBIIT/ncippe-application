@@ -142,6 +142,10 @@ public class UserController {
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		List<String> accountStatusList = new ArrayList<String>();
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
+
+		uuid = StringUtils.stripToEmpty(uuid);
+		email = StringUtils.stripToEmpty(email);
+
 		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
 		if (userOptional.isEmpty()) {
 			userOptional = userService.activateUser(email, uuid);
@@ -194,6 +198,7 @@ public class UserController {
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
 			throws JsonProcessingException {
+		userUUID = StringUtils.stripToEmpty(userUUID);
 		return fetchUser(request, userUUID, null, null);
 	}
 
@@ -204,6 +209,9 @@ public class UserController {
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
 			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId)
 			throws JsonProcessingException {
+		userUUID = StringUtils.stripToEmpty(userUUID);
+		email = StringUtils.stripToEmpty(email);
+		patientId = StringUtils.stripToEmpty(patientId);
 		return fetchUser(request, userUUID, email, patientId);
 	}
 
@@ -232,6 +240,10 @@ public class UserController {
 				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
+
+		userGUID = StringUtils.stripToEmpty(userGUID);
+		phoneNumber = StringUtils.stripToEmpty(phoneNumber);
+
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber);
 		if (!userOptional.isPresent()) {
 			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NO_CONTENT);
@@ -265,6 +277,9 @@ public class UserController {
 				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
+
+		userUUID = StringUtils.stripToEmpty(userUUID);
+
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
 		String jsonFormat = convertUserToJSON(userOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
@@ -284,6 +299,9 @@ public class UserController {
 			@ApiParam(value = "The UUID for the patient", required = true) @RequestParam String uuid,
 			@ApiParam(value = "The email used by the user to login to Login.gov", required = true) @RequestParam String email)
 			throws JsonProcessingException {
+
+		uuid = StringUtils.stripToEmpty(uuid);
+		email = StringUtils.stripToEmpty(email);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
@@ -331,6 +349,10 @@ public class UserController {
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
 			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO)
 			throws JsonProcessingException {
+
+		patientId = StringUtils.stripToEmpty(patientId);
+		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
+
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
@@ -389,6 +411,13 @@ public class UserController {
 				|| (StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS"))) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
+
+		patientId = StringUtils.stripToEmpty(patientId);
+		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
+		firstName = StringUtils.stripToEmpty(firstName);
+		lastName = StringUtils.stripToEmpty(lastName);
+		emailId = StringUtils.stripToEmpty(emailId);
+
 		Optional<User> participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId,
 				firstName, lastName);
 		if (participantOptional.isEmpty()) {
