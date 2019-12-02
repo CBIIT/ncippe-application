@@ -1,6 +1,8 @@
 package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -26,6 +28,7 @@ import com.amazonaws.services.simpleemail.model.SendEmailResult;
 import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.data.entity.EmailLog;
+import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.repository.EmailLogRepository;
 import gov.nci.ppe.services.EmailLogService;
 
@@ -70,26 +73,6 @@ public class EmailLogServiceImpl implements EmailLogService {
 		emailLog.setEmailBody(emailBody);
 		emailLog.setEmailRequestedOn(new Timestamp(System.currentTimeMillis()));
 		return this.emailLogRepository.save(emailLog);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @param patientId
-	 */
-	@Override
-	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patientName,
-			String senderEmail, String subject, String htmlBody, String textBody, String patientId) {
-		String replaceStringWith[] = { userFirstName, patientName, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
-		String signature = emailServiceConfig.getJoiningSignature();
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
-		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
 	}
 
 	/**
@@ -227,7 +210,26 @@ public class EmailLogServiceImpl implements EmailLogService {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
 		return emailStatus;
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName,
+			String recipientEmail, String patientFullName, String patientId) {
+		String replaceStringWith[] = { salutationFirstName, patientFullName, patientId };
+		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
+		String subject = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject();
+		String htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody()
+				+ emailServiceConfig.getCommonSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
 	}
 
 	/**
@@ -238,7 +240,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { userFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailUploadReportPatientHTMLBody();
-		String signature = emailServiceConfig.getJoiningSignature();
+		String signature = emailServiceConfig.getCommonSignature();
 		String subject = emailServiceConfig.getEmailUploadReportPatientSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
@@ -259,8 +261,39 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailBodyInHtmlFormatForEConsent();
 		String subject = emailServiceConfig.getEmailSubjectForEConsent();
-		String signature = emailServiceConfig.getJoiningSignature();
+		String signature = emailServiceConfig.getCommonSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
+
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToAdminAfterFileUpload(Participant participant, String recipientEmail) {
+
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+		dtf.format(now);
+		String[] dateTime = StringUtils.split(dtf.format(now), "-");
+
+		/* Replace the variables in the EmailBody */
+		String replaceStringWith[] = { participant.getFirstName(), participant.getLastName(),
+				participant.getPatientId(), dateTime[0], dateTime[1] };
+		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{UserGUID}", "%{date}", "%{time}" };
+		String updatedHtmlBody = StringUtils.replaceEach(emailServiceConfig.getEmailHtmlBodyForAdmin(),
+				replaceThisString, replaceStringWith);
+
+		/* Replace the variables in the Subject Line */
+		String replaceSubjectStringWith[] = { participant.getPatientId() };
+		String replaceThisStringForSubject[] = { "%{UserGUID}" };
+		String subject = StringUtils.replaceEach(emailServiceConfig.getEmailSubjectForAdmin(),
+				replaceThisStringForSubject, replaceSubjectStringWith);
 
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
