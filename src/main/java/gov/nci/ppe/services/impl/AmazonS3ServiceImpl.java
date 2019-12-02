@@ -294,10 +294,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 		String fileSource = "Mocha";
 		sendEmailAfterFileUpload(patient, uploadedFileType);
-		
+
 		// Get email Id and Name for CRC and Providers
 		Map<String, String> emailIdsForProvidersCRC = getEmailIds(patient);
-		sendEmailToCRCAndProvidersAfterFileUpload(emailIdsForProvidersCRC, patient.getFullName(), patient.getPatientId(), uploadedFileType);
+		sendEmailToCRCAndProvidersAfterFileUpload(emailIdsForProvidersCRC, patient.getFullName(),
+				patient.getPatientId(), uploadedFileType);
 		URL newUrl = getResourceUrl(applicationDataBucket, s3DestinationFolderKey);
 		try {
 			String publicUrlForFileOnS3 = java.net.URLDecoder.decode(newUrl.toString(), StandardCharsets.UTF_8.name());
@@ -383,7 +384,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			/* Fetch email Ids for CRC and Providers */
 			Map<String, String> emailIds = getEmailIds(patient);
 			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId, patient.getFullName(), patient.getPatientId());
+				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId,
+						patient.getFullName(), patient.getPatientId());
 			});
 
 		}
@@ -407,7 +409,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 				emailIds.put(provider.getFirstName(), provider.getEmail()); // email for providers
 			}
 		});
-		
+
 		CRC crcforPatient = patient.getCRC();
 		if (crcforPatient.getAllowEmailNotification()) {
 			emailIds.put(crcforPatient.getFirstName(), crcforPatient.getEmail()); // email for CRC
@@ -427,7 +429,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 */
 	private Map<Long, String> getUserIdAndFirstName(Participant patient, String uploadedFileType, Boolean patientFlag) {
 		Map<Long, String> userDetailMap = new HashMap<Long, String>();
-		if(patientFlag) {
+		if (patientFlag) {
 			userDetailMap.put(patient.getUserId(), patient.getFirstName());
 		}
 		/* eConsent details are only sent to Patients */
@@ -436,18 +438,18 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			userDetailMap.put(patient.getUserId(), patient.getFirstName());
 			return userDetailMap;
 		}
-		if(!patientFlag) {
+		if (!patientFlag) {
 			Set<Provider> providers = patient.getProviders();
 			providers.forEach(provider -> {
 				userDetailMap.put(provider.getUserId(), provider.getFirstName());
 			});
-	
+
 			CRC crc = patient.getCRC();
 			if (crc != null) {
 				userDetailMap.put(crc.getCrcId(), crc.getFirstName());
 			}
 		}
-	
+
 		return userDetailMap;
 	}
 
@@ -462,29 +464,28 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		return codeService.getCode(fileTypeCodeName);
 	}
 
-	
 	/**
-	 * Helper method to send out emails after file upload
+	 * Helper method to send out emails after BioMarker upload
 	 * 
 	 * @param emailIds        - list of emailIds to mail to
 	 * @param patientFullName - Full Name of the Patient (FirstName LastName)
 	 * @param actionFor       - File type Uploaded
 	 */
-	private void sendEmailToCRCAndProvidersAfterFileUpload(Map<String, String> emailIds, String patientFullName, String patientId, String actionFor) {
+	private void sendEmailToCRCAndProvidersAfterFileUpload(Map<String, String> emailIds, String patientFullName,
+			String patientId, String actionFor) {
 		if (StringUtils.isNotBlank(actionFor)
-				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)) {
+				&& FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(actionFor)) {
+
 			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId, patientFullName,patientId);
-			});
-		} else {
-			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId, patientFullName,patientId);
+				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId, patientFullName,
+						patientId);
 			});
 		}
-	}	
-	
+	}
+
 	/**
-	 * Add a notification for CRC and Providers when Mocha Admin uploads a biomarker report for Participant
+	 * Add a notification for CRC and Providers when Mocha Admin uploads a biomarker
+	 * report for Participant
 	 * 
 	 * @param patient - Participant object
 	 */
@@ -509,6 +510,6 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 						patient.getFullName(), patient.getPatientId());
 			});
 		}
-	}	
+	}
 
 }
