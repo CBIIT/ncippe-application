@@ -97,7 +97,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
 		String htmlBody = emailServiceConfig.getEmailHtmlBodyForPatientInvite()
-				+ emailServiceConfig.getCommonSignature();
+				+ emailServiceConfig.getJoiningSignature();
 		String subject = emailServiceConfig.getEmailSubjectForPatientInvite();
 		String textBody = emailServiceConfig.getEmailTextBodyForPatientInvite();
 
@@ -119,7 +119,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { providerFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
-		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite();
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite()
+				+ emailServiceConfig.getCommonSignature();
 		String subject = emailServiceConfig.getEmailSubjectForProviderPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -210,17 +211,18 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName, String recipientEmail, String patientFullName,
-			String patientId) {
-		String replaceStringWith[] = { salutationFirstName, patientFullName , patientId};
-		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}" , "%{PatientId}"};
+	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName,
+			String recipientEmail, String patientFullName, String patientId) {
+		String replaceStringWith[] = { salutationFirstName, patientFullName, patientId };
+		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
 		String subject = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject();
-		String htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody();
+		String htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody()
+				+ emailServiceConfig.getCommonSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
@@ -228,7 +230,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
 		return emailStatus;
-	}	
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -268,7 +270,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -298,6 +300,6 @@ public class EmailLogServiceImpl implements EmailLogService {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
 		return emailStatus;
-	}	
+	}
 
 }

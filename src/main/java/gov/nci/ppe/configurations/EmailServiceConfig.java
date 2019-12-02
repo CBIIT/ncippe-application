@@ -25,8 +25,14 @@ public class EmailServiceConfig {
 
 	@Value("${email.common.signature}")
 	private String commonSignature;
-	
-	/* The below properties are related to the action - sending email to participant on uploading test report */
+
+	@Value("${email.joining.signature}")
+	private String joiningSignature;
+
+	/*
+	 * The below properties are related to the action - sending email to participant
+	 * on uploading test report
+	 */
 	@Value("${email.uploadReport.patient.subject}")
 	private String emailUploadReportPatientSubject;
 
@@ -36,7 +42,10 @@ public class EmailServiceConfig {
 	@Value("${email.uploadReport.patient.htmlBody}")
 	private String emailUploadReportPatientHTMLBody;
 
-    /* The below properties are related to the action - upload eConsent Form for participant */
+	/*
+	 * The below properties are related to the action - upload eConsent Form for
+	 * participant
+	 */
 	@Value("${email.uploadFile.eConsentForm.subject}")
 	private String emailSubjectForEConsent;
 
@@ -46,7 +55,10 @@ public class EmailServiceConfig {
 	@Value("${email.uploadFile.eConsentForm.htmlBody}")
 	private String emailBodyInHtmlFormatForEConsent;
 
-	/* The below properties are related to the action - sending email to Mocha Admin on uploading test report */
+	/*
+	 * The below properties are related to the action - sending email to Mocha Admin
+	 * on uploading test report
+	 */
 	@Value("${email.uploadFile.adminSubject}")
 	private String emailSubjectForAdmin;
 
@@ -56,7 +68,10 @@ public class EmailServiceConfig {
 	@Value("${email.uploadFile.adminHtmlBody}")
 	private String emailHtmlBodyForAdmin;
 
-	/* The below properties are related to the action - sending email confirmation to CRC when patient withdraws participation */
+	/*
+	 * The below properties are related to the action - sending email confirmation
+	 * to CRC when patient withdraws participation
+	 */
 	@Value("${email.crc.withdraw.participation.subject}")
 	private String emailSubjectForCRCWhenPatientWithdraws;
 
@@ -66,7 +81,10 @@ public class EmailServiceConfig {
 	@Value("${email.crc.withdraw.participation.htmlBody}")
 	private String emailHtmlBodyForCRCWhenPatientWithdraws;
 
-	/* The below properties are related to the action - Email confirmation to Patient when CRC withdraws a particular patient's participation */
+	/*
+	 * The below properties are related to the action - Email confirmation to
+	 * Patient when CRC withdraws a particular patient's participation
+	 */
 	@Value("${email.patient.withdraw.participation.subject}")
 	private String emailSubjectForPatientWhenCRCWithdraws;
 
@@ -92,7 +110,10 @@ public class EmailServiceConfig {
 	@Value("${email.provider.patient.invite.portal.textBody}")
 	private String emailTextBodyForProviderPatientInvite;
 
-	/* Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the Portal */
+	/*
+	 * Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the
+	 * Portal
+	 */
 	@Value("${email.nonpatient.invite.portal.subject}")
 	private String emailSubjectForNonPatientInvite;
 
@@ -110,9 +131,11 @@ public class EmailServiceConfig {
 
 	@Value("${email.crc.new.patient.from.open.htmlBody}")
 	private String emailCRCAboutNewPatientDataFromOpenHtmlBody;
-	
-	/* Properties for sending Email notification to CRC and Providers when biomarker report is uploaded into the system
-	 * by Mocha Admin for Participant */
+
+	/*
+	 * Properties for sending Email notification to CRC and Providers when biomarker
+	 * report is uploaded into the system by Mocha Admin for Participant
+	 */
 	@Value("${email.crc.provider.upload.biomarker.report.subject}")
 	private String emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject;
 
@@ -297,6 +320,10 @@ public class EmailServiceConfig {
 
 	public String getCommonSignature() {
 		return commonSignature;
+	}
+
+	public String getJoiningSignature() {
+		return joiningSignature;
 	}
 
 	/**
