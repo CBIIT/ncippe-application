@@ -16,16 +16,28 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @PropertySource("classpath:NotificationService.properties")
 public class NotificationServiceConfig {
-
-	@Value("${biomark.test.result.upload}")
+	
+	/* Notify participant when biomarker report is uploaded */
+	@Value("${notify.participant.biomarker.report.upload}")
 	private String uploadTestReportNotificationMessage;
 
-	@Value("${biomark.test.result.upload.from}")
+	@Value("${notify.participant.biomarker.report.upload.from}")
 	private String uploadTestReportNotificationMessageFrom;
-
-	@Value("${biomark.test.result.upload.title}")
+	
+	@Value("${notify.participant.biomarker.report.upload.title}")
 	private String uploadTestReportNotificationMessageSubject;
+	
+	/* Notify CRC and Providers when biomarker report is uploaded for a participant */
+	@Value("${notify.crc.provider.biomarker.report.upload}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessage;
 
+	@Value("${notify.crc.provider.biomarker.report.upload.from}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageFrom;
+	
+	@Value("${notify.crc.provider.biomarker.report.upload.title}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageSubject;
+	
+	/* Notify participant when eConsent form is uploaded */
 	@Value("${eConsent.form.uploaded.notification.message}")
 	private String uploadEConsentFormNotificationMessage;
 
@@ -198,6 +210,27 @@ public class NotificationServiceConfig {
 
 	public String getUploadTestReportPatientNotificationMessageFrom() {
 		return uploadTestReportPatientNotificationFrom;
+	}
+	
+	/**
+	 * @return the notifyCRCProvidersBiomarkerReportUploadMessage
+	 */
+	public String getNotifyCRCProvidersBiomarkerReportUploadMessage() {
+		return notifyCRCProvidersBiomarkerReportUploadMessage;
+	}
+
+	/**
+	 * @return the notifyCRCProvidersBiomarkerReportUploadMessageFrom
+	 */
+	public String getNotifyCRCProvidersBiomarkerReportUploadMessageFrom() {
+		return notifyCRCProvidersBiomarkerReportUploadMessageFrom;
+	}
+
+	/**
+	 * @return the notifyCRCProvidersBiomarkerReportUploadMessageSubject
+	 */
+	public String getNotifyCRCProvidersBiomarkerReportUploadMessageSubject() {
+		return notifyCRCProvidersBiomarkerReportUploadMessageSubject;
 	}
 
 }

@@ -2,6 +2,8 @@ package gov.nci.ppe.services;
 
 import org.springframework.stereotype.Component;
 
+import gov.nci.ppe.data.entity.Participant;
+
 /**
  * @author PublicisSapient
  * @version 1.0
@@ -9,20 +11,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public interface EmailLogService {
-
-	/**
-	 * Method to send an email after participant's biomarker report is uploaded.
-	 * 
-	 * @param userFirstName  - Recipient's first name
-	 * @param recipientEmail - Recipient's email address
-	 * @param senderEmail    - Sender's email address
-	 * @param subject        - Subject for the email
-	 * @param htmlBody       - The text for the body (in HTML format) of the email
-	 * @param textBody       - The text for the body of the email
-	 * @param patientId      - The unique Patient Id
-	 */
-	public String sendEmailAfterUploadingReport(String userFirstName, String recipientEmail, String patienttName,
-			String senderEmail, String subject, String htmlBody, String textBody, String patientId);
 
 	/**
 	 * Method to send an email to users of the portal
@@ -73,6 +61,18 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName);
+	
+	/**
+	 * Method to send an email to CRC and Providers after Mocha Admin uploads a biomarker report for a participant.
+	 * 
+	 * @param salutationFirstName - First Name for CRC/Provider
+	 * @param recipientEmail - CRC/Provider's email id
+	 * @param patientName - Full Name of the patient for whom the biomarker report was uploaded
+	 * @param patientId - Patient Id
+	 * @return
+	 */
+	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName, String recipientEmail, String patientName,
+			String patientId);
 
 	/**
 	 * Method to send an email to participant after their biomarker report is
@@ -92,5 +92,14 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToPatientAfterUploadingEconsent(String recipientEmail, String firstName);
+	
+	/**
+	 * Method to send out email to Mocha Admin when a file is uploaded
+	 * biomarker report is uploaded by the admin
+	 * @param patient - An object of Participant
+	 * @param admin   - An object of User
+	 * @return
+	 */
+	public String sendEmailToAdminAfterFileUpload(Participant participant, String emailId);
 
 }

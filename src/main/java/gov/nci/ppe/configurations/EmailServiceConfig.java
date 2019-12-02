@@ -25,24 +25,8 @@ public class EmailServiceConfig {
 
 	@Value("${email.common.signature}")
 	private String commonSignature;
-
-	/*
-	 * The below properties are related to the action - upload test report for CRC
-	 * and Provider
-	 */
-	@Value("${email.uploadFile.subject}")
-	private String emailUploadFileSubject;
-
-	@Value("${email.uploadFile.textBody}")
-	private String emailUploadFileTextBody;
-
-	@Value("${email.uploadFile.htmlBody}")
-	private String emailUploadFileHTMLBody;
-
-	/*
-	 * The below properties are related to the action - upload test report for
-	 * participant
-	 */
+	
+	/* The below properties are related to the action - sending email to participant on uploading test report */
 	@Value("${email.uploadReport.patient.subject}")
 	private String emailUploadReportPatientSubject;
 
@@ -52,10 +36,7 @@ public class EmailServiceConfig {
 	@Value("${email.uploadReport.patient.htmlBody}")
 	private String emailUploadReportPatientHTMLBody;
 
-	/*
-	 * The below properties are related to the action - upload eConsent Form for
-	 * participant
-	 */
+    /* The below properties are related to the action - upload eConsent Form for participant */
 	@Value("${email.uploadFile.eConsentForm.subject}")
 	private String emailSubjectForEConsent;
 
@@ -64,15 +45,8 @@ public class EmailServiceConfig {
 
 	@Value("${email.uploadFile.eConsentForm.htmlBody}")
 	private String emailBodyInHtmlFormatForEConsent;
-	/*
-	 * The above properties are related to the action - upload eConsent Form for
-	 * participant
-	 */
 
-	/*
-	 * The below properties are related to the action - Email confirmation to Admin
-	 * who uploads biomarker report
-	 */
+	/* The below properties are related to the action - sending email to Mocha Admin on uploading test report */
 	@Value("${email.uploadFile.adminSubject}")
 	private String emailSubjectForAdmin;
 
@@ -81,15 +55,8 @@ public class EmailServiceConfig {
 
 	@Value("${email.uploadFile.adminHtmlBody}")
 	private String emailHtmlBodyForAdmin;
-	/*
-	 * The above properties are related to the action - Email confirmation to Admin
-	 * who uploads biomarker report
-	 */
 
-	/*
-	 * The below properties are related to the action - Email confirmation to CRC
-	 * when patient withdraws participation
-	 */
+	/* The below properties are related to the action - sending email confirmation to CRC when patient withdraws participation */
 	@Value("${email.crc.withdraw.participation.subject}")
 	private String emailSubjectForCRCWhenPatientWithdraws;
 
@@ -98,15 +65,8 @@ public class EmailServiceConfig {
 
 	@Value("${email.crc.withdraw.participation.htmlBody}")
 	private String emailHtmlBodyForCRCWhenPatientWithdraws;
-	/*
-	 * The above properties are related to the action - Email confirmation to CRC
-	 * when patient withdraws participation
-	 */
 
-	/*
-	 * The below properties are related to the action - Email confirmation to
-	 * Patient when CRC withdraws a particular patient's participation
-	 */
+	/* The below properties are related to the action - Email confirmation to Patient when CRC withdraws a particular patient's participation */
 	@Value("${email.patient.withdraw.participation.subject}")
 	private String emailSubjectForPatientWhenCRCWithdraws;
 
@@ -115,10 +75,6 @@ public class EmailServiceConfig {
 
 	@Value("${email.patient.withdraw.participation.htmlBody}")
 	private String emailHtmlBodyForPatientWhenCRCWithdraws;
-	/*
-	 * The above properties are related to the action - Email confirmation to
-	 * Patient when CRC withdraws a particular patient's participation
-	 */
 
 	/* Properties for inviting a new patient to participate in the Portal */
 	@Value("${email.patient.invite.portal.subject}")
@@ -136,10 +92,7 @@ public class EmailServiceConfig {
 	@Value("${email.provider.patient.invite.portal.textBody}")
 	private String emailTextBodyForProviderPatientInvite;
 
-	/*
-	 * Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the
-	 * Portal
-	 */
+	/* Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the Portal */
 	@Value("${email.nonpatient.invite.portal.subject}")
 	private String emailSubjectForNonPatientInvite;
 
@@ -157,6 +110,17 @@ public class EmailServiceConfig {
 
 	@Value("${email.crc.new.patient.from.open.htmlBody}")
 	private String emailCRCAboutNewPatientDataFromOpenHtmlBody;
+	
+	/* Properties for sending Email notification to CRC and Providers when biomarker report is uploaded into the system
+	 * by Mocha Admin for Participant */
+	@Value("${email.crc.provider.upload.biomarker.report.subject}")
+	private String emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject;
+
+	@Value("${email.crc.provider.upload.biomarker.report.textBody}")
+	private String emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportTextBody;
+
+	@Value("${email.crc.provider.upload.biomarker.report.htmlBody}")
+	private String emailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody;
 
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
@@ -175,18 +139,6 @@ public class EmailServiceConfig {
 
 	public String getSenderEmailAddress() {
 		return senderEmailAddress;
-	}
-
-	public String getEmailUploadFileSubject() {
-		return emailUploadFileSubject;
-	}
-
-	public String getEmailUploadFileTextBody() {
-		return emailUploadFileTextBody;
-	}
-
-	public String getEmailUploadFileHTMLBody() {
-		return emailUploadFileHTMLBody;
 	}
 
 	/**
@@ -347,4 +299,24 @@ public class EmailServiceConfig {
 		return commonSignature;
 	}
 
+	/**
+	 * @return the emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject
+	 */
+	public String getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject() {
+		return emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject;
+	}
+
+	/**
+	 * @return the emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportTextBody
+	 */
+	public String getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportTextBody() {
+		return emailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportTextBody;
+	}
+
+	/**
+	 * @return the emailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody
+	 */
+	public String getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody() {
+		return emailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody;
+	}
 }
