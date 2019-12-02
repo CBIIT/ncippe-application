@@ -381,7 +381,7 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
 				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
 						withdrawnPatient.getCRC().getFirstName(), withdrawnPatient.getCRC().getEmail(),
-						questionAnswers.toString());
+						questionAnswers.toString(), withdrawnPatient.getPatientId());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -444,16 +444,18 @@ public class UserServiceImpl implements UserService {
 	 * @param salutationName  - Email Subscriber's first name
 	 * @param emailId         - Email Subscriber's email id
 	 * @param questionAnswers - Survey question and answers taken by the participant
+	 * @param patientId       - Unique Id of the Patient
 	 * @return - Success or Failure of the email process
 	 */
 	private String sendEmailToCRCAfterParticipantWithdraws(String firstName, String lastName, String salutationName,
-			String emailId, String questionAnswers) {
+			String emailId, String questionAnswers, String patientId) {
 
 		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}" };
+		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers, patientId };
+		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}",
+				"%{PatientId}" };
 		String updatedTextBody = StringUtils.replaceEach(
-				emailServiceConfig.getEmailTextBodyForCRCWhenPatientWithdraws(), replaceThisString, replaceStringWith);
+				emailServiceConfig.getEmailHtmlBodyForCRCWhenPatientWithdraws(), replaceThisString, replaceStringWith);
 
 		/* Replace the variables in the Subject Line */
 		String replaceSubjectStringWith[] = { firstName, lastName };
@@ -570,7 +572,8 @@ public class UserServiceImpl implements UserService {
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
-					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.SPACE).concat(StringUtils.LF).concat(LocalDate.now().toString()),
+					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.SPACE)
+							.concat(StringUtils.LF).concat(LocalDate.now().toString()),
 					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
