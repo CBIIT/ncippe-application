@@ -337,29 +337,19 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 */
 	private void addNotificationForParticipant(Participant patient, String UploadedFileType) {
 
-		Map<Long, String> userDetailMap = getUserIdAndFirstName(patient, UploadedFileType, Boolean.TRUE);
-
 		if (StringUtils.isNotBlank(UploadedFileType)
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(UploadedFileType)) {
-			userDetailMap.forEach((userId, userName) -> {
-				notificationService.addNotification(notificationServiceConfig.getUploadEConsentFormNotificationFrom(),
-						notificationServiceConfig.getUploadEConsentFormNotificationSubject(),
-						notificationServiceConfig.getUploadEConsentFormNotificationMessage(), userId, userName,
-						patient.getFullName(), patient.getPatientId());
-			});
-		} else {
-			notificationService.addNotification(
-					notificationServiceConfig.getUploadTestReportPatientNotificationMessageFrom(),
-					notificationServiceConfig.getUploadTestReportPatientNotificationTitle(),
-					notificationServiceConfig.getUploadTestReportPatientNotificationMessage(), patient.getUserId(),
+
+			notificationService.addNotification(notificationServiceConfig.getUploadEConsentFormNotificationFrom(),
+					notificationServiceConfig.getUploadEConsentFormNotificationSubject(),
+					notificationServiceConfig.getUploadEConsentFormNotificationMessage(), patient.getUserId(),
 					patient.getFirstName(), patient.getFullName(), patient.getPatientId());
-			userDetailMap.forEach((userId, userName) -> {
-				notificationService.addNotification(
-						notificationServiceConfig.getUploadTestReportNotificationMessageFrom(),
-						notificationServiceConfig.getUploadTestReportNotificationMessageSubject(),
-						notificationServiceConfig.getUploadTestReportNotificationMessage(), userId, userName,
-						patient.getFullName(), patient.getPatientId());
-			});
+
+		} else {
+			notificationService.addNotification(notificationServiceConfig.getUploadTestReportNotificationMessageFrom(),
+					notificationServiceConfig.getUploadTestReportNotificationMessageSubject(),
+					notificationServiceConfig.getUploadTestReportNotificationMessage(), patient.getUserId(),
+					patient.getFirstName(), patient.getFullName(), patient.getPatientId());
 		}
 	}
 
@@ -491,7 +481,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 */
 	private void addNotificationForCRCAndProviders(Participant patient, String UploadedFileType) {
 
-		Map<Long, String> userDetailMap = getUserIdAndFirstName(patient, UploadedFileType, Boolean.TRUE);
+		Map<Long, String> userDetailMap = getUserIdAndFirstName(patient, UploadedFileType, Boolean.FALSE);
 
 		if (StringUtils.isNotBlank(UploadedFileType)
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(UploadedFileType)) {
