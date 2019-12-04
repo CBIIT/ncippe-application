@@ -309,7 +309,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			logFileMetadata(publicUrlForFileOnS3, s3DestinationFolderKey, originalFileName, fileSource,
 					admin.getUserId(), patient, _code);
 			addNotificationForParticipant(patient, uploadedFileType);
-			addNotificationForCRCAndProviders(patient, uploadedFileType);
+			if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(uploadedFileType)) {
+				addNotificationForCRCAndProviders(patient, uploadedFileType);
+			}
 		} catch (UnsupportedEncodingException e) {
 			logger.error("UnsupportedEncodingException : {}", e.getMessage());
 		}
@@ -483,23 +485,13 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 		Map<Long, String> userDetailMap = getUserIdAndFirstName(patient, UploadedFileType, Boolean.FALSE);
 
-		if (StringUtils.isNotBlank(UploadedFileType)
-				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(UploadedFileType)) {
-			userDetailMap.forEach((userId, userName) -> {
-				notificationService.addNotification(notificationServiceConfig.getUploadEConsentFormNotificationFrom(),
-						notificationServiceConfig.getUploadEConsentFormNotificationSubject(),
-						notificationServiceConfig.getUploadEConsentFormNotificationMessage(), userId, userName,
-						patient.getFullName(), patient.getPatientId());
-			});
-		} else {
-			userDetailMap.forEach((userId, userName) -> {
-				notificationService.addNotification(
-						notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageFrom(),
-						notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageSubject(),
-						notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessage(), userId, userName,
-						patient.getFullName(), patient.getPatientId());
-			});
-		}
+		userDetailMap.forEach((userId, userName) -> {
+			notificationService.addNotification(
+					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageFrom(),
+					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageSubject(),
+					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessage(), userId, userName,
+					patient.getFullName(), patient.getPatientId());
+		});
 	}
 
 }
