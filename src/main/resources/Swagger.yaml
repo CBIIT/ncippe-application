@@ -1,0 +1,64 @@
+swagger: "2.0"
+info:
+ description: "Microservice to return registered Users of the NCI PPE Portal"
+ version: "1.0.0"
+ title: "NCI PPE Users"
+ termsOfService: "http://swagger.io/terms/"
+ contact:
+   email: "apiteam@swagger.io"
+ license:
+   name: "Apache 2.0"
+   url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "dev.ppe.publicissapient.com"
+basePath: "/v1"
+tags:
+- name: "user"
+  description: "Operations about user"
+schemes:
+- "https"
+paths:
+ /users:
+   get:
+     tags:
+     - "user"
+     summary: "Get all registered users"
+     description: "returns all users registered with the NCI PPE Portal"
+     operationId: "getAllUsers"
+     produces:
+      - "application/json"
+     responses:
+       200:
+         description: "OK"
+         schema:
+             type: array
+             items:
+               $ref: "#/definitions/User"
+definitions:
+ Role:
+   type: "object"
+   properties:
+     roleName:
+       type: "string"
+     description:
+       type: "string"
+ User:
+   type: "object"
+   properties:
+     userName:
+       type: "string"
+     firstName:
+       type: "string"
+     lastName:
+       type: "string"
+     email:
+       type: "string"
+     userGUID:
+       type: "string"
+     phoneNumber:
+       type: "string"
+     allowEmailNotification:
+       type: "boolean"
+     userType:
+       type: "string"
+     role:
+       $ref: "#/definitions/Role"
