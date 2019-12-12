@@ -716,6 +716,7 @@ public class UserServiceImpl implements UserService {
 					newPatient.setCRC(crc);
 				}
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
+				
 				newUsersList.add(patientOptional.get());
 				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(),
 						AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
@@ -755,11 +756,27 @@ public class UserServiceImpl implements UserService {
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
 				if (providerUpdatedFlag) {
+					if(patient.getAllowEmailNotification()) {
+						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(), patient.getPatientId());
+					}
+					notificationService.addNotification(notificationServiceConfig.getNotifyPatientWhenProvidersAreReplacedFrom(),
+							notificationServiceConfig.getNotifyPatientWhenProvidersAreReplacedTitle().concat(StringUtils.CR)
+									+ LocalDate.now(), notificationServiceConfig.getNotifyPatientWhenProvidersAreReplacedMessage(),
+									patient.getUserId(), StringUtils.EMPTY, StringUtils.EMPTY,
+							patient.getPatientId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
 							mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
+					if(patient.getAllowEmailNotification()) {
+						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(), patient.getPatientId());
+					}
+					notificationService.addNotification(notificationServiceConfig.getNotifyPatientWhenCRCIsReplacedFrom(),
+							notificationServiceConfig.getNotifyPatientWhenCRCIsReplacedTitle().concat(StringUtils.CR)
+									+ LocalDate.now(), notificationServiceConfig.getNotifyPatientWhenCRCIsReplacedMessage(), 
+									patient.getUserId(), StringUtils.EMPTY, StringUtils.EMPTY,
+							patient.getPatientId());
 					final Long crcOpentCtepId = crc.getOpenCtepID();
 					if (null != existingCRC) {
 						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {

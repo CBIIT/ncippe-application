@@ -102,4 +102,22 @@ public interface EmailLogService {
 	 */
 	public String sendEmailToAdminAfterFileUpload(Participant participant, String emailId);
 
+	/**
+	 * Method to send an email to Patient when there is a change in their Provider
+	 * @param recipientEmail   - Recipient's email address 
+	 * @param patientFirstName - Recipient's first name
+	 * @param patientId        - Patient Id in the system
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToPatientWhenProviderChanges(String recipientEmail, String patientFirstName, String patientId);
+
+	/**
+	 * Method to send an email to Patient when there is a change in their CRC
+	 * @param recipientEmail   - Recipient's email address 
+	 * @param patientFirstName - Recipient's first name
+	 * @param patientId        - Patient Id in the system
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToPatientWhenCRCChanges(String recipientEmail, String patientirstName, String patientId);
+
 }
