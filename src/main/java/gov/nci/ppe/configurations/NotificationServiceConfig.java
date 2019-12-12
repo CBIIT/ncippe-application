@@ -84,6 +84,46 @@ public class NotificationServiceConfig {
 
 	@Value("${patient.added.from.open.message}")
 	private String patientAddedFromOpenMessage;
+	
+	// Properties for notifying patients when Providers are replaced
+	@Value("${provider.change.for.patient.title}")
+	private String notifyPatientWhenProvidersAreReplacedTitle;
+	
+	@Value("${provider.change.for.patient.from}")
+	private String notifyPatientWhenProvidersAreReplacedFrom;
+	
+	@Value("${provider.change.for.patient.message}")
+	private String notifyPatientWhenProvidersAreReplacedMessage;
+	
+	// Properties for notifying patients when CRC is replaced
+	@Value("${crc.change.for.patient.title}")
+	private String notifyPatientWhenCRCIsReplacedTitle;
+	
+	@Value("${crc.change.for.patient.from}")
+	private String notifyPatientWhenCRCIsReplacedFrom;
+	
+	@Value("${crc.change.for.patient.message}")
+	private String notifyPatientWhenCRCIsReplacedMessage;
+	
+	// Properties for notifying Providers when a patient is added
+	@Value("${notify.provider.when.patient.added.title}")
+	private String notifyProviderWhenPatientIsAddedTitle;
+	
+	@Value("${notify.provider.when.patient.added.from}")
+	private String notifyProviderWhenPatientIsAddedFrom;
+	
+	@Value("${notify.provider.when.patient.added.message}")
+	private String notifyProviderWhenPatientIsAddedMessage;
+	
+	// Properties for notifying CRC when a patient is added	
+	@Value("${notify.crc.when.patient.added.title}")
+	private String notifyCRCWhenPatientIsAddedTitle;
+	
+	@Value("${notify.crc.when.patient.added.from}")
+	private String notifyCRCWhenPatientIsAddedFrom;
+	
+	@Value("${notify.crc.when.patient.added.message}")
+	private String notifyCRCWhenPatientIsAddedMessage;	
 
 	public String getUploadTestReportNotificationMessage() {
 		return uploadTestReportNotificationMessage;
@@ -212,6 +252,90 @@ public class NotificationServiceConfig {
 	 */
 	public String getNotifyCRCProvidersBiomarkerReportUploadMessageSubject() {
 		return notifyCRCProvidersBiomarkerReportUploadMessageSubject;
+	}
+
+	/**
+	 * @return the notifyPatientWhenProvidersAreReplacedTitle
+	 */
+	public String getNotifyPatientWhenProvidersAreReplacedTitle() {
+		return notifyPatientWhenProvidersAreReplacedTitle;
+	}
+
+	/**
+	 * @return the notifyPatientWhenProvidersAreReplacedFrom
+	 */
+	public String getNotifyPatientWhenProvidersAreReplacedFrom() {
+		return notifyPatientWhenProvidersAreReplacedFrom;
+	}
+
+	/**
+	 * @return the notifyPatientWhenProvidersAreReplacedMessage
+	 */
+	public String getNotifyPatientWhenProvidersAreReplacedMessage() {
+		return notifyPatientWhenProvidersAreReplacedMessage;
+	}
+
+	/**
+	 * @return the notifyPatientWhenCRCIsReplacedTitle
+	 */
+	public String getNotifyPatientWhenCRCIsReplacedTitle() {
+		return notifyPatientWhenCRCIsReplacedTitle;
+	}
+
+	/**
+	 * @return the notifyPatientWhenCRCIsReplacedFrom
+	 */
+	public String getNotifyPatientWhenCRCIsReplacedFrom() {
+		return notifyPatientWhenCRCIsReplacedFrom;
+	}
+
+	/**
+	 * @return the notifyPatientWhenCRCIsReplacedMessage
+	 */
+	public String getNotifyPatientWhenCRCIsReplacedMessage() {
+		return notifyPatientWhenCRCIsReplacedMessage;
+	}
+
+	/**
+	 * @return the notifyProviderWhenPatientIsAddedTitle
+	 */
+	public String getNotifyProviderWhenPatientIsAddedTitle() {
+		return notifyProviderWhenPatientIsAddedTitle;
+	}
+
+	/**
+	 * @return the notifyProviderWhenPatientIsAddedFrom
+	 */
+	public String getNotifyProviderWhenPatientIsAddedFrom() {
+		return notifyProviderWhenPatientIsAddedFrom;
+	}
+
+	/**
+	 * @return the notifyProviderWhenPatientIsAddedMessage
+	 */
+	public String getNotifyProviderWhenPatientIsAddedMessage() {
+		return notifyProviderWhenPatientIsAddedMessage;
+	}
+
+	/**
+	 * @return the notifyCRCWhenPatientIsAddedTitle
+	 */
+	public String getNotifyCRCWhenPatientIsAddedTitle() {
+		return notifyCRCWhenPatientIsAddedTitle;
+	}
+
+	/**
+	 * @return the notifyCRCWhenPatientIsAddedFrom
+	 */
+	public String getNotifyCRCWhenPatientIsAddedFrom() {
+		return notifyCRCWhenPatientIsAddedFrom;
+	}
+
+	/**
+	 * @return the notifyCRCWhenPatientIsAddedMessage
+	 */
+	public String getNotifyCRCWhenPatientIsAddedMessage() {
+		return notifyCRCWhenPatientIsAddedMessage;
 	}
 
 }
