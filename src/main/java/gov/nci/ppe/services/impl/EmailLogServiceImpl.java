@@ -301,5 +301,42 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToPatientWhenProviderChanges(String recipientEmail, String patientFirstName, String patientId) {
+		String replaceStringWith[] = { patientFirstName , patientId };
+		String replaceThisString[] = { "%{SalutationFirstName}", "%{PatientId}" };
 
+		String htmlBody = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedHtmlBody();
+		String subject = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedSubject();
+		String signature = emailServiceConfig.getThankYouSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToPatientWhenCRCChanges(String recipientEmail, String patientirstName, String patientId) {
+		String replaceStringWith[] = { patientirstName , patientId };
+		String replaceThisString[] = { "%{SalutationFirstName}", "%{PatientId}" };
+
+		String htmlBody = emailServiceConfig.getEmailPatientWhenCRCIsReplacedHtmlBody();
+		String subject = emailServiceConfig.getEmailPatientWhenCRCIsReplacedSubject();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String signature = emailServiceConfig.getThankYouSignature();
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}	
 }

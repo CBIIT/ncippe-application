@@ -29,6 +29,8 @@ public class EmailServiceConfig {
 	@Value("${email.joining.signature}")
 	private String joiningSignature;
 
+	@Value("${email.thankyou.signature}")
+	private String thankYouSignature;
 	/*
 	 * The below properties are related to the action - sending email to participant
 	 * on uploading test report
@@ -144,6 +146,32 @@ public class EmailServiceConfig {
 
 	@Value("${email.crc.provider.upload.biomarker.report.htmlBody}")
 	private String emailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody;
+	
+	/*
+	 * Properties for sending Email notification to Participants when their
+	 * providers change
+	 */
+	@Value("${email.patient.when.provider.changes.subject}")
+	private String emailPatientWhenProvidersAreReplacedSubject;
+	
+	@Value("${email.patient.when.provider.changes.textBody}")
+	private String emailPatientWhenProvidersAreReplacedTextBody;
+	
+	@Value("${email.patient.when.provider.changes.htmlBody}")
+	private String emailPatientWhenProvidersAreReplacedHtmlBody;
+	
+	/*
+	 * Properties for sending Email notification to Participants when their
+	 * CRC change
+	 */
+	@Value("${email.patient.when.crc.changes.subject}")
+	private String emailPatientWhenCRCIsReplacedSubject;
+	
+	@Value("${email.patient.when.crc.changes.textBody}")
+	private String emailPatientWhenCRCIsReplacedTextBody;
+	
+	@Value("${email.patient.when.crc.changes.htmlBody}")
+	private String emailPatientWhenCRCIsReplacedHtmlBody;
 
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
@@ -345,5 +373,54 @@ public class EmailServiceConfig {
 	 */
 	public String getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody() {
 		return emailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody;
+	}
+
+	/**
+	 * @return the emailPatientWhenProvidersAreReplacedSubject
+	 */
+	public String getEmailPatientWhenProvidersAreReplacedSubject() {
+		return emailPatientWhenProvidersAreReplacedSubject;
+	}
+
+	/**
+	 * @return the emailPatientWhenProvidersAreReplacedTextBody
+	 */
+	public String getEmailPatientWhenProvidersAreReplacedTextBody() {
+		return emailPatientWhenProvidersAreReplacedTextBody;
+	}
+
+	/**
+	 * @return the emailPatientWhenProvidersAreReplacedHtmlBody
+	 */
+	public String getEmailPatientWhenProvidersAreReplacedHtmlBody() {
+		return emailPatientWhenProvidersAreReplacedHtmlBody;
+	}
+
+	/**
+	 * @return the emailPatientWhenCRCIsReplacedSubject
+	 */
+	public String getEmailPatientWhenCRCIsReplacedSubject() {
+		return emailPatientWhenCRCIsReplacedSubject;
+	}
+
+	/**
+	 * @return the emailPatientWhenCRCIsReplacedTextBody
+	 */
+	public String getEmailPatientWhenCRCIsReplacedTextBody() {
+		return emailPatientWhenCRCIsReplacedTextBody;
+	}
+
+	/**
+	 * @return the emailPatientWhenCRCIsReplacedHtmlBody
+	 */
+	public String getEmailPatientWhenCRCIsReplacedHtmlBody() {
+		return emailPatientWhenCRCIsReplacedHtmlBody;
+	}
+
+	/**
+	 * @return the thankYouSignature
+	 */
+	public String getThankYouSignature() {
+		return thankYouSignature;
 	}
 }
