@@ -173,6 +173,26 @@ public class EmailServiceConfig {
 	@Value("${email.patient.when.crc.changes.htmlBody}")
 	private String emailPatientWhenCRCIsReplacedHtmlBody;
 
+	/* Properties for sending Email to CRC when a patient is added */
+	@Value("${email.crc.when.patients.added.subject}")
+	private String emailCRCWhenPatientIsAddedSubject;
+	
+	@Value("${email.crc.when.patients.added.textBody}")
+	private String emailCRCWhenPatientIsAddedTextBody;
+	
+	@Value("${email.crc.when.patients.added.htmlBody}")
+	private String emailCRCWhenPatientIsAddedHtmlBody;
+
+	/* Properties for sending Email to CRC when a patient is added */
+	@Value("${email.provider.when.patients.added.subject}")
+	private String emailProviderWhenPatientIsAddedSubject;
+	
+	@Value("${email.provider.when.patients.added.textBody}")
+	private String emailProviderWhenPatientIsAddedTextBody;
+	
+	@Value("${email.provider.when.patients.added.htmlBody}")
+	private String emailProviderWhenPatientIsAddedHtmlBody;
+	
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
 	}
@@ -422,5 +442,47 @@ public class EmailServiceConfig {
 	 */
 	public String getThankYouSignature() {
 		return thankYouSignature;
+	}
+
+	/**
+	 * @return the emailCRCWhenPatientIsAddedSubject
+	 */
+	public String getEmailCRCWhenPatientIsAddedSubject() {
+		return emailCRCWhenPatientIsAddedSubject;
+	}
+
+	/**
+	 * @return the emailCRCWhenPatientIsAddedTextBody
+	 */
+	public String getEmailCRCWhenPatientIsAddedTextBody() {
+		return emailCRCWhenPatientIsAddedTextBody;
+	}
+
+	/**
+	 * @return the emailCRCWhenPatientIsAddedHtmlBody
+	 */
+	public String getEmailCRCWhenPatientIsAddedHtmlBody() {
+		return emailCRCWhenPatientIsAddedHtmlBody;
+	}
+
+	/**
+	 * @return the emailProviderWhenPatientIsAddedSubject
+	 */
+	public String getEmailProviderWhenPatientIsAddedSubject() {
+		return emailProviderWhenPatientIsAddedSubject;
+	}
+
+	/**
+	 * @return the emailProviderWhenPatientIsAddedTextBody
+	 */
+	public String getEmailProviderWhenPatientIsAddedTextBody() {
+		return emailProviderWhenPatientIsAddedTextBody;
+	}
+
+	/**
+	 * @return the emailProviderWhenPatientIsAddedHtmlBody
+	 */
+	public String getEmailProviderWhenPatientIsAddedHtmlBody() {
+		return emailProviderWhenPatientIsAddedHtmlBody;
 	}
 }
