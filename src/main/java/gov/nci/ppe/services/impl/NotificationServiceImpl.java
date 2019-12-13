@@ -1,6 +1,7 @@
 package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
 import gov.nci.ppe.services.NotificationService;
@@ -22,6 +24,9 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Autowired
 	private PortalNotificationRepository notificationRepo;
+	
+	@Autowired
+	private NotificationServiceConfig notificationSrvConfig;
 
 	/**
 	 * {@inheritDoc}
@@ -38,15 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
 		String updatedMessage = StringUtils.replaceEach(message, replaceThisString, replaceStringWith);
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
-		PortalNotification notificationObj = new PortalNotification();
-		notificationObj.setMessageFrom(from);
-		notificationObj.setSubject(updatedSubject);
-		notificationObj.setMessage(updatedMessage);
-		notificationObj.setUserId(userId);
-		notificationObj.setDateGenerated(new Timestamp(System.currentTimeMillis()));
-		notificationObj.setViewedByUser(0);
-		notificationObj = notificationRepo.save(notificationObj);
-		return Optional.of(notificationObj);
+		return addNotificationToAccount(from, updatedSubject, updatedMessage, userId);
 	}
 
 	/**
@@ -80,6 +77,67 @@ public class NotificationServiceImpl implements NotificationService {
 	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
 			List<PortalNotification> notificationsForUpdate) {
 		return notificationRepo.saveAll(notificationsForUpdate);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override	
+	public void notifyPatientWhenCRCIsReplaced(Long userId) {
+		addNotificationToAccount(notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedFrom(), notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedTitle().concat(StringUtils.CR)
+				+ LocalDate.now(),notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedMessage(), userId);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override	
+	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId) {
+		String replaceStringWith[] = { patientFullName };
+		String replaceThisString[] = { "%{PatientFullName}" };
+		String updatedMessage = StringUtils.replaceEach(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessage(), replaceThisString, replaceStringWith);
+		addNotificationToAccount(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedFrom(), notificationSrvConfig.getNotifyCRCWhenPatientIsAddedTitle().concat(StringUtils.CR)
+				+ (LocalDate.now()), updatedMessage, userId);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override	
+	public void notifyPatientWhenProviderIsReplaced(Long userId) {
+		addNotificationToAccount(notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedFrom(), notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedTitle().concat(StringUtils.CR)
+				+ LocalDate.now(),notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedMessage(), userId);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override	
+	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId) {
+		String replaceStringWith[] = { patientFullName };
+		String replaceThisString[] = { "%{PatientFullName}" };
+		String updatedMessage = StringUtils.replaceEach(notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessage(), replaceThisString, replaceStringWith);
+		addNotificationToAccount(notificationSrvConfig.getNotifyProviderWhenPatientIsAddedFrom(), notificationSrvConfig.getNotifyProviderWhenPatientIsAddedTitle().concat(StringUtils.CR)
+				+ (LocalDate.now()), updatedMessage, userId);
+	}
+	/**
+	 * Private method that inserts a row into PortalNotification Table.
+	 * @param from - The sender of the message. It is usually system notification
+	 * @param title - Subject of the message
+	 * @param message - Content of the actual message
+	 * @param userId - Id for the recipient of the message
+	 * @return
+	 */
+	private Optional<PortalNotification> addNotificationToAccount(String from, String title, String message, Long userId) {
+		PortalNotification notificationObj = new PortalNotification();
+		notificationObj.setMessageFrom(from);
+		notificationObj.setSubject(title);
+		notificationObj.setMessage(message);
+		notificationObj.setUserId(userId);
+		notificationObj.setDateGenerated(new Timestamp(System.currentTimeMillis()));
+		notificationObj.setViewedByUser(0);
+		notificationObj = notificationRepo.save(notificationObj);
+		return Optional.of(notificationObj);
 	}
 
 }
