@@ -120,4 +120,20 @@ public interface EmailLogService {
 	 */
 	public String sendEmailToPatientWhenCRCChanges(String recipientEmail, String patientirstName, String patientId);
 
+	/**
+	 * Method to send an email to CRC when a patient is included under them
+	 * @param recipientEmail - Recipient's email address
+	 * @param CRCFullName    - CRC's Full Name
+	 * @return
+	 */
+	public String sendEmailToCRCWhenPatientIsAdded(String recipientEmail, String CRCFullName);
+
+	/**
+	 * Method to send an email to Provider when a patient is included under them
+	 * @param recipientEmail - Recipient's email address
+	 * @param CRCFullName    - Provider's Full Name
+	 * @return
+	 */	
+	public String sendEmailToProviderWhenPatientIsAdded(String recipientEmail, String CRCFullName);
+
 }

@@ -62,5 +62,30 @@ public interface NotificationService {
 	 */
 	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
 			List<PortalNotification> notificationsForUpdate);
+	/**
+	 * Method to add notify Patient when their CRC is replaced
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyPatientWhenCRCIsReplaced(Long userId);
+
+	/**
+	 * Method to  nofity CRC when a patient is assigned to them
+	 * @param patientFullName - Full name of the patient
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId);
+
+	/**
+	 * Method to add notify Patient when their Provider is replaced
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyPatientWhenProviderIsReplaced(Long userId);
+
+	/**
+	 * Method to  nofity CRC when a patient is assigned to them
+	 * @param patientFullName - Full name of the patient
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId);
 
 }

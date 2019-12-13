@@ -339,4 +339,40 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 	}	
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToCRCWhenPatientIsAdded(String recipientEmail, String CRCFullName) {
+		String replaceStringWith[] = { CRCFullName};
+		String replaceThisString[] = { "%{SalutationFirstName}"};	
+		String subject = emailServiceConfig.getEmailCRCWhenPatientIsAddedSubject();
+		String htmlBody = emailServiceConfig.getEmailCRCWhenPatientIsAddedHtmlBody();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String signature = emailServiceConfig.getThankYouSignature();
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToProviderWhenPatientIsAdded(String recipientEmail, String CRCFullName) {
+		String replaceStringWith[] = { CRCFullName};
+		String replaceThisString[] = { "%{SalutationFirstName}"};	
+		String subject = emailServiceConfig.getEmailProviderWhenPatientIsAddedSubject();
+		String htmlBody = emailServiceConfig.getEmailProviderWhenPatientIsAddedHtmlBody();
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String signature = emailServiceConfig.getThankYouSignature();
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+	}	
 }
