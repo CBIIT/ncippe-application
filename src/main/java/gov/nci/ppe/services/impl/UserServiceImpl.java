@@ -195,6 +195,9 @@ public class UserServiceImpl implements UserService {
 				user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
 				user = userRepository.save(user);
 				optionalUser = Optional.of(user);
+			} else if (user.getPortalAccountStatus().getCodeName()
+					.equals(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name())) {
+				optionalUser = Optional.empty();
 			}
 		}
 		return optionalUser;
