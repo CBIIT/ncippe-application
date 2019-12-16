@@ -1,7 +1,6 @@
 package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -390,8 +389,7 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject()
-						.concat(StringUtils.CR) + LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject();
 				notificationTitle = StringUtils.replace(notificationTitle, "%{FullName}",
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
@@ -410,8 +408,7 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject()
-						.concat(StringUtils.CR) + LocalDate.now();
+				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject();
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
 						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
 						withdrawnPatient.getUserId(), withdrawnPatient.getCRC().getFirstName(),
@@ -541,10 +538,8 @@ public class UserServiceImpl implements UserService {
 							participant.getFullName());
 					message = StringUtils.replace(message, "%{PatientID}", participant.getPatientId());
 					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(),
-							notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
-									+ LocalDate.now(),
-							message, provider.getUserId(), provider.getFirstName(), participant.getFullName(),
-							patientId);
+							notificationServiceConfig.getPatientReceivesInvitationTitle(), message,
+							provider.getUserId(), provider.getFirstName(), participant.getFullName(), patientId);
 				}
 			}
 		}
@@ -575,8 +570,7 @@ public class UserServiceImpl implements UserService {
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
-					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.SPACE)
-							.concat(StringUtils.LF).concat(LocalDate.now().toString()),
+					notificationServiceConfig.getPatientAddedFromOpenTitle(),
 					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
