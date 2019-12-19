@@ -233,10 +233,10 @@ public class UserServiceImpl implements UserService {
 			Set<Participant> associatedPatients = null;
 			User user = optionalUser.get();
 			if (null != user.getRole()) {
-				if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_CRC.getRoleName())) {
+				if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PPE_CRC.name())) {
 					associatedPatients = ((CRC) user).getPatients();
 
-				} else if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PROVIDER.getRoleName())) {
+				} else if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PPE_PROVIDER.name())) {
 					associatedPatients = ((Provider) user).getPatients();
 				}
 			}
@@ -554,7 +554,7 @@ public class UserServiceImpl implements UserService {
 	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient) {
 		newPatient.setFirstName(StringUtils.EMPTY);
 		newPatient.setLastName(StringUtils.EMPTY);
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_PARTICIPANT.name());
 		newPatient.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_PARTICIPANT.name());
 		newPatient.setUserType(userType);
@@ -588,7 +588,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider) {
 		Timestamp currentTimestamp = TimeUtil.now();
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_PROVIDER.getRoleName());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_PROVIDER.name());
 		provider.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
 		provider.setUserType(userType);
@@ -618,7 +618,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc) {
 		Timestamp currentTimestamp = TimeUtil.now();
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_CRC.getRoleName());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_CRC.name());
 		crc.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_CRC.name());
 		crc.setUserType(userType);

@@ -35,12 +35,15 @@ import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.QuestionAnswerType;
+import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
+import gov.nci.ppe.data.entity.ContentEditor;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.entity.dto.ContentEditorDTO;
 import gov.nci.ppe.data.entity.dto.CrcDTO;
 import gov.nci.ppe.data.entity.dto.JsonViews;
 import gov.nci.ppe.data.entity.dto.ParticipantDTO;
@@ -96,10 +99,6 @@ public class UserController {
 	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
 	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
-	private final String ROLE_PPE_PROVIDER = "ROLE_PPE_PROVIDER";
-	private final String ROLE_PPE_PARTICIPANT = "ROLE_PPE_PARTICIPANT";
-	private final String ROLE_PPE_CRC = "ROLE_PPE_CRC";
-
 	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
@@ -377,8 +376,8 @@ public class UserController {
 			});
 		}
 		/*
-		 * Find out if the participant withdrew themself or the CRC did it for them and
-		 * set the LastRevisedUser accordingly
+		 * Find out if the participant withdrew themselves or the CRC did it for them
+		 * and set the LastRevisedUser accordingly
 		 */
 		if (StringUtils.equals(patient.getUserUUID(), updatedByUser)) {
 			patient.setLastRevisedUser(patient.getUserId());
@@ -478,7 +477,7 @@ public class UserController {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerSubtypes(new NamedType(ParticipantDTO.class, "ParticipantDTO"),
 				new NamedType(ProviderDTO.class, "ProviderDTO"), new NamedType(CrcDTO.class, "CrcDTO"));
-		String roleName = user.getRole().getRoleName();
+		PPERole roleName = PPERole.valueOf(user.getRole().getRoleName());
 		switch (roleName) {
 		case ROLE_PPE_PROVIDER:
 			return mapper.writerWithView(JsonViews.ProviderDetailView.class).writeValueAsString(userDTO);
@@ -496,7 +495,7 @@ public class UserController {
 
 	private UserDTO convertUserDTO(User usr) {
 		UserDTO userDTO = null;
-		String roleName = usr.getRole().getRoleName();
+		PPERole roleName = PPERole.valueOf(usr.getRole().getRoleName());
 		switch (roleName) {
 		case ROLE_PPE_PROVIDER:
 			Provider provider = (Provider) usr;
@@ -518,6 +517,11 @@ public class UserController {
 		case ROLE_PPE_CRC:
 			CRC crcAdmin = (CRC) usr;
 			userDTO = dozerBeanMapper.map(crcAdmin, CrcDTO.class);
+			break;
+
+		case ROLE_PPE_CONTENT_EDITOR:
+			ContentEditor contentEditor = (ContentEditor) usr;
+			userDTO = dozerBeanMapper.map(contentEditor, ContentEditorDTO.class);
 			break;
 
 		default:
