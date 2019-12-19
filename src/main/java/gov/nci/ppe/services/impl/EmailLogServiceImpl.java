@@ -350,7 +350,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String subject = emailServiceConfig.getEmailCRCWhenPatientIsAddedSubject();
 		String htmlBody = emailServiceConfig.getEmailCRCWhenPatientIsAddedHtmlBody();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String signature = emailServiceConfig.getThankYouSignature();
+		String signature = emailServiceConfig.getThankYouForContributionSignature();
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
@@ -368,7 +368,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String subject = emailServiceConfig.getEmailProviderWhenPatientIsAddedSubject();
 		String htmlBody = emailServiceConfig.getEmailProviderWhenPatientIsAddedHtmlBody();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String signature = emailServiceConfig.getThankYouSignature();
+		String signature = emailServiceConfig.getThankYouForContributionSignature();
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
