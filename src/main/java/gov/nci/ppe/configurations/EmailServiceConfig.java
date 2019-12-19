@@ -31,6 +31,9 @@ public class EmailServiceConfig {
 
 	@Value("${email.thankyou.signature}")
 	private String thankYouSignature;
+	
+	@Value("${email.thankyou.contribution.signature}")
+	private String thankYouForContributionSignature;
 	/*
 	 * The below properties are related to the action - sending email to participant
 	 * on uploading test report
@@ -484,5 +487,12 @@ public class EmailServiceConfig {
 	 */
 	public String getEmailProviderWhenPatientIsAddedHtmlBody() {
 		return emailProviderWhenPatientIsAddedHtmlBody;
+	}
+
+	/**
+	 * @return the thankYouForContributionSignature
+	 */
+	public String getThankYouForContributionSignature() {
+		return thankYouForContributionSignature;
 	}
 }
