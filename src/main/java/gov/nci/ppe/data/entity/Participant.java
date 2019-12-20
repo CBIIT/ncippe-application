@@ -40,12 +40,12 @@ public class Participant extends User {
 	private Set<Provider> providers = new HashSet<>();
 
 	@OneToMany(mappedBy = "participant")
-	@Where(clause = "FileType = 8")
+	@Where(clause = "FileType = 102")
 	@OrderBy("DateUploaded DESC")
 	private List<FileMetadata> otherDocuments = new ArrayList<>();
 
 	@OneToMany(mappedBy = "participant")
-	@Where(clause = "FileType = 7")
+	@Where(clause = "FileType = 101")
 	@OrderBy("DateUploaded DESC")
 	List<FileMetadata> reports;
 
