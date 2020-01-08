@@ -376,8 +376,8 @@ public class UserServiceImpl implements UserService {
 		Participant withdrawnPatient = (Participant) userOptional.get();
 		StringBuilder questionAnswers = new StringBuilder();
 		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
-			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ").append(qs.getAnswer())
-					.append("<br/>");
+			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
+					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
 			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
