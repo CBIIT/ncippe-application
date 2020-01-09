@@ -295,10 +295,6 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		String fileSource = "Mocha";
 		sendEmailAfterFileUpload(patient, uploadedFileType);
 
-		// Get email Id and Name for CRC and Providers
-		Map<String, String> emailIdsForProvidersCRC = getEmailIds(patient);
-		sendEmailToCRCAndProvidersAfterFileUpload(emailIdsForProvidersCRC, patient.getFullName(),
-				patient.getPatientId(), uploadedFileType);
 		URL newUrl = getResourceUrl(applicationDataBucket, s3DestinationFolderKey);
 		try {
 			String publicUrlForFileOnS3 = java.net.URLDecoder.decode(newUrl.toString(), StandardCharsets.UTF_8.name());
