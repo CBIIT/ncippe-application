@@ -768,7 +768,7 @@ public class UserServiceImpl implements UserService {
 
 						}
 					});
-					if (patient.getAllowEmailNotification()) {
+					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}
@@ -778,7 +778,7 @@ public class UserServiceImpl implements UserService {
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
-					if (patient.getAllowEmailNotification()) {
+					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}

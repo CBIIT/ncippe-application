@@ -16,6 +16,11 @@ import io.jsonwebtoken.JwtException;
 @Component
 public interface JWTManagementService {
 
+	public static final String TOKEN_CLAIM_USERNAME = "username";
+	public static final String TOKEN_CLAIM_ROLE = "role";
+	public static final String TOKEN_CLAIM_FIRSTNAME = "firstname";
+	public static final String TOKEN_CLAIM_LASTNAME = "lastname";
+
 	/**
 	 * Creates a signed Java Web Token with the provided user's name and role
 	 * 
@@ -23,7 +28,7 @@ public interface JWTManagementService {
 	 * @return The signed token
 	 */
 	public String createJWT(User user);
-	
+
 	/**
 	 * Validates an incoming token and returns the list of claims in the token
 	 * 

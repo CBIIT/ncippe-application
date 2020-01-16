@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,12 +51,10 @@ import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.services.AuditService;
+import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.JWTManagementService;
 import gov.nci.ppe.services.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -92,9 +89,10 @@ public class UserController {
 	@Autowired
 	private JWTManagementService jwtMgmtService;
 
+	@Autowired
+	AuthorizationService authService;
+
 	private final String AUTHORIZATION = "Authorization";
-	private final String SUCCESS = "Success";
-	private final String ERROR = "Error";
 	private final String TOKEN_ERROR_MSG = "{\n\"error\" : \"Refresh your token \"\n}";
 	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
@@ -169,23 +167,6 @@ public class UserController {
 	}
 
 	/**
-	 * This method will be called by all other methods to verify the JWT token
-	 * 
-	 * @param token
-	 * @return a JSON reply with appropriate HTTP Status
-	 */
-	private String verifyToken(String authString) {
-		try {
-			Jws<Claims> claims = jwtMgmtService.validateJWT(authString);
-			logger.log(Level.INFO, claims.toString());
-		} catch (JwtException jwtException) {
-			logger.log(Level.WARNING, jwtException.getMessage());
-			return ERROR;
-		}
-		return SUCCESS;
-	}
-
-	/**
 	 * This method will generate the JSON response based on the user.
 	 * 
 	 * @param userUUID - Unique Id for the User
@@ -235,8 +216,7 @@ public class UserController {
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 
 		String value = request.getHeader(AUTHORIZATION);
-		if (StringUtils.isEmpty(value)
-				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
+		if (!authService.authorize(value, userGUID)) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
@@ -272,12 +252,11 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
-		if (StringUtils.isEmpty(value)
-				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
+		userUUID = StringUtils.stripToEmpty(userUUID);
+
+		if (!authService.authorize(value, userUUID)) {
 			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
-
-		userUUID = StringUtils.stripToEmpty(userUUID);
 
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
 		String jsonFormat = convertUserToJSON(userOptional.get());
@@ -352,19 +331,20 @@ public class UserController {
 		patientId = StringUtils.stripToEmpty(patientId);
 		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String value = request.getHeader(AUTHORIZATION);
-		if (StringUtils.isEmpty(value)
-				|| StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS")) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
-		}
 		Optional<User> participantOptional = userService.findActiveParticipantByPatientId(patientId);
 		if (!participantOptional.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
 		}
-		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
 		Participant patient = (Participant) participantOptional.get();
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		String value = request.getHeader(AUTHORIZATION);
+		if (!authService.authorize(value, patient.getUserUUID())) {
+			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+		}
+
+		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
 		List<QuestionAnswer> qsAnsList = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(qsAnsDTO)) {
 			qsAnsDTO.forEach(qs -> {
@@ -403,13 +383,6 @@ public class UserController {
 			@ApiParam(value = "Last name of the participant", required = false) @RequestParam(value = "lastName", required = false) String lastName,
 			@ApiParam(value = "Email Id for the participant", required = false) @RequestParam(value = "emailId", required = false) String emailId)
 			throws JsonProcessingException {
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String value = request.getHeader(AUTHORIZATION);
-		if (StringUtils.isEmpty(value)
-				|| (StringUtils.isNotEmpty(verifyToken(value)) && !verifyToken(value).equalsIgnoreCase("SUCCESS"))) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
-		}
 
 		patientId = StringUtils.stripToEmpty(patientId);
 		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
@@ -417,11 +390,22 @@ public class UserController {
 		lastName = StringUtils.stripToEmpty(lastName);
 		emailId = StringUtils.stripToEmpty(emailId);
 
-		Optional<User> participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId,
-				firstName, lastName);
+		List<String> validAccountStatusList = new ArrayList<>();
+		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
+				validAccountStatusList);
 		if (participantOptional.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
 		}
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		String value = request.getHeader(AUTHORIZATION);
+		if (!authService.authorize(value, participantOptional.get())) {
+			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+		}
+
+		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId, firstName, lastName);
+
 		String jsonFormat = convertUserToJSON(participantOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
@@ -551,13 +535,6 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String authToken = request.getHeader(AUTHORIZATION);
-		logger.finest("TOKEN #########" + authToken);
-		if (StringUtils.isEmpty(authToken) || (StringUtils.isNotEmpty(verifyToken(authToken))
-				&& !verifyToken(authToken).equalsIgnoreCase(SUCCESS))) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(TOKEN_ERROR_MSG);
-		}
-
 		Optional<User> userOptional = null;
 		if (StringUtils.isNotBlank(uuid)) {
 			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());
@@ -572,8 +549,13 @@ public class UserController {
 		if (!userOptional.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(httpHeaders).body(NO_USER_FOUND_MSG);
 		}
-
 		User user = userOptional.get();
+		String authToken = request.getHeader(AUTHORIZATION);
+		logger.finest("TOKEN #########" + authToken);
+		if (!authService.authorize(authToken, user.getUserUUID())) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(TOKEN_ERROR_MSG);
+		}
+
 		String userJson = convertUserToJSON(user);
 		return new ResponseEntity<String>(userJson, httpHeaders, HttpStatus.OK);
 	}
