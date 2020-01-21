@@ -31,7 +31,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	public UserService userService;
 
 	@Override
-	public boolean authorize(String authToken, Participant targetUser) {
+	public boolean authorize(String authToken, User user) {
 		// If the Token is empty, the user is not authorized
 		if (StringUtils.isEmpty(authToken)) {
 			return false;
@@ -42,30 +42,33 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			logger.log(Level.INFO, requestingUserUUID);
 			logger.log(Level.INFO, claims.toString());
 
-			// Invalid JWT no usename present
+			// Invalid JWT no username present
 			if (StringUtils.isBlank(requestingUserUUID)) {
 				logger.log(Level.WARNING, "No Username present in JWT");
 				return false;
 			}
 			// If the UUID in the JWT matches the UUID of the targetUser, always allow
-			if (requestingUserUUID.equalsIgnoreCase(targetUser.getUserUUID())) {
-				logger.log(Level.INFO, "User is requesting access to self");
+			if (requestingUserUUID.equalsIgnoreCase(user.getUserUUID())) {
+				logger.log(Level.INFO, "User " + requestingUserUUID + " is requesting access to self");
 				return true;
 			}
 
 			final String requestingUserRole = (String) claims.getBody().get(JWTManagementService.TOKEN_CLAIM_ROLE);
 
-			if (requestingUserRole.equals(PPERole.ROLE_PPE_CRC.name())) {
+			switch (PPERole.valueOf(requestingUserRole)) {
+			
+			case ROLE_PPE_CRC:
+				return authorizeCRC((Participant) user, requestingUserUUID);
 
-				return authorizeCRC(targetUser, requestingUserUUID);
+			case ROLE_PPE_PROVIDER:
+				return authorizeProvider((Participant) user, requestingUserUUID);
+
+			case ROLE_PPE_MOCHA_ADMIN:
+				return true;
+
+			default:
+				return false;
 			}
-
-			if (requestingUserRole.equals(PPERole.ROLE_PPE_PROVIDER.name())) {
-
-				return authorizeProvider(targetUser, requestingUserUUID);
-			}
-
-			return true;
 
 		} catch (JwtException jwtException) {
 			// Not a valid JWT, user is not authorized
@@ -107,7 +110,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			logger.log(Level.WARNING, "No user found with UUID " + targetUUID);
 			return false;
 		} else {
-			return authorize(authToken, (Participant) targetUserOptional.get());
+			return authorize(authToken, targetUserOptional.get());
 		}
 	}
 

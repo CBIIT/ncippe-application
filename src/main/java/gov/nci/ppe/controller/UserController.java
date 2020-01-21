@@ -391,6 +391,7 @@ public class UserController {
 		emailId = StringUtils.stripToEmpty(emailId);
 
 		List<String> validAccountStatusList = new ArrayList<>();
+		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
 		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
 				validAccountStatusList);
 		if (participantOptional.isEmpty()) {
@@ -552,7 +553,7 @@ public class UserController {
 		User user = userOptional.get();
 		String authToken = request.getHeader(AUTHORIZATION);
 		logger.finest("TOKEN #########" + authToken);
-		if (!authService.authorize(authToken, user.getUserUUID())) {
+		if (!authService.authorize(authToken, user)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(TOKEN_ERROR_MSG);
 		}
 
