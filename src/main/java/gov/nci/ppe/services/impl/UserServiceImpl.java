@@ -533,14 +533,10 @@ public class UserServiceImpl implements UserService {
 			for (Provider provider : participant.getProviders()) {
 				if (provider.getAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
-					String message = StringUtils.replace(
-							notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
-							participant.getFullName());
-					message = StringUtils.replace(message, "%{PatientID}", participant.getPatientId());
-					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(),
-							notificationServiceConfig.getPatientReceivesInvitationTitle(), message,
-							provider.getUserId(), provider.getFirstName(), participant.getFullName(), patientId);
 				}
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
+						provider.getProviderId(), participant.getPatientId());
+
 			}
 		}
 
@@ -576,7 +572,11 @@ public class UserServiceImpl implements UserService {
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
 			// OPEN
-			emailService.sendEmailToCRCOnNewPatient(newPatient.getCRC().getEmail(), newPatient.getCRC().getFirstName());
+			if (newPatient.getCRC().getAllowEmailNotification()
+					&& StringUtils.isNotBlank(newPatient.getCRC().getEmail())) {
+				emailService.sendEmailToCRCOnNewPatient(newPatient.getCRC().getEmail(),
+						newPatient.getCRC().getFirstName());
+			}
 
 		}
 		return patientOptional;
@@ -759,7 +759,7 @@ public class UserServiceImpl implements UserService {
 						if (providerOptional.isPresent()) {
 							Provider newProvider = providerOptional.get();
 							notificationService.notifyProviderWhenPatientIsAdded(patient.getFullName(),
-									newProvider.getUserId());
+									newProvider.getUserId(), patient.getPatientId());
 
 							if (newProvider.getAllowEmailNotification()) {
 								emailService.sendEmailToProviderWhenPatientIsAdded(newProvider.getEmail(),
@@ -768,7 +768,7 @@ public class UserServiceImpl implements UserService {
 
 						}
 					});
-					if (patient.getAllowEmailNotification()) {
+					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}
@@ -778,7 +778,7 @@ public class UserServiceImpl implements UserService {
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
-					if (patient.getAllowEmailNotification()) {
+					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}
