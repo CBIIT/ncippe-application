@@ -92,9 +92,9 @@ public class NotificationServiceImpl implements NotificationService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId) {
-		String replaceStringWith[] = { patientFullName };
-		String replaceThisString[] = { "%{PatientFullName}" };
+	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
+		String replaceStringWith[] = { patientFullName, patientId };
+		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
 		String updatedMessage = StringUtils.replaceEach(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessage(),
 				replaceThisString, replaceStringWith);
 		addNotificationToAccount(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedFrom(),

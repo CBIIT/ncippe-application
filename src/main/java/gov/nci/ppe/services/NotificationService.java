@@ -69,11 +69,14 @@ public interface NotificationService {
 	public void notifyPatientWhenCRCIsReplaced(Long userId);
 
 	/**
-	 * Method to  nofity CRC when a patient is assigned to them
+	 * Method to nofity CRC when a patient is assigned to them
+	 * 
 	 * @param patientFullName - Full name of the patient
-	 * @param userId - Id of the recipient for whom the notification message is intended
+	 * @param userId          - Id of the recipient for whom the notification
+	 *                        message is intended
+	 * @param patientId       - Patient ID of the patient.
 	 */
-	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId);
+	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId);
 
 	/**
 	 * Method to add notify Patient when their Provider is replaced
