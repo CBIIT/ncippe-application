@@ -787,7 +787,8 @@ public class UserServiceImpl implements UserService {
 
 					if (null != crc) {
 						// Notify the CRC in the system
-						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId());
+						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
+								patient.getPatientId());
 						if (crc.getAllowEmailNotification()) {
 							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFullName());
 						}
