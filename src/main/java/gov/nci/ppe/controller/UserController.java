@@ -93,7 +93,7 @@ public class UserController {
 	AuthorizationService authService;
 
 	private final String AUTHORIZATION = "Authorization";
-	private final String TOKEN_ERROR_MSG = "{\n\"error\" : \"Refresh your token \"\n}";
+	private final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";
 	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
 	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
@@ -217,7 +217,7 @@ public class UserController {
 
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, userGUID)) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
 		userGUID = StringUtils.stripToEmpty(userGUID);
@@ -255,7 +255,7 @@ public class UserController {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
 		if (!authService.authorize(value, userUUID)) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
@@ -341,7 +341,7 @@ public class UserController {
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, patient.getUserUUID())) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
 		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
@@ -402,7 +402,7 @@ public class UserController {
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, participantOptional.get())) {
-			return new ResponseEntity<String>(TOKEN_ERROR_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
 		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId, firstName, lastName);
@@ -554,7 +554,7 @@ public class UserController {
 		String authToken = request.getHeader(AUTHORIZATION);
 		logger.finest("TOKEN #########" + authToken);
 		if (!authService.authorize(authToken, user)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(TOKEN_ERROR_MSG);
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(UNAUTHORIZED_ACCESS);
 		}
 
 		String userJson = convertUserToJSON(user);
