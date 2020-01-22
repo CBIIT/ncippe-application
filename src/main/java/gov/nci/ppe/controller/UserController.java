@@ -491,12 +491,17 @@ public class UserController {
 			providerDTO.getPatients().removeIf(
 					patient -> patient.getPortalAccountStatus().equalsIgnoreCase(PortalAccountStatus.ACCT_NEW.name()));
 
+
 			userDTO = providerDTO;
 			break;
 
 		case ROLE_PPE_PARTICIPANT:
 			Participant patient = (Participant) usr;
 			userDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
+			// Filter out Notifications for CRC and Providers
+			((ParticipantDTO) userDTO).getCrc().getNotifications().clear();
+			((ParticipantDTO) userDTO).getProviders()
+					.forEach(associatedProvider -> associatedProvider.getNotifications().clear());
 			break;
 
 		case ROLE_PPE_CRC:
