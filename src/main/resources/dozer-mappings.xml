@@ -87,5 +87,9 @@
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.QuestionAnswer</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.QuestionAnswerDTO</class-b>
-	</mapping>		
+	</mapping>	
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.NCORPSite</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NCORPSiteDTO</class-b>
+	</mapping>	
 </mappings>
