@@ -18,8 +18,4 @@ public class CommonConstants {
 	public enum ActionType {
 		USER_DEACTIVATE_USER, USER_GET_USER, USER_UPDATE_USER, USER_INVITE_PARTICIPANT, USER_WITHDRAW_PARTICIPANT
 	}
-
-	public enum NCORPSiteStatusType {
-		PENDING, ACTIVE, WITHDRAWN
-	}
 }
