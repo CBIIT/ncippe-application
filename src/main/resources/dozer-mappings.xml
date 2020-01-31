@@ -87,5 +87,13 @@
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.QuestionAnswer</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.QuestionAnswerDTO</class-b>
-	</mapping>		
+	</mapping>	
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.NCORPSite</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NCORPSiteDTO</class-b>
+		<field>
+			<a get-method="getGpsCoordinates">gpsCoordinates</a>
+			<b>gpsCoordinates</b>
+		</field>
+	</mapping>	
 </mappings>
