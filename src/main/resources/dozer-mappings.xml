@@ -91,5 +91,9 @@
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.NCORPSite</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.NCORPSiteDTO</class-b>
+		<field>
+			<a get-method="getGpsCoordinates">gpsCoordinates</a>
+			<b>gpsCoordinates</b>
+		</field>
 	</mapping>	
 </mappings>

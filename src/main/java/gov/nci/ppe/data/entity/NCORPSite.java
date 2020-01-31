@@ -62,4 +62,14 @@ public class NCORPSite {
 
 	@Column(name = "POCName", nullable = false, length = 128)
 	private String sitePOCName;
+
+	@Column(name = "Latitude", nullable = false, length = 11)
+	private String latitude;
+
+	@Column(name = "Longitude", nullable = false, length = 11)
+	private String longitude;
+
+	public String getGpsCoordinates() {
+		return latitude + "," + longitude;
+	}
 }
