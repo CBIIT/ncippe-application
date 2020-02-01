@@ -287,7 +287,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		// notification, then send a confirmation email to the Admin/User uploading the
 		// report.
 		if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(uploadedFileType)
-				&& admin.getAllowEmailNotification()) {
+				&& admin.isAllowEmailNotification()) {
 			String emailStatus = emailLogService.sendEmailToAdminAfterFileUpload(patient, admin.getEmail());
 			logger.info("Action of sending email was " + emailStatus);
 		}
@@ -362,11 +362,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	private void sendEmailAfterFileUpload(Participant patient, String actionFor) {
 		if (StringUtils.isNotBlank(actionFor)
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)
-				&& patient.getAllowEmailNotification()) {
+				&& patient.isAllowEmailNotification()) {
 			// Send email to Patient only
 			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName());
 		} else {
-			if (patient.getAllowEmailNotification()) {
+			if (patient.isAllowEmailNotification()) {
 				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName());
 			}
 			/* Fetch email Ids for CRC and Providers */
@@ -393,13 +393,13 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 		Set<Provider> providers = patient.getProviders();
 		providers.forEach(provider -> {
-			if (provider.getAllowEmailNotification()) {
+			if (provider.isAllowEmailNotification()) {
 				emailIds.put(provider.getFirstName(), provider.getEmail()); // email for providers
 			}
 		});
 
 		CRC crcforPatient = patient.getCRC();
-		if (crcforPatient.getAllowEmailNotification()) {
+		if (crcforPatient.isAllowEmailNotification()) {
 			emailIds.put(crcforPatient.getFirstName(), crcforPatient.getEmail()); // email for CRC
 		}
 

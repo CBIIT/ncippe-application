@@ -67,7 +67,7 @@ public class UserDTOTest {
 		assertEquals(email, userDTO.getEmail());
 		assertEquals(userUUID, userDTO.getUuid());
 		assertEquals(phoneNumber, userDTO.getPhoneNumber());
-		assertEquals(allowEmailNotification, userDTO.getAllowEmailNotification());
+		assertEquals(allowEmailNotification, userDTO.isAllowEmailNotification());
 		assertEquals(userType, userDTO.getUserType());
 		assertEquals(roleName, userDTO.getRoleName());
 		assertEquals(dateCreated, userDTO.getDateCreated());

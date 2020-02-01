@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
@@ -128,7 +129,8 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber) {
+	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
+			LanguageOption preferredLang) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userGuid);
 
 		/* Check if the user is present in the system */
@@ -139,6 +141,9 @@ public class UserServiceImpl implements UserService {
 		User user = userOptional.get();
 		user.setAllowEmailNotification(userEmailNotification);
 		user.setPhoneNumber(phoneNumber);
+		if (preferredLang != null) {
+			user.setPreferredLanguage(preferredLang);
+		}
 		user.setLastRevisedUser(user.getUserId());
 		user.setLastRevisedDate(TimeUtil.now());
 		User updateUser = userRepository.save(user);
@@ -380,7 +385,7 @@ public class UserServiceImpl implements UserService {
 					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
-			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
+			if (withdrawnPatient.getCRC().isAllowEmailNotification()) {
 				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
 						withdrawnPatient.getCRC().getFirstName(), withdrawnPatient.getCRC().getEmail(),
 						questionAnswers.toString(), withdrawnPatient.getPatientId());
@@ -399,7 +404,7 @@ public class UserServiceImpl implements UserService {
 
 			}
 		} else {
-			if (withdrawnPatient.getAllowEmailNotification()) {
+			if (withdrawnPatient.isAllowEmailNotification()) {
 				sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCRC().getFirstName(),
 						withdrawnPatient.getCRC().getLastName(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getEmail(), questionAnswers.toString());
@@ -497,7 +502,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
-			String patientFirstName, String patientLastName) throws JsonProcessingException {
+			String patientFirstName, String patientLastName, LanguageOption preferredLanguage)
+			throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
 			return participantOptional;
@@ -512,6 +518,9 @@ public class UserServiceImpl implements UserService {
 		}
 		if (StringUtils.isNotBlank(patientEmail)) {
 			participant.setEmail(patientEmail);
+		}
+		if (preferredLanguage != null) {
+			participant.setPreferredLanguage(preferredLanguage);
 		}
 		/* Get the UserId for CRC */
 		Optional<User> crcOptional = findByUuid(uuid);
@@ -531,7 +540,7 @@ public class UserServiceImpl implements UserService {
 		emailService.sendEmailToInvitePatient(patientEmail, patientFirstName);
 		if (participant.getProviders() != null) {
 			for (Provider provider : participant.getProviders()) {
-				if (provider.getAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
+				if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
 				}
 				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
@@ -572,7 +581,7 @@ public class UserServiceImpl implements UserService {
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
 			// OPEN
-			if (newPatient.getCRC().getAllowEmailNotification()
+			if (newPatient.getCRC().isAllowEmailNotification()
 					&& StringUtils.isNotBlank(newPatient.getCRC().getEmail())) {
 				emailService.sendEmailToCRCOnNewPatient(newPatient.getCRC().getEmail(),
 						newPatient.getCRC().getFirstName());
@@ -695,6 +704,7 @@ public class UserServiceImpl implements UserService {
 					crc.setLastName(patientData.getCraLastName());
 					crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
 					crc.setEmail(patientData.getCraEmail());
+					crc.setPreferredLanguage(LanguageOption.ENGLISH);
 					crc = (CRC) insertNewCRCDetailsFromOpen(crc).get();
 					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()),
 							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
@@ -707,6 +717,7 @@ public class UserServiceImpl implements UserService {
 			if (patientOptional.isEmpty()) {
 				Participant newPatient = new Participant();
 				newPatient.setPatientId(patientData.getPatientId());
+				newPatient.setPreferredLanguage(LanguageOption.ENGLISH);
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
 				if (null != crc) {
@@ -761,14 +772,14 @@ public class UserServiceImpl implements UserService {
 							notificationService.notifyProviderWhenPatientIsAdded(patient.getFullName(),
 									newProvider.getUserId(), patient.getPatientId());
 
-							if (newProvider.getAllowEmailNotification()) {
+							if (newProvider.isAllowEmailNotification()) {
 								emailService.sendEmailToProviderWhenPatientIsAdded(newProvider.getEmail(),
 										newProvider.getFullName());
 							}
 
 						}
 					});
-					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}
@@ -778,7 +789,7 @@ public class UserServiceImpl implements UserService {
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
-					if (patient.getAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
 								patient.getPatientId());
 					}
@@ -789,7 +800,7 @@ public class UserServiceImpl implements UserService {
 						// Notify the CRC in the system
 						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
 								patient.getPatientId());
-						if (crc.getAllowEmailNotification()) {
+						if (crc.isAllowEmailNotification()) {
 							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFullName());
 						}
 					}
@@ -881,6 +892,7 @@ public class UserServiceImpl implements UserService {
 		provider.setLastName(lastName);
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
+		provider.setPreferredLanguage(LanguageOption.ENGLISH);
 		logger.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
 		return provider;
 	}
