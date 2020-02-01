@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
@@ -45,10 +46,12 @@ public interface UserService {
 	 * @param userGUID               - GUID of the user
 	 * @param phoneNumber            - the value can be empty string if the user
 	 *                               wishes to delete his/her number.
+	 * @param preferredLang          - Preferred Language for the User
 	 * @param allowEmailNotification - value can be only 1 (true) or 2 (false)
 	 * @return JSON String containing User information that was updated
 	 */
-	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber);
+	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
+			LanguageOption preferredLang);
 
 	/**
 	 * Fetch the user based on the user's UserId
@@ -174,17 +177,19 @@ public interface UserService {
 	 * Updates a Patient record to include patient name and email, changes state
 	 * from NEW to INITIATED, and sends an invitation email to the patient.
 	 * 
-	 * @param patientId        - Unique Patient Id of the Patient
-	 * @param uuid             - Unique login Id of the CRC performing the action
-	 * @param patientEmail     - Email address of the patient (No format validation
-	 *                         done at Service)
-	 * @param patientFirstName - First Name of Patient
-	 * @param patientLastName  - Last Name of Patient
+	 * @param patientId         - Unique Patient Id of the Patient
+	 * @param uuid              - Unique login Id of the CRC performing the action
+	 * @param patientEmail      - Email address of the patient (No format validation
+	 *                          done at Service)
+	 * @param patientFirstName  - First Name of Patient
+	 * @param patientLastName   - Last Name of Patient
+	 * @param preferredLanguage - Language preferred by the Patient
 	 * @return Updated Patient record
 	 * @throws JsonProcessingException
 	 */
 	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
-			String patientFirstName, String patientLastName) throws JsonProcessingException;
+			String patientFirstName, String patientLastName, LanguageOption preferredLanguage)
+			throws JsonProcessingException;
 	
 	/**
 	 * Inserts a new patient record into PPE database based on the patient ID if one doesn't

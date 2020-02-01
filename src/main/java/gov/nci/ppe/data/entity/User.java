@@ -26,7 +26,9 @@ import org.hibernate.annotations.FetchMode;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.dto.JsonViews;
+import lombok.Data;
 
 /**
  * @author PublicisSapient
@@ -38,6 +40,7 @@ import gov.nci.ppe.data.entity.dto.JsonViews;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorOptions(force = true)
 @DiscriminatorColumn(name = "UserType", discriminatorType = DiscriminatorType.INTEGER)
+@Data
 public class User {
 
 	@Id
@@ -99,139 +102,8 @@ public class User {
 	@Fetch(FetchMode.JOIN)
 	private Code portalAccountStatus;
 
-	public Long getUserId() {
-		return userId;
-	}
-
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
-
-	public String getUserUUID() {
-		return userUUID;
-	}
-
-	public void setUserUUID(String userUUID) {
-		this.userUUID = userUUID;
-	}
-
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
-
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
-
-	public boolean getAllowEmailNotification() {
-		return allowEmailNotification;
-	}
-
-	public void setAllowEmailNotification(boolean allowEmailNotification) {
-		this.allowEmailNotification = allowEmailNotification;
-	}
-
-	public Role getRole() {
-		return role;
-	}
-
-	public void setRole(Role role) {
-		this.role = role;
-	}
-
-	public Code getUserType() {
-		return userType;
-	}
-
-	public void setUserType(Code code) {
-		this.userType = code;
-	}
-
-	public Timestamp getDateCreated() {
-		return dateCreated;
-	}
-
-	public void setDateCreated(Timestamp dateCreated) {
-		this.dateCreated = dateCreated;
-	}
-
-	public Timestamp getDateActivated() {
-		return dateActivated;
-	}
-
-	public void setDateActivated(Timestamp dateActivated) {
-		this.dateActivated = dateActivated;
-	}
-
-	public Timestamp getDateDeactivated() {
-		return dateDeactivated;
-	}
-
-	public void setDateDeactivated(Timestamp dateDeactivated) {
-		this.dateDeactivated = dateDeactivated;
-	}
-
-	public Timestamp getLastRevisedDate() {
-		return lastRevisedDate;
-	}
-
-	public void setLastRevisedDate(Timestamp lastRevisedDate) {
-		this.lastRevisedDate = lastRevisedDate;
-	}
-
-	public Long getLastRevisedUser() {
-		return lastRevisedUser;
-	}
-
-	public void setLastRevisedUser(Long lastRevisedUser) {
-		this.lastRevisedUser = lastRevisedUser;
-	}
-
-	public List<PortalNotification> getNotifications() {
-		return notifications;
-	}
-
-	public void setNotifications(List<PortalNotification> notifications) {
-		this.notifications = notifications;
-	}
-
-	/**
-	 * @return the portalAccountStatus
-	 */
-	public Code getPortalAccountStatus() {
-		return portalAccountStatus;
-	}
-
-	/**
-	 * @param portalAccountStatus the portalAccountStatus to set
-	 */
-	public void setPortalAccountStatus(Code portalAccountStatus) {
-		this.portalAccountStatus = portalAccountStatus;
-	}
+	@Column(name = "PreferredLanguage", nullable = true)
+	private LanguageOption preferredLanguage;
 
 	public String getFullName() {
 		return this.firstName + StringUtils.SPACE + this.lastName;
