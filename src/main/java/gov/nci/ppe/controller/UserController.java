@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.QuestionAnswerType;
 import gov.nci.ppe.constants.PPERole;
@@ -210,7 +211,8 @@ public class UserController {
 	public ResponseEntity<String> updateUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
-			@ApiParam(value = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification)
+			@ApiParam(value = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification,
+			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
@@ -223,7 +225,16 @@ public class UserController {
 		userGUID = StringUtils.stripToEmpty(userGUID);
 		phoneNumber = StringUtils.stripToEmpty(phoneNumber);
 
-		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber);
+		LanguageOption preferredLang = null;
+
+		try {
+			preferredLang = LanguageOption.getLanguageOption(preferredLanguage);
+		} catch (IllegalArgumentException ex) {
+			return ResponseEntity.badRequest().body("Invalid Language Option selected : " + preferredLanguage);
+		}
+
+		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
+				preferredLang);
 		if (!userOptional.isPresent()) {
 			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NO_CONTENT);
 		}
@@ -381,7 +392,8 @@ public class UserController {
 			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
 			@ApiParam(value = "First name of the participant", required = false) @RequestParam(value = "firstName", required = false) String firstName,
 			@ApiParam(value = "Last name of the participant", required = false) @RequestParam(value = "lastName", required = false) String lastName,
-			@ApiParam(value = "Email Id for the participant", required = false) @RequestParam(value = "emailId", required = false) String emailId)
+			@ApiParam(value = "Email Id for the participant", required = false) @RequestParam(value = "emailId", required = false) String emailId,
+			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage)
 			throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -389,6 +401,14 @@ public class UserController {
 		firstName = StringUtils.stripToEmpty(firstName);
 		lastName = StringUtils.stripToEmpty(lastName);
 		emailId = StringUtils.stripToEmpty(emailId);
+
+		LanguageOption preferredLang = null;
+
+		try {
+			preferredLang = LanguageOption.getLanguageOption(preferredLanguage);
+		} catch (IllegalArgumentException ex) {
+			return ResponseEntity.badRequest().body("Invalid Language Option selected : " + preferredLanguage);
+		}
 
 		List<String> validAccountStatusList = new ArrayList<>();
 		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
@@ -405,7 +425,8 @@ public class UserController {
 			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
-		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId, firstName, lastName);
+		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId, firstName, lastName,
+				preferredLang);
 
 		String jsonFormat = convertUserToJSON(participantOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
@@ -481,6 +502,7 @@ public class UserController {
 	private UserDTO convertUserDTO(User usr) {
 		UserDTO userDTO = null;
 		PPERole roleName = PPERole.valueOf(usr.getRole().getRoleName());
+
 		switch (roleName) {
 		case ROLE_PPE_PROVIDER:
 			Provider provider = (Provider) usr;
@@ -497,11 +519,19 @@ public class UserController {
 
 		case ROLE_PPE_PARTICIPANT:
 			Participant patient = (Participant) usr;
-			userDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
+
+			ParticipantDTO participantDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
 			// Filter out Notifications for CRC and Providers
-			((ParticipantDTO) userDTO).getCrc().getNotifications().clear();
-			((ParticipantDTO) userDTO).getProviders()
-					.forEach(associatedProvider -> associatedProvider.getNotifications().clear());
+			if (participantDTO.getCrc().getNotifications() != null) {
+				participantDTO.getCrc().getNotifications().clear();
+			}
+			participantDTO.getProviders()
+					.forEach(associatedProvider -> {
+						if (associatedProvider.getNotifications() != null) { 
+							associatedProvider.getNotifications().clear();
+						}
+					});
+			userDTO = participantDTO;
 			break;
 
 		case ROLE_PPE_CRC:
