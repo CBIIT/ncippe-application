@@ -37,6 +37,7 @@ public interface EmailLogService {
 
 	/**
 	 * Method to send a Notification email to Provider when their Patient is invited
+	 * to join the BioBank, or when a patient is reassigned to them
 	 * 
 	 * @param recipientEmail    - Recipient's email address
 	 * @param providerFirstName - Recipient's first name
@@ -127,13 +128,5 @@ public interface EmailLogService {
 	 * @return
 	 */
 	public String sendEmailToCRCWhenPatientIsAdded(String recipientEmail, String CRCFullName);
-
-	/**
-	 * Method to send an email to Provider when a patient is included under them
-	 * @param recipientEmail - Recipient's email address
-	 * @param CRCFullName    - Provider's Full Name
-	 * @return
-	 */	
-	public String sendEmailToProviderWhenPatientIsAdded(String recipientEmail, String CRCFullName);
 
 }
