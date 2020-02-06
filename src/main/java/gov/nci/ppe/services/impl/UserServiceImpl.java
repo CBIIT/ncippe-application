@@ -459,8 +459,10 @@ public class UserServiceImpl implements UserService {
 		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers, patientId };
 		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}",
 				"%{PatientId}" };
-		String updatedTextBody = StringUtils.replaceEach(
-				emailServiceConfig.getEmailHtmlBodyForCRCWhenPatientWithdraws(), replaceThisString, replaceStringWith);
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForCRCWhenPatientWithdraws()
+				+ emailServiceConfig.getThankYouForContributionSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(
+				htmlBody, replaceThisString, replaceStringWith);
 
 		/* Replace the variables in the Subject Line */
 		String replaceSubjectStringWith[] = { firstName, lastName };
@@ -469,7 +471,7 @@ public class UserServiceImpl implements UserService {
 				replaceThisStringForSubject, replaceSubjectStringWith);
 
 		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(), subject,
-				updatedTextBody, updatedTextBody);
+				updatedHtmlBody, updatedHtmlBody);
 	}
 
 	/**
@@ -490,11 +492,13 @@ public class UserServiceImpl implements UserService {
 		/* Replace the variables in the EmailBody */
 		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers };
 		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}" };
-		String updatedTextBody = StringUtils.replaceEach(
-				emailServiceConfig.getEmailTextBodyForPatientWhenCRCWithdraws(), replaceThisString, replaceStringWith);
+		String htmlBody = emailServiceConfig.getEmailTextBodyForPatientWhenCRCWithdraws()
+				+ emailServiceConfig.getThankYouForContributionSignature();
+		String updatedHtmlBody = StringUtils.replaceEach(
+				htmlBody, replaceThisString, replaceStringWith);
 
 		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(),
-				emailServiceConfig.getEmailSubjectForPatientWhenCRCWithdraws(), updatedTextBody, updatedTextBody);
+				emailServiceConfig.getEmailSubjectForPatientWhenCRCWithdraws(), updatedHtmlBody, updatedHtmlBody);
 	}
 
 	/*
@@ -773,7 +777,7 @@ public class UserServiceImpl implements UserService {
 									newProvider.getUserId(), patient.getPatientId());
 
 							if (newProvider.isAllowEmailNotification()) {
-								emailService.sendEmailToProviderWhenPatientIsAdded(newProvider.getEmail(),
+								emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
 										newProvider.getFullName());
 							}
 
