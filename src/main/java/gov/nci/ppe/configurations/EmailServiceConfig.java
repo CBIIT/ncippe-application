@@ -186,15 +186,6 @@ public class EmailServiceConfig {
 	@Value("${email.crc.when.patients.added.htmlBody}")
 	private String emailCRCWhenPatientIsAddedHtmlBody;
 
-	/* Properties for sending Email to CRC when a patient is added */
-	@Value("${email.provider.when.patients.added.subject}")
-	private String emailProviderWhenPatientIsAddedSubject;
-	
-	@Value("${email.provider.when.patients.added.textBody}")
-	private String emailProviderWhenPatientIsAddedTextBody;
-	
-	@Value("${email.provider.when.patients.added.htmlBody}")
-	private String emailProviderWhenPatientIsAddedHtmlBody;
 	
 	public String getEmailSubjectForProviderPatientInvite() {
 		return emailSubjectForProviderPatientInvite;
@@ -466,27 +457,6 @@ public class EmailServiceConfig {
 	 */
 	public String getEmailCRCWhenPatientIsAddedHtmlBody() {
 		return emailCRCWhenPatientIsAddedHtmlBody;
-	}
-
-	/**
-	 * @return the emailProviderWhenPatientIsAddedSubject
-	 */
-	public String getEmailProviderWhenPatientIsAddedSubject() {
-		return emailProviderWhenPatientIsAddedSubject;
-	}
-
-	/**
-	 * @return the emailProviderWhenPatientIsAddedTextBody
-	 */
-	public String getEmailProviderWhenPatientIsAddedTextBody() {
-		return emailProviderWhenPatientIsAddedTextBody;
-	}
-
-	/**
-	 * @return the emailProviderWhenPatientIsAddedHtmlBody
-	 */
-	public String getEmailProviderWhenPatientIsAddedHtmlBody() {
-		return emailProviderWhenPatientIsAddedHtmlBody;
 	}
 
 	/**

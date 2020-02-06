@@ -136,7 +136,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { firstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
-		String htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody();
+		String htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody()
+				+ emailServiceConfig.getCommonSignature();
 		String subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -201,7 +202,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName) {
 		String replaceStringWith[] = { firstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
-		String htmlBody = emailServiceConfig.getEmailHtmlBodyForNonPatientInvite();
+		String htmlBody = emailServiceConfig.getEmailHtmlBodyForNonPatientInvite()
+				+ emailServiceConfig.getJoiningSignature();
 		String subject = emailServiceConfig.getEmailSubjectForNonPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
@@ -358,21 +360,4 @@ public class EmailLogServiceImpl implements EmailLogService {
 		return emailStatus;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String sendEmailToProviderWhenPatientIsAdded(String recipientEmail, String CRCFullName) {
-		String replaceStringWith[] = { CRCFullName};
-		String replaceThisString[] = { "%{SalutationFirstName}"};	
-		String subject = emailServiceConfig.getEmailProviderWhenPatientIsAddedSubject();
-		String htmlBody = emailServiceConfig.getEmailProviderWhenPatientIsAddedHtmlBody();
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String signature = emailServiceConfig.getThankYouForContributionSignature();
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
-	}	
 }
