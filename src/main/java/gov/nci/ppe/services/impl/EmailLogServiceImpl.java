@@ -120,7 +120,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
 		String htmlBody = emailServiceConfig.getEmailHtmlBodyForProviderPatientInvite()
-				+ emailServiceConfig.getCommonSignature();
+				+ emailServiceConfig.getThankYouForContributionSignature();
 		String subject = emailServiceConfig.getEmailSubjectForProviderPatientInvite();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -137,7 +137,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
 		String htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody()
-				+ emailServiceConfig.getCommonSignature();
+				+ emailServiceConfig.getThankYouParticipatingSignature();
 		String subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -224,7 +224,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
 		String subject = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject();
 		String htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody()
-				+ emailServiceConfig.getCommonSignature();
+				+ emailServiceConfig.getThankYouParticipatingSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
@@ -242,7 +242,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceStringWith[] = { userFirstName };
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailUploadReportPatientHTMLBody();
-		String signature = emailServiceConfig.getCommonSignature();
+		String signature = emailServiceConfig.getThankYouParticipatingSignature();
 		String subject = emailServiceConfig.getEmailUploadReportPatientSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
@@ -263,7 +263,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 		String htmlBody = emailServiceConfig.getEmailBodyInHtmlFormatForEConsent();
 		String subject = emailServiceConfig.getEmailSubjectForEConsent();
-		String signature = emailServiceConfig.getCommonSignature();
+		String signature = emailServiceConfig.getThankYouParticipatingSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
@@ -314,7 +314,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 		String htmlBody = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedHtmlBody();
 		String subject = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedSubject();
-		String signature = emailServiceConfig.getThankYouSignature();
+		String signature = emailServiceConfig.getThankYouParticipatingSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
@@ -334,7 +334,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String htmlBody = emailServiceConfig.getEmailPatientWhenCRCIsReplacedHtmlBody();
 		String subject = emailServiceConfig.getEmailPatientWhenCRCIsReplacedSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String signature = emailServiceConfig.getThankYouSignature();
+		String signature = emailServiceConfig.getThankYouParticipatingSignature();
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
