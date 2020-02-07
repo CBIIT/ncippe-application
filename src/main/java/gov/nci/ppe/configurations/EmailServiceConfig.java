@@ -23,14 +23,11 @@ public class EmailServiceConfig {
 	@Value("${email.use.aws}")
 	private boolean useAWSSES;
 
-	@Value("${email.common.signature}")
-	private String commonSignature;
-
 	@Value("${email.joining.signature}")
 	private String joiningSignature;
 
-	@Value("${email.thankyou.signature}")
-	private String thankYouSignature;
+	@Value("${email.thankyou.participating.signature}")
+	private String thankYouParticipatingSignature;
 	
 	@Value("${email.thankyou.contribution.signature}")
 	private String thankYouForContributionSignature;
@@ -115,6 +112,9 @@ public class EmailServiceConfig {
 	@Value("${email.provider.patient.invite.portal.textBody}")
 	private String emailTextBodyForProviderPatientInvite;
 
+	@Value("${email.provider.patient.invite.portal.htmlBody}")
+	private String emailHtmlBodyForProviderPatientInvite;
+
 	/*
 	 * Properties for inviting a new HCP, CRC, BSSC and Admin to participate in the
 	 * Portal
@@ -198,9 +198,6 @@ public class EmailServiceConfig {
 	public String getEmailHtmlBodyForProviderPatientInvite() {
 		return emailHtmlBodyForProviderPatientInvite;
 	}
-
-	@Value("${email.provider.patient.invite.portal.htmlBody}")
-	private String emailHtmlBodyForProviderPatientInvite;
 
 	public String getSenderEmailAddress() {
 		return senderEmailAddress;
@@ -360,9 +357,6 @@ public class EmailServiceConfig {
 		return emailUploadReportPatientHTMLBody;
 	}
 
-	public String getCommonSignature() {
-		return commonSignature;
-	}
 
 	public String getJoiningSignature() {
 		return joiningSignature;
@@ -434,8 +428,8 @@ public class EmailServiceConfig {
 	/**
 	 * @return the thankYouSignature
 	 */
-	public String getThankYouSignature() {
-		return thankYouSignature;
+	public String getThankYouParticipatingSignature() {
+		return thankYouParticipatingSignature;
 	}
 
 	/**
