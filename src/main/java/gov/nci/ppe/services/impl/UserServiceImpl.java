@@ -778,7 +778,7 @@ public class UserServiceImpl implements UserService {
 
 							if (newProvider.isAllowEmailNotification()) {
 								emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
-										newProvider.getFullName());
+										newProvider.getFirstName());
 							}
 
 						}
