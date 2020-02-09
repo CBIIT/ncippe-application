@@ -351,7 +351,7 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
-		if (!authService.authorize(value, patient.getUserUUID())) {
+		if (!authService.authorize(value, patient)) {
 			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
