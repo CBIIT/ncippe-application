@@ -224,7 +224,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
 		String subject = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlyUploadedBiomarkerReportSubject();
 		String htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutUNewlypUloadedBiomarkerReportHtmlBody()
-				+ emailServiceConfig.getThankYouParticipatingSignature();
+				+ emailServiceConfig.getThankYouForContributionSignature();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
