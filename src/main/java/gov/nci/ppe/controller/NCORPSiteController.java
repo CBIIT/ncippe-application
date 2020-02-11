@@ -45,7 +45,7 @@ public class NCORPSiteController {
 	private Mapper dozerBeanMapper;
 
 	@ApiOperation(value = "Return all the active sites.")
-	@GetMapping(value = "/api/v1/sites")
+	@GetMapping(value = "/publicapi/v1/sites")
 	public ResponseEntity<String> getAllActiveSites() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
