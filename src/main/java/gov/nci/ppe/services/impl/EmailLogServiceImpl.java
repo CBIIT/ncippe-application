@@ -137,7 +137,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String replaceThisString[] = { "%{SalutationFirstName}" };
 
 		String htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenHtmlBody()
-				+ emailServiceConfig.getThankYouParticipatingSignature();
+				+ emailServiceConfig.getThankYouForContributionSignature();
 		String subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubject();
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
