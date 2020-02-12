@@ -30,6 +30,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Autowired
 	public UserService userService;
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 */
 	@Override
 	public boolean authorize(String authToken, User user) {
 		// If the Token is empty, the user is not authorized
@@ -103,6 +107,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 
+	 */
 	@Override
 	public boolean authorize(String authToken, String targetUUID) {
 		Optional<User> targetUserOptional = userService.findByUuid(targetUUID);
@@ -112,6 +120,19 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		} else {
 			return authorize(authToken, targetUserOptional.get());
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 */
+	@Override
+	public Optional<User> getRequestingUser(String authToken) {
+		Jws<Claims> claims = jwtMgmtService.validateJWT(authToken);
+		final String requestingUserUUID = (String) claims.getBody().get(JWTManagementService.TOKEN_CLAIM_USERNAME);
+		logger.log(Level.INFO, requestingUserUUID);
+		logger.log(Level.INFO, claims.toString());
+		return userService.findByUuid(requestingUserUUID);
 	}
 
 }
