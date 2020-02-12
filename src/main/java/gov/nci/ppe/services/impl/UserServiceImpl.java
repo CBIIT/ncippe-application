@@ -505,8 +505,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
-			String patientFirstName, String patientLastName, LanguageOption preferredLanguage)
+	public Optional<User> invitePatientToPortal(String patientId, String uuid)
 			throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
@@ -514,18 +513,7 @@ public class UserServiceImpl implements UserService {
 		}
 
 		Participant participant = (Participant) participantOptional.get();
-		if (StringUtils.isNotBlank(patientFirstName)) {
-			participant.setFirstName(patientFirstName);
-		}
-		if (StringUtils.isNotBlank(patientLastName)) {
-			participant.setLastName(patientLastName);
-		}
-		if (StringUtils.isNotBlank(patientEmail)) {
-			participant.setEmail(patientEmail);
-		}
-		if (preferredLanguage != null) {
-			participant.setPreferredLanguage(preferredLanguage);
-		}
+
 		/* Get the UserId for CRC */
 		Optional<User> crcOptional = findByUuid(uuid);
 		if (crcOptional.isPresent()) {
@@ -538,10 +526,11 @@ public class UserServiceImpl implements UserService {
 
 		participantOptional = Optional.of(userRepository.save(participant));
 
-		raiseInvitedParticipationAuditEvent(patientId, uuid, patientEmail, patientFirstName, patientLastName);
+		raiseInvitedParticipationAuditEvent(patientId, uuid, participant.getEmail(), participant.getFirstName(),
+				participant.getLastName());
 
 		// Send Notification to Patient & Providers
-		emailService.sendEmailToInvitePatient(patientEmail, patientFirstName);
+		emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName());
 		if (participant.getProviders() != null) {
 			for (Provider provider : participant.getProviders()) {
 				if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -108,7 +109,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Return all the registered users along with their roles.")
-	@GetMapping(value = "/api/v1/users")
+	@GetMapping(value = "/api/v1/users", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getAllRegisteredUsers() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
@@ -133,7 +134,7 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User logged in successfully"),
 			@ApiResponse(code = 409, message = "User has already been activated with a different UUID."),
 			@ApiResponse(code = 404, message = "User not found") })
-	@PostMapping(value = "/api/v1/login")
+	@PostMapping(value = "/api/v1/login", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> login(@RequestParam(value = "uuid", required = true) String uuid,
 			@RequestParam(value = "email", required = true) String email) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -175,7 +176,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Returns the User Details for the specified User")
-	@GetMapping(value = "/api/v1/user/{userUUID}")
+	@GetMapping(value = "/api/v1/user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
 			throws JsonProcessingException {
@@ -184,7 +185,7 @@ public class UserController {
 	}
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
-	@GetMapping(value = "/api/v1/user")
+	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
@@ -207,7 +208,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "update the registered user's email notification preference and phone number.")
-	@PutMapping(value = "/api/v1/user/{userGUID}")
+	@PutMapping(value = "/api/v1/user/{userGUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> updateUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
@@ -256,7 +257,7 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User has been deactivated"),
 			@ApiResponse(code = 401, message = "Bearer token is missing or expired.") })
 	@ApiOperation(value = "Deactivates a particular user in the portal")
-	@PatchMapping(value = "/api/v1/deactivate-user/{userUUID}")
+	@PatchMapping(value = "/api/v1/deactivate-user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> deActivateUserByGuid(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
 			throws JsonProcessingException {
@@ -283,7 +284,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Authorize a user who has logged in via login.gov")
-	@PatchMapping(value = "/api/v1/authorize-user")
+	@PatchMapping(value = "/api/v1/authorize-user", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> authorizeUser(HttpServletRequest request,
 			@ApiParam(value = "The UUID for the patient", required = true) @RequestParam String uuid,
 			@ApiParam(value = "The email used by the user to login to Login.gov", required = true) @RequestParam String email)
@@ -332,7 +333,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Participant withdraws from the Biobank program")
-	@PostMapping(value = "/api/v1/withdraw-user-participation")
+	@PostMapping(value = "/api/v1/withdraw-user-participation", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> withdrawParticipationByParticipant(HttpServletRequest request,
 			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
@@ -386,16 +387,68 @@ public class UserController {
 	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
-	@PatchMapping(value = "/api/v1/user/invite-participant-to-portal")
+	@PatchMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
-			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
-			@ApiParam(value = "First name of the participant", required = false) @RequestParam(value = "firstName", required = false) String firstName,
-			@ApiParam(value = "Last name of the participant", required = false) @RequestParam(value = "lastName", required = false) String lastName,
-			@ApiParam(value = "Email Id for the participant", required = false) @RequestParam(value = "emailId", required = false) String emailId,
-			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage)
+			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId)
 			throws JsonProcessingException {
 
+		patientId = StringUtils.stripToEmpty(patientId);
+		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
+
+
+		List<String> validAccountStatusList = new ArrayList<>();
+		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
+		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
+				validAccountStatusList);
+		if (participantOptional.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+		}
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		String value = request.getHeader(AUTHORIZATION);
+		if (!authService.authorize(value, participantOptional.get())) {
+			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+		}
+
+		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser);
+
+		String jsonFormat = convertUserToJSON(participantOptional.get());
+		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+	}
+
+	/**
+	 * This method will insert new patient, provider and CRC details into PPE
+	 * Database if it doesn't exists. The data will be fetched from OPEN.
+	 * 
+	 * @param openResponseDTO - Patient, Provider and CRC details in JSON Format.
+	 * @return - HTTP Response with appropriate message.
+	 * @throws JsonProcessingException
+	 */
+	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
+	@PostMapping(value = "/api/v1/user/insert-open-data", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> insertDataFromOpen(
+			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
+			throws JsonProcessingException {
+		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		String jsonFormat = convertUsersToJSON(newUsersList);
+		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+	}
+
+	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
+	@PatchMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> enterUserDetails(HttpServletRequest request,
+			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
+			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
+			@ApiParam(value = "First name of the participant", required = true) @RequestParam(value = "firstName", required = true) String firstName,
+			@ApiParam(value = "Last name of the participant", required = true) @RequestParam(value = "lastName", required = true) String lastName,
+			@ApiParam(value = "Email Id for the participant", required = true) @RequestParam(value = "emailId", required = true) String emailId,
+			@ApiParam(value = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage)
+			throws JsonProcessingException {
 		patientId = StringUtils.stripToEmpty(patientId);
 		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
 		firstName = StringUtils.stripToEmpty(firstName);
@@ -421,35 +474,24 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String value = request.getHeader(AUTHORIZATION);
-		if (!authService.authorize(value, participantOptional.get())) {
+		User newPatient = participantOptional.get();
+		if (!authService.authorize(value, newPatient)) {
 			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
 		}
 
-		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser, emailId, firstName, lastName,
-				preferredLang);
+		// Fill in the details
+		newPatient.setFirstName(firstName);
+		newPatient.setLastName(lastName);
+		newPatient.setEmail(emailId);
+		newPatient.setPreferredLanguage(preferredLang);
+
+		Optional<User> optionalCRC = authService.getRequestingUser(value);
+		// No need to check for existence, as otherwise authorize() call would have
+		// failed
+		newPatient.setLastRevisedUser(optionalCRC.get().getLastRevisedUser());
+		participantOptional = userService.updateUser(newPatient);
 
 		String jsonFormat = convertUserToJSON(participantOptional.get());
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
-	}
-
-	/**
-	 * This method will insert new patient, provider and CRC details into PPE
-	 * Database if it doesn't exists. The data will be fetched from OPEN.
-	 * 
-	 * @param openResponseDTO - Patient, Provider and CRC details in JSON Format.
-	 * @return - HTTP Response with appropriate message.
-	 * @throws JsonProcessingException
-	 */
-	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
-	@PostMapping(value = "/api/v1/user/insert-open-data")
-	public ResponseEntity<String> insertDataFromOpen(
-			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
-			throws JsonProcessingException {
-		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
-
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String jsonFormat = convertUsersToJSON(newUsersList);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
