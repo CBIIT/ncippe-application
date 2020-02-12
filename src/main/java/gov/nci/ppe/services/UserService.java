@@ -179,16 +179,10 @@ public interface UserService {
 	 * 
 	 * @param patientId         - Unique Patient Id of the Patient
 	 * @param uuid              - Unique login Id of the CRC performing the action
-	 * @param patientEmail      - Email address of the patient (No format validation
-	 *                          done at Service)
-	 * @param patientFirstName  - First Name of Patient
-	 * @param patientLastName   - Last Name of Patient
-	 * @param preferredLanguage - Language preferred by the Patient
 	 * @return Updated Patient record
 	 * @throws JsonProcessingException
 	 */
-	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
-			String patientFirstName, String patientLastName, LanguageOption preferredLanguage)
+	public Optional<User> invitePatientToPortal(String patientId, String uuid)
 			throws JsonProcessingException;
 	
 	/**
