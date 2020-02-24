@@ -31,7 +31,7 @@ public class Participant extends User {
 	@Column(name = "UserId")
 	private Long participantId;
 
-	@Column(name = "PatientID", nullable = false, length = 32)
+	@Column(name = "PatientID", nullable = false, length = 20)
 	private String patientId;
 
 	@ManyToMany
