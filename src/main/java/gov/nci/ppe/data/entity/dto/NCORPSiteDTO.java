@@ -39,6 +39,9 @@ public class NCORPSiteDTO {
 	@JsonProperty("telephone")
 	private String phoneNumber;
 
+	@JsonProperty("extension")
+	private String phoneNumberExtension;
+
 	@JsonProperty("poc_email")
 	private String pocEmail;
 
