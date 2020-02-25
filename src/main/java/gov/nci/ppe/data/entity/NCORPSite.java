@@ -57,8 +57,11 @@ public class NCORPSite {
 	@Column(name = "ZipCode", nullable = false, length = 10)
 	private String zipCode;
 
-	@Column(name = "PhoneNumber", nullable = true, length = 24)
+	@Column(name = "PhoneNumber", nullable = true, length = 14)
 	private String phoneNumber;
+
+	@Column(name = "PhoneNumberExtension", nullable = true, length = 8)
+	private String phoneNumberExtension;
 
 	@Column(name = "POCName", nullable = true, length = 32)
 	private String sitePOCName;
