@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
