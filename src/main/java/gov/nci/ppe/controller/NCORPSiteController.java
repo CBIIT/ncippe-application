@@ -3,7 +3,6 @@ package gov.nci.ppe.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.data.entity.NCORPSite;
