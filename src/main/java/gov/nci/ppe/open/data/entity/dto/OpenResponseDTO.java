@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import lombok.Data;
+
 /**
  * @author PublicisSapient
  * @version 1.0
  * @since 2019-11-04
  */
+@Data
 public class OpenResponseDTO {
 
 	private String requestId;
@@ -20,103 +23,6 @@ public class OpenResponseDTO {
 	private String message;
 	private List<UserEnrollmentDataDTO> data;
 	
-	/**
-	 * @return the requestId
-	 */
-	public String getRequestId() {
-		return requestId;
-	}
-	
-	/**
-	 * @param requestId the requestId to set
-	 */
-	public void setRequestId(String requestId) {
-		this.requestId = requestId;
-	}
-	
-	/**
-	 * @return the requestUrl
-	 */
-	public String getRequestUrl() {
-		return requestUrl;
-	}
-	
-	/**
-	 * @param requestUrl the requestUrl to set
-	 */
-	public void setRequestUrl(String requestUrl) {
-		this.requestUrl = requestUrl;
-	}
-	
-	/**
-	 * @return the requestBy
-	 */
-	public String getRequestBy() {
-		return requestBy;
-	}
-	
-	/**
-	 * @param requestBy the requestBy to set
-	 */
-	public void setRequestBy(String requestBy) {
-		this.requestBy = requestBy;
-	}
-	
-	/**
-	 * @return the requestDate
-	 */
-	public Timestamp getRequestDate() {
-		return requestDate;
-	}
-	
-	/**
-	 * @param requestDate the requestDate to set
-	 */
-	public void setRequestDate(Timestamp requestDate) {
-		this.requestDate = requestDate;
-	}
-	
-	/**
-	 * @return the status
-	 */
-	public String getStatus() {
-		return status;
-	}
-	
-	/**
-	 * @param status the status to set
-	 */
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	
-	/**
-	 * @return the message
-	 */
-	public String getMessage() {
-		return message;
-	}
-	
-	/**
-	 * @param message the message to set
-	 */
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	
-	/**
-	 * @return the data
-	 */
-	public List<UserEnrollmentDataDTO> getData() {
-		return data;
-	}
-	
-	/**
-	 * @param data the data to set
-	 */
-	public void setData(List<UserEnrollmentDataDTO> data) {
-		this.data = data;
-	}
 	
     @Override
     public String toString() {
