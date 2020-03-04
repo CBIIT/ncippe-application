@@ -398,7 +398,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			}
 		});
 
-		CRC crcforPatient = patient.getCRC();
+		CRC crcforPatient = patient.getCrc();
 		if (crcforPatient.isAllowEmailNotification()) {
 			emailIds.put(crcforPatient.getFirstName(), crcforPatient.getEmail()); // email for CRC
 		}
@@ -432,7 +432,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 				userDetailMap.put(provider.getUserId(), provider.getFirstName());
 			});
 
-			CRC crc = patient.getCRC();
+			CRC crc = patient.getCrc();
 			if (crc != null) {
 				userDetailMap.put(crc.getCrcId(), crc.getFirstName());
 			}

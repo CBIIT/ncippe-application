@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,9 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dozermapper.core.Mapper;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.PatientReportConstants;
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -45,6 +43,8 @@ import gov.nci.ppe.services.AmazonS3Service;
 import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.UserService;
 import gov.nci.ppe.services.impl.ApiException;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * Controller class for Participant's Report related actions.

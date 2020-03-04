@@ -289,7 +289,7 @@ public class UserServiceImpl implements UserService {
 		});
 		qsAnsRepo.saveAll(qsAnsList);
 		patient.setLastRevisedDate(qsAnsInsertionTime);
-		patient.setIsActiveBiobankParticipant(false);
+		patient.setActiveBiobankParticipant(false);
 		patient.setDateDeactivated(qsAnsInsertionTime);
 		return Optional.of(userRepository.save(patient));
 	}
@@ -385,9 +385,9 @@ public class UserServiceImpl implements UserService {
 					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
-			if (withdrawnPatient.getCRC().isAllowEmailNotification()) {
+			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
-						withdrawnPatient.getCRC().getFirstName(), withdrawnPatient.getCRC().getEmail(),
+						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
 						questionAnswers.toString(), withdrawnPatient.getPatientId());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
@@ -399,14 +399,14 @@ public class UserServiceImpl implements UserService {
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
 						notificationTitle, notificationServiceConfig.getParticipantWithdrawsSelfMessage(),
-						withdrawnPatient.getCRC().getCrcId(), withdrawnPatient.getFirstName(),
+						withdrawnPatient.getCrc().getCrcId(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getFirstName(), withdrawnPatient.getPatientId());
 
 			}
 		} else {
 			if (withdrawnPatient.isAllowEmailNotification()) {
-				sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCRC().getFirstName(),
-						withdrawnPatient.getCRC().getLastName(), withdrawnPatient.getFirstName(),
+				sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getEmail(), questionAnswers.toString());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
@@ -416,8 +416,8 @@ public class UserServiceImpl implements UserService {
 				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject();
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
 						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
-						withdrawnPatient.getUserId(), withdrawnPatient.getCRC().getFirstName(),
-						withdrawnPatient.getCRC().getLastName(), withdrawnPatient.getPatientId());
+						withdrawnPatient.getUserId(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
 			}
 		}
 		return Optional.of(userOptional.get());
@@ -559,25 +559,25 @@ public class UserServiceImpl implements UserService {
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
 		newPatient.setPortalAccountStatus(portalAccountStatusCode);
 		newPatient.setAllowEmailNotification(true);
-		newPatient.setIsActiveBiobankParticipant(true);
+		newPatient.setActiveBiobankParticipant(true);
 		newPatient.setDateCreated(TimeUtil.now());
 		newPatient.setLastRevisedDate(TimeUtil.now());
 		Optional<User> patientOptional = Optional.of(userRepository.save(newPatient));
-		if (null != newPatient.getCRC()) {
+		if (null != newPatient.getCrc()) {
 
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
 					notificationServiceConfig.getPatientAddedFromOpenTitle(),
-					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(),
+					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCrc().getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
 			// OPEN
-			if (newPatient.getCRC().isAllowEmailNotification()
-					&& StringUtils.isNotBlank(newPatient.getCRC().getEmail())) {
-				emailService.sendEmailToCRCOnNewPatient(newPatient.getCRC().getEmail(),
-						newPatient.getCRC().getFirstName());
+			if (newPatient.getCrc().isAllowEmailNotification()
+					&& StringUtils.isNotBlank(newPatient.getCrc().getEmail())) {
+				emailService.sendEmailToCRCOnNewPatient(newPatient.getCrc().getEmail(),
+						newPatient.getCrc().getFirstName());
 			}
 
 		}
@@ -710,11 +710,12 @@ public class UserServiceImpl implements UserService {
 			if (patientOptional.isEmpty()) {
 				Participant newPatient = new Participant();
 				newPatient.setPatientId(patientData.getPatientId());
+				newPatient.setDateOfBirth(patientData.getDateOfBirth());
 				newPatient.setPreferredLanguage(LanguageOption.ENGLISH);
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
 				if (null != crc) {
-					newPatient.setCRC(crc);
+					newPatient.setCrc(crc);
 				}
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 
@@ -738,18 +739,18 @@ public class UserServiceImpl implements UserService {
 					providerUpdatedFlag = true;
 				}
 
-				CRC existingCRC = patient.getCRC();
+				CRC existingCRC = patient.getCrc();
 
 				// Adding a new CRC to a patient
 				if (null == existingCRC && null != crc) {
-					patient.setCRC(crc);
+					patient.setCrc(crc);
 					crcUpdatedFlag = true;
 				}
 				// Updating CRC for a patient
 				if (null != crc && null != existingCRC) {
 					// Check if the CRC remains unchanged.
 					if (existingCRC.getOpenCtepID() != crc.getOpenCtepID()) {
-						patient.setCRC(crc);
+						patient.setCrc(crc);
 						crcUpdatedFlag = true;
 					}
 				}
