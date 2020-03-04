@@ -96,7 +96,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
-		if (targetUser.getCRC().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
+		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
 			logger.log(Level.INFO,
 					"CRC " + requestingUserUUID + " allowed access to patient " + targetUser.getUserUUID());
 			return true;
