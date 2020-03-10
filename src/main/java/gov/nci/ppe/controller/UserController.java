@@ -51,7 +51,6 @@ import gov.nci.ppe.data.entity.dto.ParticipantDTO;
 import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
-import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
@@ -418,26 +417,6 @@ public class UserController {
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
-	/**
-	 * This method will insert new patient, provider and CRC details into PPE
-	 * Database if it doesn't exists. The data will be fetched from OPEN.
-	 * 
-	 * @param openResponseDTO - Patient, Provider and CRC details in JSON Format.
-	 * @return - HTTP Response with appropriate message.
-	 * @throws JsonProcessingException
-	 */
-	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
-	@PostMapping(value = "/api/v1/user/insert-open-data", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> insertDataFromOpen(
-			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
-			throws JsonProcessingException {
-		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
-
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
-		String jsonFormat = convertUsersToJSON(newUsersList);
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
-	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
 	@PatchMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
