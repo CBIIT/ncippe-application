@@ -394,11 +394,16 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject();
-				notificationTitle = StringUtils.replace(notificationTitle, "%{FullName}",
+				String notificationTitleEnglish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectEnglish();
+				notificationTitleEnglish = StringUtils.replace(notificationTitleEnglish, "%{FullName}",
+						withdrawnPatient.getFullName());
+				String notificationTitleSpanish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectSpanish();
+				notificationTitleSpanish = StringUtils.replace(notificationTitleSpanish, "%{FullName}",
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
-						notificationTitle, notificationServiceConfig.getParticipantWithdrawsSelfMessage(),
+						notificationTitleEnglish, notificationTitleSpanish,
+						notificationServiceConfig.getParticipantWithdrawsSelfMessageEnglish(),
+						notificationServiceConfig.getParticipantWithdrawsSelfMessageSpanish(),
 						withdrawnPatient.getCrc().getCrcId(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getFirstName(), withdrawnPatient.getPatientId());
 
@@ -413,9 +418,12 @@ public class UserServiceImpl implements UserService {
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject();
+
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
-						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectEnglish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectSpanish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCMessageEnglish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCMessageSpanish(),
 						withdrawnPatient.getUserId(), withdrawnPatient.getCrc().getFirstName(),
 						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
 			}
@@ -568,8 +576,10 @@ public class UserServiceImpl implements UserService {
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
-					notificationServiceConfig.getPatientAddedFromOpenTitle(),
-					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCrc().getUserId(),
+					notificationServiceConfig.getPatientAddedFromOpenSubjectEnglish(),
+					notificationServiceConfig.getPatientAddedFromOpenSubjectSpanish(),
+					notificationServiceConfig.getPatientAddedFromOpenMessageEnglish(),
+					notificationServiceConfig.getPatientAddedFromOpenMessageSpanish(), newPatient.getCrc().getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
