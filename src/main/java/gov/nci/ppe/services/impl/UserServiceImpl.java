@@ -386,9 +386,12 @@ public class UserServiceImpl implements UserService {
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
-				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
+
+				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
+						withdrawnPatient.getLastName(),
 						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId());
+						questionAnswers.toString(), withdrawnPatient.getPatientId(),
+						withdrawnPatient.getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -410,9 +413,10 @@ public class UserServiceImpl implements UserService {
 			}
 		} else {
 			if (withdrawnPatient.isAllowEmailNotification()) {
-				sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
+				emailService.sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
 						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getFirstName(),
-						withdrawnPatient.getEmail(), questionAnswers.toString());
+						withdrawnPatient.getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -448,66 +452,9 @@ public class UserServiceImpl implements UserService {
 		return Optional.of(userRepository.save(user));
 	}
 
-	/**
-	 * Method to send out email to CRC when an active participant withdraws self
-	 * from the PPE Program
-	 * 
-	 * @param firstName       - Patient's First Name
-	 * @param lastName        - Patient's Last Name
-	 * @param salutationName  - Email Subscriber's first name
-	 * @param emailId         - Email Subscriber's email id
-	 * @param questionAnswers - Survey question and answers taken by the participant
-	 * @param patientId       - Unique Id of the Patient
-	 * @return - Success or Failure of the email process
-	 */
-	private String sendEmailToCRCAfterParticipantWithdraws(String firstName, String lastName, String salutationName,
-			String emailId, String questionAnswers, String patientId) {
 
-		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}",
-				"%{PatientId}" };
-		String htmlBody = emailServiceConfig.getEmailHtmlBodyForCRCWhenPatientWithdraws()
-				+ emailServiceConfig.getThankYouForContributionSignature();
-		String updatedHtmlBody = StringUtils.replaceEach(
-				htmlBody, replaceThisString, replaceStringWith);
 
-		/* Replace the variables in the Subject Line */
-		String replaceSubjectStringWith[] = { firstName, lastName };
-		String replaceThisStringForSubject[] = { "%{FirstName}", "%{LastName}" };
-		String subject = StringUtils.replaceEach(emailServiceConfig.getEmailSubjectForCRCWhenPatientWithdraws(),
-				replaceThisStringForSubject, replaceSubjectStringWith);
 
-		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(), subject,
-				updatedHtmlBody, updatedHtmlBody);
-	}
-
-	/**
-	 * Method to send out email to Patient when a CRC withdraws that participant
-	 * from the PPE Program
-	 * 
-	 * @param firstName       - CRC's first name
-	 * @param lastName        - CRC's last name
-	 * @param salutationName  - Email Subscriber's first name
-	 * @param emailId         - Email Subscriber's email id
-	 * @param questionAnswers - Survey question and answers taken by the CRC on
-	 *                        behalf of the participant
-	 * @return - Success or Failure of the email process
-	 */
-	private String sendEmailToParticipantAfterCRCWithdrawsPatient(String firstName, String lastName,
-			String salutationName, String emailId, String questionAnswers) {
-
-		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}" };
-		String htmlBody = emailServiceConfig.getEmailTextBodyForPatientWhenCRCWithdraws()
-				+ emailServiceConfig.getThankYouForContributionSignature();
-		String updatedHtmlBody = StringUtils.replaceEach(
-				htmlBody, replaceThisString, replaceStringWith);
-
-		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(),
-				emailServiceConfig.getEmailSubjectForPatientWhenCRCWithdraws(), updatedHtmlBody, updatedHtmlBody);
-	}
 
 	/*
 	 * {@inheritDoc}
@@ -538,11 +485,13 @@ public class UserServiceImpl implements UserService {
 				participant.getLastName());
 
 		// Send Notification to Patient & Providers
-		emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName());
+		emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName(),
+				participant.getPreferredLanguage());
 		if (participant.getProviders() != null) {
 			for (Provider provider : participant.getProviders()) {
 				if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
-					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
+					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
+							provider.getPreferredLanguage());
 				}
 				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
 						provider.getProviderId(), participant.getPatientId());
@@ -571,7 +520,8 @@ public class UserServiceImpl implements UserService {
 		newPatient.setDateCreated(TimeUtil.now());
 		newPatient.setLastRevisedDate(TimeUtil.now());
 		Optional<User> patientOptional = Optional.of(userRepository.save(newPatient));
-		if (null != newPatient.getCrc()) {
+		CRC crc = newPatient.getCrc();
+		if (null != crc) {
 
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
@@ -579,15 +529,13 @@ public class UserServiceImpl implements UserService {
 					notificationServiceConfig.getPatientAddedFromOpenSubjectEnglish(),
 					notificationServiceConfig.getPatientAddedFromOpenSubjectSpanish(),
 					notificationServiceConfig.getPatientAddedFromOpenMessageEnglish(),
-					notificationServiceConfig.getPatientAddedFromOpenMessageSpanish(), newPatient.getCrc().getUserId(),
+					notificationServiceConfig.getPatientAddedFromOpenMessageSpanish(), crc.getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
 			// OPEN
-			if (newPatient.getCrc().isAllowEmailNotification()
-					&& StringUtils.isNotBlank(newPatient.getCrc().getEmail())) {
-				emailService.sendEmailToCRCOnNewPatient(newPatient.getCrc().getEmail(),
-						newPatient.getCrc().getFirstName());
+			if (crc.isAllowEmailNotification() && StringUtils.isNotBlank(crc.getEmail())) {
+				emailService.sendEmailToCRCOnNewPatient(crc.getEmail(), crc.getFirstName(), crc.getPreferredLanguage());
 			}
 
 		}
@@ -612,7 +560,8 @@ public class UserServiceImpl implements UserService {
 		Optional<User> providerOptional = Optional.of(userRepository.save(provider));
 
 		// Send Email Notification to Providers
-		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName());
+		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName(),
+				provider.getPreferredLanguage());
 		return providerOptional;
 	}
 
@@ -642,7 +591,7 @@ public class UserServiceImpl implements UserService {
 		Optional<User> providerOptional = Optional.of(userRepository.save(crc));
 
 		// Send Email Notification to CRCs
-		emailService.sendEmailToInviteNonPatients(crc.getEmail(), crc.getFirstName());
+		emailService.sendEmailToInviteNonPatients(crc.getEmail(), crc.getFirstName(), crc.getPreferredLanguage());
 		return providerOptional;
 	}
 
@@ -778,14 +727,14 @@ public class UserServiceImpl implements UserService {
 
 							if (newProvider.isAllowEmailNotification()) {
 								emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
-										newProvider.getFirstName());
+										newProvider.getFirstName(), newProvider.getPreferredLanguage());
 							}
 
 						}
 					});
 					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
-								patient.getPatientId());
+								patient.getPatientId(), patient.getPreferredLanguage());
 					}
 					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
@@ -795,7 +744,7 @@ public class UserServiceImpl implements UserService {
 				if (crcUpdatedFlag) {
 					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
-								patient.getPatientId());
+								patient.getPatientId(), patient.getPreferredLanguage());
 					}
 					// Notify the patient in the system
 					notificationService.notifyPatientWhenCRCIsReplaced(patient.getUserId());
@@ -805,7 +754,8 @@ public class UserServiceImpl implements UserService {
 						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
 								patient.getPatientId());
 						if (crc.isAllowEmailNotification()) {
-							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFullName());
+							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFullName(),
+									crc.getPreferredLanguage());
 						}
 					}
 					final Long crcOpentCtepId = crc.getOpenCtepID();
