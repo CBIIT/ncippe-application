@@ -288,7 +288,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		// report.
 		if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(uploadedFileType)
 				&& admin.isAllowEmailNotification()) {
-			String emailStatus = emailLogService.sendEmailToAdminAfterFileUpload(patient, admin.getEmail());
+			String emailStatus = emailLogService.sendEmailToAdminAfterFileUpload(patient, admin.getEmail(),
+					admin.getPreferredLanguage());
 			logger.info("Action of sending email was " + emailStatus);
 		}
 
@@ -368,16 +369,18 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)
 				&& patient.isAllowEmailNotification()) {
 			// Send email to Patient only
-			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName());
+			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName(),
+					patient.getPreferredLanguage());
 		} else {
 			if (patient.isAllowEmailNotification()) {
-				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName());
+				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName(),
+						patient.getPreferredLanguage());
 			}
 			/* Fetch email Ids for CRC and Providers */
 			Map<String, String> emailIds = getEmailIds(patient);
 			emailIds.forEach((name, emailId) -> {
 				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId,
-						patient.getFullName(), patient.getPatientId());
+						patient.getFullName(), patient.getPatientId(), patient.getPreferredLanguage());
 			});
 
 		}
