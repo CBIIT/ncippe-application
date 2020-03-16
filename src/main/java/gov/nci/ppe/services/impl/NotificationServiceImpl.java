@@ -31,7 +31,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<PortalNotification> addNotification(String from, String subject, String message, Long userId,
+	public Optional<PortalNotification> addNotification(String from, String subjectEnglish, String subjectSpanish,
+			String messageEnglish, String messageSpanish, Long userId,
 			String userName, String patientName, String patientId) {
 
 		/*
@@ -40,9 +41,12 @@ public class NotificationServiceImpl implements NotificationService {
 		 */
 		String replaceStringWith[] = { userName, patientName, patientId };
 		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
-		String updatedMessage = StringUtils.replaceEach(message, replaceThisString, replaceStringWith);
-		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
-		return addNotificationToAccount(from, updatedSubject, updatedMessage, userId);
+		String updatedMessageEnglish = StringUtils.replaceEach(messageEnglish, replaceThisString, replaceStringWith);
+		String updatedSubjectEnglish = StringUtils.replaceEach(subjectEnglish, replaceThisString, replaceStringWith);
+		String updatedMessageSpanish = StringUtils.replaceEach(messageSpanish, replaceThisString, replaceStringWith);
+		String updatedSubjectSpanish = StringUtils.replaceEach(subjectSpanish, replaceThisString, replaceStringWith);
+		return addNotificationToAccount(from, updatedSubjectEnglish, updatedSubjectSpanish, updatedMessageEnglish,
+				updatedMessageSpanish, userId);
 	}
 
 	/**
@@ -84,8 +88,10 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public void notifyPatientWhenCRCIsReplaced(Long userId) {
 		addNotificationToAccount(notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedFrom(),
-				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedTitle(),
-				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedMessage(), userId);
+				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedSubjectEnglish(),
+				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedSubjectSpanish(),
+				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedMessageEnglish(),
+				notificationSrvConfig.getNotifyPatientWhenCRCIsReplacedMessageSpanish(), userId);
 	}
 
 	/**
@@ -95,10 +101,16 @@ public class NotificationServiceImpl implements NotificationService {
 	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
 		String replaceStringWith[] = { patientFullName, patientId };
 		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
-		String updatedMessage = StringUtils.replaceEach(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessage(),
+		String updatedMessageEnglish = StringUtils.replaceEach(
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(),
 				replaceThisString, replaceStringWith);
+		String updatedMessageSpanish = StringUtils.replaceEach(
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageSpanish(), replaceThisString,
+				replaceStringWith);
 		addNotificationToAccount(notificationSrvConfig.getNotifyCRCWhenPatientIsAddedFrom(),
-				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedTitle(), updatedMessage, userId);
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedSubjectEnglish(),
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedSubjectSpanish(), updatedMessageEnglish,
+				updatedMessageSpanish, userId);
 	}
 
 	/**
@@ -107,8 +119,10 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public void notifyPatientWhenProviderIsReplaced(Long userId) {
 		addNotificationToAccount(notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedFrom(),
-				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedTitle(),
-				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedMessage(), userId);
+				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedSubjectEnglish(),
+				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedSubjectSpanish(),
+				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedMessageEnglish(),
+				notificationSrvConfig.getNotifyPatientWhenProvidersAreReplacedMessageSpanish(), userId);
 	}
 
 	/**
@@ -118,15 +132,19 @@ public class NotificationServiceImpl implements NotificationService {
 	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
 		String replaceStringWith[] = { patientFullName, patientId };
 		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
-		String updatedMessage = StringUtils.replaceEach(
-				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessage(), replaceThisString,
+		String updatedMessageEnglish = StringUtils.replaceEach(
+				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessageEnglish(), replaceThisString,
+				replaceStringWith);
+		String updatedMessageSpanish = StringUtils.replaceEach(
+				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessageSpanish(), replaceThisString,
 				replaceStringWith);
 		addNotificationToAccount(notificationSrvConfig.getNotifyProviderWhenPatientIsAddedFrom(),
-				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedTitle(), updatedMessage, userId);
+				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedSubjectEnglish(),
+				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedSubjectSpanish(), updatedMessageEnglish,
+				updatedMessageSpanish, userId);
 	}
 
 	/**
-	 * Private method that inserts a row into PortalNotification Table.
 	 * 
 	 * @param from    - The sender of the message. It is usually system notification
 	 * @param title   - Subject of the message
@@ -134,12 +152,27 @@ public class NotificationServiceImpl implements NotificationService {
 	 * @param userId  - Id for the recipient of the message
 	 * @return
 	 */
-	private Optional<PortalNotification> addNotificationToAccount(String from, String title, String message,
-			Long userId) {
+
+	/**
+	 * Private method that inserts a row into PortalNotification Table.
+	 * 
+	 * @param from           - The sender of the message. It is usually system
+	 *                       notification
+	 * @param subjectEnglish - Subject of the message in English
+	 * @param subjectSpanish - Subject of the message in Spanish
+	 * @param messageEnglish - Content of the actual message in English
+	 * @param messageSpanish - Content of the actual message in Spanish
+	 * @param userId         - Id for the recipient of the message
+	 * @return The saved notification
+	 */
+	private Optional<PortalNotification> addNotificationToAccount(String from, String subjectEnglish,
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId) {
 		PortalNotification notificationObj = new PortalNotification();
 		notificationObj.setMessageFrom(from);
-		notificationObj.setSubject(title);
-		notificationObj.setMessage(message);
+		notificationObj.setSubjectEnglish(subjectEnglish);
+		notificationObj.setSubjectSpanish(subjectSpanish);
+		notificationObj.setMessageEnglish(messageEnglish);
+		notificationObj.setMessageSpanish(messageSpanish);
 		notificationObj.setUserId(userId);
 		notificationObj.setDateGenerated(new Timestamp(System.currentTimeMillis()));
 		notificationObj.setViewedByUser(0);
