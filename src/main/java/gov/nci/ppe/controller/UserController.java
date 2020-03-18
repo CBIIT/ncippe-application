@@ -16,12 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -98,6 +100,8 @@ public class UserController {
 	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
 	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
+	private final String HEADER_UUID = "sm_user";
+	private final String HEADER_EMAIL = "user_email";
 	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
@@ -167,6 +171,46 @@ public class UserController {
 		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
 	}
 
+	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> getSelfData(HttpServletRequest request,
+			@RequestHeader MultiValueMap<String, String> headers) throws JsonProcessingException {
+
+		logger.info("Request UUID: " + request.getHeader(HEADER_UUID));
+		logger.info("Request EMAIL: " + request.getHeader(HEADER_EMAIL));
+		String uuid = getFromHeader(headers, HEADER_UUID);
+		String email = getFromHeader(headers, HEADER_EMAIL);
+		logger.info("Getting User data for Self: UUID=" + uuid + ", EMAIL=" + email);
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		List<String> accountStatusList = new ArrayList<String>();
+		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
+
+		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
+		if (userOptional.isEmpty()) {
+			userOptional = userService.activateUser(email, uuid);
+
+			if (!userOptional.isPresent()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+			}
+
+			User user = userOptional.get();
+			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(USER_UUID_ALREADY_USED_MSG);
+			}
+		}
+
+		User user = userOptional.get();
+		String userInJsonFormat = convertUserToJSON(user);
+		return new ResponseEntity<String>(mapper.writeValueAsString(userInJsonFormat), httpHeaders, HttpStatus.OK);
+
+
+	}
+
+	private String getFromHeader(MultiValueMap<String, String> headers, String key) {
+		return headers.getFirst(key);
+	}
+
 	/**
 	 * This method will generate the JSON response based on the user.
 	 * 
@@ -184,7 +228,7 @@ public class UserController {
 	}
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
-	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
+	@GetMapping(value = "/api/v1/patient", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
