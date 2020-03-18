@@ -16,14 +16,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -171,14 +169,16 @@ public class UserController {
 		return new ResponseEntity<String>(mapper.writeValueAsString(responseJsonWithToken), httpHeaders, HttpStatus.OK);
 	}
 
+	@ApiOperation("Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "User data found"),
+			@ApiResponse(code = 409, message = USER_UUID_ALREADY_USED_MSG),
+			@ApiResponse(code = 404, message = NO_USER_FOUND_MSG) })
 	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> getSelfData(HttpServletRequest request,
-			@RequestHeader MultiValueMap<String, String> headers) throws JsonProcessingException {
+	public ResponseEntity<String> getSelfData(HttpServletRequest request) throws JsonProcessingException {
 
-		logger.info("Request UUID: " + request.getHeader(HEADER_UUID));
-		logger.info("Request EMAIL: " + request.getHeader(HEADER_EMAIL));
-		String uuid = getFromHeader(headers, HEADER_UUID);
-		String email = getFromHeader(headers, HEADER_EMAIL);
+		String uuid = request.getHeader(HEADER_UUID);
+		String email = request.getHeader(HEADER_EMAIL);
+
 		logger.info("Getting User data for Self: UUID=" + uuid + ", EMAIL=" + email);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -202,14 +202,10 @@ public class UserController {
 
 		User user = userOptional.get();
 		String userInJsonFormat = convertUserToJSON(user);
-		return new ResponseEntity<String>(mapper.writeValueAsString(userInJsonFormat), httpHeaders, HttpStatus.OK);
-
+		return new ResponseEntity<String>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
 	}
 
-	private String getFromHeader(MultiValueMap<String, String> headers, String key) {
-		return headers.getFirst(key);
-	}
 
 	/**
 	 * This method will generate the JSON response based on the user.
