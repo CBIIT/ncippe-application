@@ -81,11 +81,26 @@
 	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.PortalNotification</class-a>
-		<class-b>gov.nci.ppe.data.entity.dto.PortalNotificationDTO
-		</class-b>
+		<class-b>gov.nci.ppe.data.entity.dto.PortalNotificationDTO</class-b>
 		<field>
 			<a is-accessible="true">dateGenerated</a>
 			<b is-accessible="true">dateGenerated</b>
+		</field>
+		<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+		<field>
+			<a>subjectEnglish</a>
+			<b>subject.en</b>
+		</field>
+		<field>
+			<a>subjectSpanish</a>
+			<b>subject.es</b>
 		</field>
 	</mapping>
 	<mapping>
