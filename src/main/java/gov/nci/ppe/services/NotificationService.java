@@ -20,6 +20,8 @@ public interface NotificationService {
 	 * 
 	 * @param messageFrom -
 	 * @param subject     - Subject/Title for the notification
+	 * @param subject     - Subject/Title for the notification
+	 * @param message     - Message describing the notification
 	 * @param message     - Message describing the notification
 	 * @param userId      - user Id
 	 * @param userName    - First Name of the user to whom this notification is
@@ -27,7 +29,8 @@ public interface NotificationService {
 	 * @param patientName - Participant's first name.
 	 * @return An Optional object of {PortalNotification} class
 	 */
-	public Optional<PortalNotification> addNotification(String messageFrom, String subject, String message, Long userId,
+	public Optional<PortalNotification> addNotification(String messageFrom, String subjectEnglish,
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId,
 			String userName, String patientName, String patientId);
 
 	/**
