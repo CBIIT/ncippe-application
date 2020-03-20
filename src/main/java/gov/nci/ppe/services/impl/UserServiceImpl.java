@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
@@ -79,9 +78,6 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	public EmailLogService emailService;
-
-	@Autowired
-	private EmailServiceConfig emailServiceConfig;
 
 	@Autowired
 	private NotificationServiceConfig notificationServiceConfig;
@@ -292,57 +288,6 @@ public class UserServiceImpl implements UserService {
 		patient.setActiveBiobankParticipant(false);
 		patient.setDateDeactivated(qsAnsInsertionTime);
 		return Optional.of(userRepository.save(patient));
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> authorizeUser(String email, String uuid) {
-		boolean userUpdatedFlag = false;
-		Timestamp updatedTime = TimeUtil.now();
-		Optional<User> userOptional = findByUuid(uuid);
-		if (userOptional.isEmpty()) {
-			// No uuid match. Could be a first time user. Search by email.
-			userOptional = findByEmail(email);
-			if (!userOptional.isPresent() || StringUtils.isNotBlank(userOptional.get().getUserUUID())) {
-
-				return Optional.empty();
-			}
-		}
-
-		User user = userOptional.get();
-
-		// Update the email id if they don't match
-		if (!StringUtils.equalsIgnoreCase(email, user.getEmail())) {
-			user.setEmail(email);
-			userUpdatedFlag = true;
-		}
-
-		// activate the user if they are not already done
-		if (StringUtils.isAllBlank(user.getUserUUID())) {
-			user.setUserUUID(uuid);
-			user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
-			user.setDateActivated(updatedTime);
-			userUpdatedFlag = true;
-		}
-
-		// Update the record in the database if there are any changes
-		if (userUpdatedFlag) {
-			user.setLastRevisedDate(updatedTime);
-			user.setLastRevisedUser(user.getUserId());
-			Optional<User> updatedUserOptional = updateUser(user);
-			user = updatedUserOptional.get();
-		}
-
-		return Optional.of(user);
-
-	}
-
-	@Override
-	public String decryptLoginGovToken(String idToken) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
