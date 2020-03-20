@@ -107,23 +107,6 @@ public interface UserService {
 	 */
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList);
 
-	/**
-	 * Authorizes the User based on the idToken and email
-	 * 
-	 * @param email - email of the user to authorize
-	 * @param uuid  - login.gov supplied uuid
-	 * 
-	 * @return The authorized user
-	 */
-	public Optional<User> authorizeUser(String email, String uuid);
-
-	/**
-	 * Decrypts the id_toen object from login.gov using logn.gov's pubic key
-	 * 
-	 * @param idToken
-	 * @return
-	 */
-	public String decryptLoginGovToken(String idToken);
 
 	/**
 	 * Fetch the user based on their email and PortalAccountStatus.
