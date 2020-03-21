@@ -89,7 +89,6 @@ public class UserController {
 	@Autowired
 	AuthorizationService authService;
 
-	private final String AUTHORIZATION = "Authorization";
 	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
 	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
@@ -168,8 +167,8 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 
-		String value = request.getHeader(AUTHORIZATION);
-		if (!authService.authorize(value, userGUID)) {
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		if (!authService.authorize(requestingUserUUID, userGUID)) {
 			return new ResponseEntity<String>(CommonConstants.UNAUTHORIZED_ACCESS, httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
@@ -186,7 +185,7 @@ public class UserController {
 		}
 
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
-				preferredLang);
+				preferredLang, null);
 		if (!userOptional.isPresent()) {
 			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NO_CONTENT);
 		}
@@ -532,9 +531,9 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(httpHeaders).body(NO_USER_FOUND_MSG);
 		}
 		User user = userOptional.get();
-		String authToken = request.getHeader(AUTHORIZATION);
-		logger.finest("TOKEN #########" + authToken);
-		if (!authService.authorize(authToken, user)) {
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		if (!authService.authorize(requestingUserUUID, user)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders)
 					.body(CommonConstants.UNAUTHORIZED_ACCESS);
 		}

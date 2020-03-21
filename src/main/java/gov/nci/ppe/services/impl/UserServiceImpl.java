@@ -60,7 +60,7 @@ import gov.nci.ppe.util.TimeUtil;
 @Component
 public class UserServiceImpl implements UserService {
 
-	protected Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
+	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
 
@@ -126,11 +126,11 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
-			LanguageOption preferredLang) {
+			LanguageOption preferredLang, String requestingUserUUID) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userGuid);
-
+		Optional<User> requesterOptional = userRepository.findByUserUUID(requestingUserUUID);
 		/* Check if the user is present in the system */
-		if (!userOptional.isPresent()) {
+		if (userOptional.isEmpty() || requesterOptional.isEmpty()) {
 			return userOptional;
 		}
 
@@ -140,7 +140,7 @@ public class UserServiceImpl implements UserService {
 		if (preferredLang != null) {
 			user.setPreferredLanguage(preferredLang);
 		}
-		user.setLastRevisedUser(user.getUserId());
+		user.setLastRevisedUser(requesterOptional.get().getUserId());
 		user.setLastRevisedDate(TimeUtil.now());
 		User updateUser = userRepository.save(user);
 

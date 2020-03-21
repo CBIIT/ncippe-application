@@ -43,15 +43,17 @@ public interface UserService {
 	 * This method will update the registered user's email notification preference
 	 * and phone number.
 	 * 
-	 * @param userGUID               - GUID of the user
 	 * @param phoneNumber            - the value can be empty string if the user
 	 *                               wishes to delete his/her number.
 	 * @param preferredLang          - Preferred Language for the User
+	 * @param userGUID               - GUID of the user
 	 * @param allowEmailNotification - value can be only 1 (true) or 2 (false)
+	 * @param requestingUserUUID     - requesting User UUID
+	 * 
 	 * @return JSON String containing User information that was updated
 	 */
 	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
-			LanguageOption preferredLang);
+			LanguageOption preferredLang, String requestingUserUUID);
 
 	/**
 	 * Fetch the user based on the user's UserId
