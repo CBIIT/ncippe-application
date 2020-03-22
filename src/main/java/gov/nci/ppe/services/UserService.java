@@ -73,15 +73,6 @@ public interface UserService {
 	public Optional<User> activateUser(String userEmail, String userUUID);
 
 	/**
-	 * Changes the user's registered email address
-	 * 
-	 * @param userUUID  - UUID of the User
-	 * @param userEmail - new email address to change to
-	 * @return
-	 */
-	public Optional<User> updateEmail(String userUUID, String userEmail);
-
-	/**
 	 * Fetch the user based on their userGUID and PortalAccountStatus.
 	 * 
 	 * @param userGUID          - GUID of the user
@@ -103,12 +94,14 @@ public interface UserService {
 
 	/**
 	 * Withdraw patient participation from Biobank program.
-	 * @param patient   - Participant object representing the patient who is been withdrawn from PPE
-	 * @param qsAnsList - A list of survey questions and their answers provided during withdrawal
-	 * @return          - a User Object whose status will be withdrawn from the program
+	 * 
+	 * @param patient   - Participant object representing the patient who is been
+	 *                  withdrawn from PPE
+	 * @param qsAnsList - A list of survey questions and their answers provided
+	 *                  during withdrawal
+	 * @return - a User Object whose status will be withdrawn from the program
 	 */
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList);
-
 
 	/**
 	 * Fetch the user based on their email and PortalAccountStatus.
@@ -135,24 +128,31 @@ public interface UserService {
 	 * @return a User object
 	 */
 	public Optional<User> findActiveParticipantByPatientId(String patientId);
-	
+
 	/**
-	 * Withdraw patient participation from Biobank program and sends an email to subscribers.
-	 * @param patient   - Participant object representing the patient who is been withdrawn from PPE
-	 * @param qsAnsList - A list of survey questions and their answers provided during withdrawal
-	 * @return          - a User Object whose status will be withdrawn from the program
+	 * Withdraw patient participation from Biobank program and sends an email to
+	 * subscribers.
+	 * 
+	 * @param patient   - Participant object representing the patient who is been
+	 *                  withdrawn from PPE
+	 * @param qsAnsList - A list of survey questions and their answers provided
+	 *                  during withdrawal
+	 * @return - a User Object whose status will be withdrawn from the program
 	 */
-	public Optional<User> withdrawParticipationFromBiobankProgramAndSendNotification(Participant patient, List<QuestionAnswer> qsAnsList);
-	
+	public Optional<User> withdrawParticipationFromBiobankProgramAndSendNotification(Participant patient,
+			List<QuestionAnswer> qsAnsList);
+
 	/**
 	 * Fetch a user by their email id
+	 * 
 	 * @param emailId - Email id to search for the user
 	 * @return a User Object
 	 */
 	public Optional<User> findByEmail(String emailId);
-	
+
 	/**
 	 * Update the User record in database
+	 * 
 	 * @param user - a User Object with updated values
 	 * @return a User Object
 	 */
@@ -162,59 +162,65 @@ public interface UserService {
 	 * Updates a Patient record to include patient name and email, changes state
 	 * from NEW to INITIATED, and sends an invitation email to the patient.
 	 * 
-	 * @param patientId         - Unique Patient Id of the Patient
-	 * @param uuid              - Unique login Id of the CRC performing the action
+	 * @param patientId - Unique Patient Id of the Patient
+	 * @param uuid      - Unique login Id of the CRC performing the action
 	 * @return Updated Patient record
 	 * @throws JsonProcessingException
 	 */
-	public Optional<User> invitePatientToPortal(String patientId, String uuid)
-			throws JsonProcessingException;
-	
+	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException;
+
 	/**
-	 * Inserts a new patient record into PPE database based on the patient ID if one doesn't
-	 * already exist. The patient details are fetched from OPEN.
+	 * Inserts a new patient record into PPE database based on the patient ID if one
+	 * doesn't already exist. The patient details are fetched from OPEN.
+	 * 
 	 * @param patientId - Unique patientId that OPEN sends.
 	 * @return - User object
 	 */
 	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient);
-	
+
 	/**
 	 * Inserts a new provider record into PPE database
+	 * 
 	 * @param provider - An entity object contain mandatory details.
 	 * @return Optional User object
 	 */
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider);
-	
+
 	/**
 	 * Find a provider based on the CtepId passed. CtepID is provided by OPEN.
+	 * 
 	 * @param ctepId
 	 * @return an optional User.
 	 */
 	public Optional<Provider> findProviderByCtepId(Long ctepId);
-	
+
 	/**
 	 * Inserts a new CRC record into PPE database
+	 * 
 	 * @param provider - An entity object contain mandatory details.
 	 * @return Optional User object
 	 */
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc);
-	
+
 	/**
 	 * Find a CRC based on the CtepId passed. CtepID is provided by OPEN.
+	 * 
 	 * @param ctepId
 	 * @return an optional User.
 	 */
 	public Optional<CRC> findCRCByCtepId(Long ctepId);
-	
+
 	/**
 	 * Insert the data fetched from OPEN into PPE DB
+	 * 
 	 * @param openResponseDTO - Data from OPEN
 	 * @return List of Users that were inserted into PPE DB
 	 */
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO);
 
 	/**
-	 * Update an existing patient with details fetched from OPEN 
+	 * Update an existing patient with details fetched from OPEN
+	 * 
 	 * @param existingPatient - Existing Patient in PPE
 	 * @return an optional User.
 	 */

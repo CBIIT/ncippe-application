@@ -204,21 +204,6 @@ public class UserServiceImpl implements UserService {
 		return optionalUser;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> updateEmail(String userUUID, String userEmail) {
-		Optional<User> optionalUser = userRepository.findByUserUUID(userUUID);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			user.setEmail(userEmail);
-			user = userRepository.save(user);
-			optionalUser = Optional.of(user);
-		}
-		return optionalUser;
-	}
-
 	@Override
 	public Optional<User> findByUuidAndPortalAccountStatus(String userGuid, List<String> accountStatusList) {
 		List<Code> accountStatusCodeList = convertToCode(accountStatusList);
@@ -333,10 +318,9 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(),
-						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getPreferredLanguage());
+						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), withdrawnPatient.getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -397,16 +381,11 @@ public class UserServiceImpl implements UserService {
 		return Optional.of(userRepository.save(user));
 	}
 
-
-
-
-
 	/*
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> invitePatientToPortal(String patientId, String uuid)
-			throws JsonProcessingException {
+	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
 			return participantOptional;

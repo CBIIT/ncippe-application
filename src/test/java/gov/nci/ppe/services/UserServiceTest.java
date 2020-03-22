@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -78,8 +80,10 @@ public class UserServiceTest {
 	private static final String PARTICIPANT_UUID = "part-bbbb-cccc-dddd";
 	private static final String PROVIDER_UUID = "prov-bbbb-cccc-dddd";
 	private static final String CRC_UUID = "crcc-bbbb-cccc-dddd";
+	private static final String PART_EMAIL = "patient@example.com";
 
 	private static final String phoneNumber = null;
+
 	@Before
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
@@ -106,11 +110,11 @@ public class UserServiceTest {
 		PortalNotification notice = new PortalNotification();
 		notifications.add(notice);
 		pa.setNotifications(notifications);
-		
+
 		Optional<User> userOpt = Optional.of(pa);
 
 		when(mockUserRepo.findByUserUUID(PARTICIPANT_UUID)).thenReturn(userOpt);
-		
+
 		Optional<User> resultOpt = userService.findByUuid(PARTICIPANT_UUID);
 
 		verify(mockUserRepo).findByUserUUID(PARTICIPANT_UUID);
@@ -129,7 +133,6 @@ public class UserServiceTest {
 		PortalNotification notice = new PortalNotification();
 		notifications.add(notice);
 		pa.setNotifications(notifications);
-		
 
 		FileMetadata report = new FileMetadata();
 		report.setFileType(getFileTypeCode(FileType.PPE_FILETYPE_BIOMARKER_REPORT));
@@ -169,7 +172,6 @@ public class UserServiceTest {
 		assertTrue(resultOpt.isEmpty());
 	}
 
-
 	@Test
 	public void testUpdateUserDetails_Success() {
 		Participant pa = new Participant();
@@ -198,6 +200,51 @@ public class UserServiceTest {
 		assertTrue(result.isAllowEmailNotification());
 
 	}
+
+	@Test
+	public void testActivateUser_UserNotFound() {
+		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.empty());
+		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
+		verify(mockUserRepo).findByEmail(PART_EMAIL);
+		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	public void testActivateUser_UserInActive() {
+		Participant pa = new Participant();
+		pa.setUserUUID(PARTICIPANT_UUID);
+		Code status = new Code();
+		status.setCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+		pa.setPortalAccountStatus(status);
+
+		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
+
+		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
+		assertTrue(result.isEmpty());
+		verify(mockUserRepo).findByEmail(PART_EMAIL);
+	}
+
+	@Test
+	public void testActivateUser_Success() {
+
+		Participant pa = new Participant();
+		pa.setUserId(-1L);
+		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
+		when(mockUserRepo.save(pa)).then(returnsFirstArg());
+		when(mockCodeRepo.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
+				.thenReturn(getCode(PortalAccountStatus.ACCT_ACTIVE.name()));
+		Optional<User> resultOpt = userService.activateUser(PART_EMAIL, PARTICIPANT_UUID);
+		verify(mockUserRepo).findByEmail(PART_EMAIL);
+		verify(mockUserRepo).save(pa);
+		assertTrue(resultOpt.isPresent());
+		Participant result = (Participant) resultOpt.get();
+		assertEquals(PARTICIPANT_UUID, result.getUserUUID());
+		assertEquals(pa.getUserId(), result.getLastRevisedUser());
+		assertEquals(result.getLastRevisedDate(), result.getDateActivated());
+		assertEquals(PortalAccountStatus.ACCT_ACTIVE.name(), result.getPortalAccountStatus().getCodeName());
+
+	}
+
 	private Role getRole(PPERole roleType) {
 		Role role = new Role();
 		role.setRoleName(roleType.name());
@@ -205,8 +252,12 @@ public class UserServiceTest {
 	}
 
 	private Code getFileTypeCode(FileType fileType) {
+		return getCode(fileType.getFileType());
+	}
+
+	private Code getCode(String codeName) {
 		Code code = new Code();
-		code.setCodeName(fileType.getFileType());
+		code.setCodeName(codeName);
 		return code;
 	}
 
