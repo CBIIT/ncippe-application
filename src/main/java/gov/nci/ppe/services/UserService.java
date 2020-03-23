@@ -234,4 +234,12 @@ public interface UserService {
 	 * @return an optional User.
 	 */
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient);
+
+	/**
+	 * Return the list of Users who have an unread Biomarker report
+	 * 
+	 * @param daysUnread - no of days that report is unread
+	 * @return List of users who have unread reports
+	 */
+	public List<User> findUsersWithUnreadReportsPastDays(int daysUnread);
 }

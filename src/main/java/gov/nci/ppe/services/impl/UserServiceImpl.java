@@ -943,4 +943,13 @@ public class UserServiceImpl implements UserService {
 		});
 		return providerIds;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<User> findUsersWithUnreadReportsPastDays(int daysUnread) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.GsonBuilder;
@@ -41,6 +43,7 @@ public class NotificationController {
 	public NotificationController() {
 	}
 
+	public static final String NOTIFICATION_GENERATED = "Reminder Notifications Generated";
 
 	/**
 	 * Retrieves all notifications for the specified User
@@ -162,6 +165,14 @@ public class NotificationController {
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Notification not found for " + notificationId);
 		}
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User " + userGUID + " is not present");
+	}
+
+	@ApiOperation(value = "Generate System Notification and Email to remind Users who have not read a Biomarker report for the specified number of days.")
+	@PostMapping(value = "/privateapi/v1/send-reminder")
+	public ResponseEntity<String> generateUnreadReportReminderNotification(
+			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
+
+		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
 	}
 
 }
