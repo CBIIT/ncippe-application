@@ -99,8 +99,8 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User data found"),
 			@ApiResponse(code = 409, message = USER_UUID_ALREADY_USED_MSG),
 			@ApiResponse(code = 404, message = NO_USER_FOUND_MSG) })
-	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> getSelfData(HttpServletRequest request) throws JsonProcessingException {
+	@PostMapping(value = "/api/v1/login", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> login(HttpServletRequest request) throws JsonProcessingException {
 
 		String uuid = request.getHeader(CommonConstants.HEADER_UUID);
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
@@ -134,8 +134,8 @@ public class UserController {
 
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
-	@GetMapping(value = "/api/v1/participant", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> getParticipant(HttpServletRequest request,
+	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
 			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId)
