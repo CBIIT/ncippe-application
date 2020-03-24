@@ -48,4 +48,7 @@ public class NCORPSiteDTO {
 	@JsonProperty("gps_coordinates")
 	private String gpsCoordinates;
 
+	@JsonProperty("website")
+	private String website;
+
 }
