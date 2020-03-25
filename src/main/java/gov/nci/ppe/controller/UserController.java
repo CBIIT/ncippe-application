@@ -183,7 +183,7 @@ public class UserController {
 		}
 
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
-				preferredLang, null);
+				preferredLang, requestingUserUUID);
 		if (!userOptional.isPresent()) {
 			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NO_CONTENT);
 		}
