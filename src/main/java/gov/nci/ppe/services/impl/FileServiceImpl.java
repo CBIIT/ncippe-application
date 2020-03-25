@@ -50,7 +50,7 @@ public class FileServiceImpl implements FileService {
      */	
 	@Override
 	public Optional<FileMetadata> getFileByFileGUID(String fileGUID) {
-		return fileMetadataRepo.findFileByGUID(fileGUID);
+		return fileMetadataRepo.findByFileGUID(fileGUID);
 	}
 
 	/**

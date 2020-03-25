@@ -46,12 +46,12 @@ public class FileServiceTest {
 		expected.setFileGUID(uuid);
 		Optional<FileMetadata> expectedOpt = Optional.of(expected);
 
-		Mockito.when(mockFileMetadataRepo.findFileByGUID(uuid)).thenReturn(expectedOpt);
+		Mockito.when(mockFileMetadataRepo.findByFileGUID(uuid)).thenReturn(expectedOpt);
 
 		Optional<FileMetadata> resultOpt = fileService.getFileByFileGUID(uuid);
 
 		assertEquals(expected, resultOpt.get());
-		Mockito.verify(mockFileMetadataRepo).findFileByGUID(uuid);
+		Mockito.verify(mockFileMetadataRepo).findByFileGUID(uuid);
 	}
 
 	@Test

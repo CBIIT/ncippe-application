@@ -97,4 +97,13 @@ public interface NotificationService {
 	 */
 	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId);
 
+	/**
+	 * Generate Email and System Notification to Users who have unread reports for
+	 * the specified number of days
+	 * 
+	 * @param daysUnread - number of days report must be unread to trigger
+	 *                   notification
+	 */
+	public void generateUnreadReportReminderNotification(int daysUnread);
+
 }

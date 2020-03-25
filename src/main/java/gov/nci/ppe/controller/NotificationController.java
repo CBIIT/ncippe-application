@@ -38,7 +38,7 @@ public class NotificationController {
 	private NotificationService notificationService;
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
 
 	public NotificationController() {
 	}
@@ -172,6 +172,7 @@ public class NotificationController {
 	public ResponseEntity<String> generateUnreadReportReminderNotification(
 			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
 
+		notificationService.generateUnreadReportReminderNotification(daysUnread);
 		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
 	}
 
