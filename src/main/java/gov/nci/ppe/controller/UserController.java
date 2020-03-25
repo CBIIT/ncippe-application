@@ -17,10 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -157,7 +155,7 @@ public class UserController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "update the registered user's email notification preference and phone number.")
-	@PutMapping(value = "/api/v1/user/{userGUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/api/v1/user/{userGUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> updateUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
@@ -207,7 +205,7 @@ public class UserController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User has been deactivated"),
 			@ApiResponse(code = 401, message = "Bearer token is missing or expired.") })
 	@ApiOperation(value = "Deactivates a particular user in the portal")
-	@PatchMapping(value = "/api/v1/deactivate-user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/api/v1/deactivate-user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> deActivateUserByGuid(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
 			throws JsonProcessingException {
@@ -293,7 +291,7 @@ public class UserController {
 	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
-	@PatchMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
 			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId)
 			throws JsonProcessingException {
@@ -326,7 +324,7 @@ public class UserController {
 
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
-	@PatchMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> enterUserDetails(HttpServletRequest request,
 			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
 			@ApiParam(value = "First name of the participant", required = true) @RequestParam(value = "firstName", required = true) String firstName,

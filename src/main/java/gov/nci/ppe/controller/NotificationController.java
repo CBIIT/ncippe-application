@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.GsonBuilder;
@@ -104,7 +104,7 @@ public class NotificationController {
 	 * @return List of User Notifications with Read indicator set
 	 */
 	@ApiOperation(value = "Mark all notifications as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
+	@PostMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
 	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID) {
 
@@ -141,7 +141,7 @@ public class NotificationController {
 	 * @return
 	 */
 	@ApiOperation(value = "Mark an individual notification as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
+	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
 	public ResponseEntity<String> updateNotificationAsReadByNotificationId(
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId) {
