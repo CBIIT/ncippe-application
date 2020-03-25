@@ -259,7 +259,7 @@ public class UserController {
 			return new ResponseEntity<String>(CommonConstants.UNAUTHORIZED_ACCESS, httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
-
+		logger.info("Request to withdraw Participant " + patient.getPatientId() + " by User " + updatedByUserUUID);
 		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
 		List<QuestionAnswer> qsAnsList = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(qsAnsDTO)) {
@@ -285,8 +285,11 @@ public class UserController {
 		}
 		Optional<User> userOptional = userService.withdrawParticipationFromBiobankProgramAndSendNotification(patient,
 				qsAnsList);
+		Participant withdrawnPatient = (Participant) userOptional.get();
+		logger.info("Patient " + withdrawnPatient.getPatientId() + " new status "
+				+ withdrawnPatient.getPortalAccountStatus().getCodeName());
 		raiseWithdrawParticipationAuditEvent(patientId, updatedByUserUUID);
-		String jsonFormat = convertUserToJSON(userOptional.get());
+		String jsonFormat = convertUserToJSON(withdrawnPatient);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
