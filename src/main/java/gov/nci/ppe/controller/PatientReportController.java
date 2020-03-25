@@ -162,7 +162,7 @@ public class PatientReportController {
 		if (rptOptional.isPresent()) {
 			FileMetadata fileMetadata = rptOptional.get();
 
-			if (!authorizationService.authorizeFileUpload(requestingUserUUID,
+			if (!authorizationService.authorizeFileDownload(requestingUserUUID,
 					fileMetadata.getParticipant().getPatientId(), fileMetadata.getFileType().getCodeName())) {
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not Authorized");
 			}
