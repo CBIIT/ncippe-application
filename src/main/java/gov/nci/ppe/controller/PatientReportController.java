@@ -18,10 +18,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -89,8 +87,8 @@ public class PatientReportController {
 	 * @return error response in case of missing parameters an internal exception or
 	 *         success response if file has been stored successfully
 	 */
-	@RequestMapping(value = "/api/patientReport", method = RequestMethod.POST)
-	@ApiOperation(value = "Uploads a File andd associates it with the participant")
+	@PostMapping(value = "/api/patientReport")
+	@ApiOperation(value = "Uploads a File and associates it with the participant")
 	public ResponseEntity<String> handleFileUpload(
 			@ApiParam(value = "Patient file to Upload", required = true) @RequestParam(value = "reportFile", required = true) MultipartFile file,
 			@ApiParam(value = "Patient ID of the Patient whose file is to be uploaded", required = true) @RequestParam(value = "patientId", required = true) String patientId,
@@ -201,7 +199,7 @@ public class PatientReportController {
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Marks the report as having been viewed by the specified user")
-	@PatchMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
+	@PostMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
 			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
 			HttpServletRequest req)
