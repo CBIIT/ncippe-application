@@ -361,7 +361,7 @@ public class UserServiceImpl implements UserService {
 						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
 			}
 		}
-		return Optional.of(userOptional.get());
+		return Optional.of(withdrawnPatient);
 	}
 
 	/**
