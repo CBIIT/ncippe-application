@@ -1,6 +1,8 @@
 package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
@@ -30,6 +31,7 @@ import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
+import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
@@ -46,6 +48,7 @@ import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
+import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
 import gov.nci.ppe.util.TimeUtil;
@@ -77,19 +80,14 @@ public class UserServiceImpl implements UserService {
 
 	private CRCRepository crcRepository;
 
-	@Autowired
 	public EmailLogService emailService;
 
-	@Autowired
-	private EmailServiceConfig emailServiceConfig;
-
-	@Autowired
 	private NotificationServiceConfig notificationServiceConfig;
 
-	@Autowired
 	private NotificationService notificationService;
 
-	@Autowired
+	private FileService fileService;
+
 	private AuditService auditService;
 
 	private ObjectMapper mapper = new ObjectMapper();
@@ -100,7 +98,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
 			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository,
-			CRCRepository crcRepository) {
+			CRCRepository crcRepository, EmailLogService emailService,
+			NotificationServiceConfig notificationServiceConfig, NotificationService notificationService,
+			FileService fileService, AuditService auditService) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
@@ -109,6 +109,11 @@ public class UserServiceImpl implements UserService {
 		this.roleRepository = roleRepository;
 		this.providerRepository = providerRepository;
 		this.crcRepository = crcRepository;
+		this.emailService = emailService;
+		this.notificationServiceConfig = notificationServiceConfig;
+		this.notificationService = notificationService;
+		this.fileService = fileService;
+		this.auditService = auditService;
 	}
 
 	/**
@@ -943,4 +948,58 @@ public class UserServiceImpl implements UserService {
 		});
 		return providerIds;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void generateUnreadReportReminderNotification(int daysUnread) {
+		LocalDate today = LocalDate.now();
+
+		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
+		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
+
+		System.out.println(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
+				+ " and "
+				+ endOfPeriod.toString());
+		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(startOfPeriod, endOfPeriod);
+		uploadedFiles.stream().forEach(file -> sendOverdueNotification(file));
+
+	}
+
+	private void sendOverdueNotification(FileMetadata fileMetadata) {
+		Participant patient = fileMetadata.getParticipant();
+		CRC assocCRC = patient.getCrc();
+		Set<Provider> associatedProviders = patient.getProviders();
+
+		// Unread notification and email to patient.
+		if (!fileMetadata.hasViewed(patient.getUserUUID())) {
+			if (patient.isAllowEmailNotification()) {
+				emailService.sendEmailToParticipantReminderUnreadReport(patient.getEmail(), patient.getFirstName(),
+						patient.getPreferredLanguage());
+				notificationService.notifyPatientReminderToReadBiomarkerReport(patient.getUserId());
+			}
+		}
+
+		if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
+			if (assocCRC.isAllowEmailNotification()) {
+				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
+						assocCRC.getEmail(), patient.getFullName(), patient.getPatientId(),
+						assocCRC.getPreferredLanguage());
+				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
+						assocCRC.getUserId(), patient.getPatientId());
+			}
+		}
+
+		for (Provider provider : associatedProviders) {
+			if (!fileMetadata.hasViewed(provider.getUserUUID())) {
+				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(provider.getFirstName(),
+						provider.getEmail(), patient.getFullName(), patient.getPatientId(),
+						provider.getPreferredLanguage());
+				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
+						provider.getUserId(), patient.getPatientId());
+			}
+		}
+	}
+
 }

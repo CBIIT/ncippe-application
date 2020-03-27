@@ -234,4 +234,14 @@ public interface UserService {
 	 * @return an optional User.
 	 */
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient);
+
+
+	/**
+	 * Generate Email and System Notification to Users who have unread reports for
+	 * the specified number of days
+	 * 
+	 * @param daysUnread - number of days report must be unread to trigger
+	 *                   notification
+	 */
+	public void generateUnreadReportReminderNotification(int daysUnread);
 }
