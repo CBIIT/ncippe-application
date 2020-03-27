@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
 	private CRCRepository crcRepository;
 
-	public EmailLogService emailService;
+	private EmailLogService emailService;
 
 	private NotificationServiceConfig notificationServiceConfig;
 
