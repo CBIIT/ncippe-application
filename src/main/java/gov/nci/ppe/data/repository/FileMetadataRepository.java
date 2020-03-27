@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.repository;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,8 +12,22 @@ import gov.nci.ppe.data.entity.FileMetadata;
 @Repository
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
+	/**
+	 * Find FileMetadata by the GUID
+	 * 
+	 * @param fileGuid - Primary Key Identifier of the FileMetadat object
+	 * @return The FileMetadata object, if found
+	 */
 	Optional<FileMetadata> findByFileGUID(String fileGuid);
 
-	List<FileMetadata> findByDateUploadedBetween(Timestamp startDate, Timestamp endDate);
+	/**
+	 * Return list of FileMetadata objects uploaded during the specified period
+	 * 
+	 * @param startTime - Beginning of period
+	 * @param endTime   - End of period
+	 * @return - List of FileMetadata objects with DateUploaded field falling
+	 *         between startDate and endDate
+	 */
+	List<FileMetadata> findByDateUploadedBetween(LocalDateTime startTime, LocalDateTime endTime);
 
 }

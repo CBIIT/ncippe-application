@@ -1,9 +1,15 @@
 package gov.nci.ppe.services;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Before;
@@ -27,6 +33,8 @@ import gov.nci.ppe.services.impl.FileServiceImpl;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
 public class FileServiceTest {
+
+	private static final String GUID = "aaaa";
 
 	@InjectMocks
 	private FileServiceImpl fileService;
@@ -96,5 +104,24 @@ public class FileServiceTest {
 		assertEquals(fileType, savedFM.getFileType());
 		assertNotNull(savedFM.getFileGUID());
 		assertNotNull(savedFM.getDateUploaded());
+	}
+
+	@Test
+	public void testGetFilesUploadedBetween() {
+		LocalDateTime startTime = LocalDateTime.now();
+		LocalDateTime endTime = startTime.plusDays(2);
+
+		List<FileMetadata> expectedFiles = new ArrayList<>();
+		FileMetadata fm = new FileMetadata();
+		fm.setFileGUID(GUID);
+		expectedFiles.add(fm);
+
+		when(mockFileMetadataRepo.findByDateUploadedBetween(startTime, endTime)).thenReturn(expectedFiles);
+
+		List<FileMetadata> results = fileService.getFilesUploadedBetween(startTime, endTime);
+		verify(mockFileMetadataRepo).findByDateUploadedBetween(startTime, endTime);
+
+		assertFalse(results.isEmpty());
+		assertEquals(GUID, results.get(0).getFileGUID());
 	}
 }

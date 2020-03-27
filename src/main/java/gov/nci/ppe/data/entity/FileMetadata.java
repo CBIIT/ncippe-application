@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,7 +57,7 @@ public class FileMetadata {
 	private String fileName;
 
 	@Column(name = "DateUploaded", nullable = false)
-	private Timestamp dateUploaded;
+	private LocalDateTime dateUploaded;
 
 	@Column(name = "Source", nullable = false, length = 45)
 	private String source;
@@ -76,5 +76,15 @@ public class FileMetadata {
 	@JoinTable(name = "FileMetaDataViewedBy", joinColumns = {
 			@JoinColumn(name = "FileMetaDataId") }, inverseJoinColumns = { @JoinColumn(name = "ViewedByUserId") })
 	private Set<User> viewedBy = new HashSet<>();
+
+	/**
+	 * Checks if the user with the specified UUID has viewed the File
+	 * 
+	 * @param userUUID - UUID of the User to check for
+	 * @return true, if the User has viewed the file, false otherwise
+	 */
+	public boolean hasViewed(String userUUID) {
+		return viewedBy.stream().anyMatch(user -> user.getUserUUID().equals(userUUID));
+	}
 
 }
