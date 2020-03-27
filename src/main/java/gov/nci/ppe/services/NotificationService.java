@@ -72,7 +72,7 @@ public interface NotificationService {
 	public void notifyPatientWhenCRCIsReplaced(Long userId);
 
 	/**
-	 * Method to nofity CRC when a patient is assigned to them
+	 * Method to notify CRC when a patient is assigned to them
 	 * 
 	 * @param patientFullName - Full name of the patient
 	 * @param userId          - Id of the recipient for whom the notification
@@ -88,7 +88,7 @@ public interface NotificationService {
 	public void notifyPatientWhenProviderIsReplaced(Long userId);
 
 	/**
-	 * Method to nofity CRC when a patient is assigned to them
+	 * Method to notify CRC when a patient is assigned to them
 	 * 
 	 * @param patientFullName - Full name of the patient
 	 * @param userId          - Id of the recipient for whom the notification
@@ -98,12 +98,20 @@ public interface NotificationService {
 	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId);
 
 	/**
-	 * Generate Email and System Notification to Users who have unread reports for
-	 * the specified number of days
+	 * Method to remind Patient that they have an unread biomarker report
 	 * 
-	 * @param daysUnread - number of days report must be unread to trigger
-	 *                   notification
+	 * @param userId - UserId of the patient.
 	 */
-	public void generateUnreadReportReminderNotification(int daysUnread);
+	public void notifyPatientReminderToReadBiomarkerReport(Long userId);
+
+	/**
+	 * Method to remind CRC/Provider that they have an unread biomarker report for
+	 * one of their patients.
+	 * 
+	 * @param patientFullName - Full Name of the patient.
+	 * @param userId          - Provider/CRC User Id
+	 * @param patientId       - Patient ID of the patient.
+	 */
+	public void notifyProviderCRCReminderToReadBiomarkerReport(String patientFullName, Long userId, String patientId);
 
 }

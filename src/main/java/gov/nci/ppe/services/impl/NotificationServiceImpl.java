@@ -1,8 +1,6 @@
 package gov.nci.ppe.services.impl;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -186,18 +184,25 @@ public class NotificationServiceImpl implements NotificationService {
 		return Optional.of(notificationObj);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-	public void generateUnreadReportReminderNotification(int daysUnread) {
-		LocalDate today = LocalDate.now();
+	public void notifyPatientReminderToReadBiomarkerReport(Long userId) {
+		this.addNotificationToAccount(notificationSrvConfig.getRemindPatientUnreadReportFrom(),
+				notificationSrvConfig.getRemindPatientUnreadReportSubjectEnglish(),
+				notificationSrvConfig.getRemindPatientUnreadReportSubjectSpanish(),
+				notificationSrvConfig.getRemindPatientUnreadReportMessageEnglish(),
+				notificationSrvConfig.getRemindPatientUnreadReportMessageSpanish(), userId);
 
-		LocalDateTime endOfPeriod = today.minusDays(daysUnread).atStartOfDay();
-		LocalDateTime startOfPeriod = endOfPeriod.minusDays(1);
+	}
 
-		System.out.println("Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
-				+ endOfPeriod.toString());
+	@Override
+	public void notifyProviderCRCReminderToReadBiomarkerReport(String patientFullName, Long userId, String patientId) {
+		this.addNotification(notificationSrvConfig.getRemindCRCProviderUnreadReportFrom(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportSubjectEnglish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportSubjectSpanish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportMessageEnglish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportMessageSpanish(), userId, null, patientFullName,
+				patientId);
+
 	}
 
 }

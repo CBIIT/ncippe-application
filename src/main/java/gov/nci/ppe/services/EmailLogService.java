@@ -187,4 +187,32 @@ public interface EmailLogService {
 	 */
 	public String sendEmailToCRCAfterParticipantWithdraws(String firstName, String lastName, String salutationName,
 			String emailId, String questionAnswers, String patientId, LanguageOption preferredLanguage);
+
+	/**
+	 * Method to send a reminder email to participant if their biomarker report is
+	 * unread
+	 * 
+	 * @param recipientEmail    - Recipient's email address
+	 * @param userFirstName     - Recipient's first name
+	 * @param preferredLanguage - Recipient's preferred language
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToParticipantReminderUnreadReport(String recipientEmail, String userFirstName,
+			LanguageOption preferredLanguage);
+
+	/**
+	 * Method to send an email to CRC and Providers if they have unread biomarker
+	 * reports for an associated participant.
+	 * 
+	 * @param salutationFirstName - First Name for CRC/Provider
+	 * @param recipientEmail      - CRC/Provider's email id
+	 * @param patientFullName     - Full Name of the patient for whom the biomarker
+	 *                            report was uploaded
+	 * @param patientId           - Patient Id
+	 * @param preferredLanguage   - Recipient's preferred language
+	 * @return Email Status if the email was sent out successfully
+	 */
+	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
+			String patientFullName, String patientId, LanguageOption preferredLanguage);
+
 }

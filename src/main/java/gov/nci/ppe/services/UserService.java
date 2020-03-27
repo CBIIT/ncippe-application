@@ -235,11 +235,13 @@ public interface UserService {
 	 */
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient);
 
+
 	/**
-	 * Return the list of Users who have an unread Biomarker report
+	 * Generate Email and System Notification to Users who have unread reports for
+	 * the specified number of days
 	 * 
-	 * @param daysUnread - no of days that report is unread
-	 * @return List of users who have unread reports
+	 * @param daysUnread - number of days report must be unread to trigger
+	 *                   notification
 	 */
-	public List<User> findUsersWithUnreadReportsPastDays(int daysUnread);
+	public void generateUnreadReportReminderNotification(int daysUnread);
 }
