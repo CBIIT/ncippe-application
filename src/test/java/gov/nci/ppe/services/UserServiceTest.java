@@ -4,27 +4,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import gov.nci.ppe.configurations.NotificationServiceConfig;
-import gov.nci.ppe.data.repository.PortalNotificationRepository;
-import gov.nci.ppe.services.impl.NotificationServiceImpl;
+import gov.nci.ppe.services.impl.UserServiceImpl;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
-public class NotificationServiceTest {
+public class UserServiceTest {
 
 	@InjectMocks
-	private NotificationServiceImpl notificationService;
+	private UserServiceImpl userService;
 
-	@Mock
-	private PortalNotificationRepository mockNotificationRepo;
 
-	@Mock
-	private NotificationServiceConfig mockNotificationSrvConfig;
 
 	@Before
 	public void initMocks() {
@@ -33,7 +26,7 @@ public class NotificationServiceTest {
 
 	@Test
 	public void testGenerateUnreadReportReminderNotification() {
-		notificationService.generateUnreadReportReminderNotification(7);
+		userService.generateUnreadReportReminderNotification(7);
 	}
 
 }
