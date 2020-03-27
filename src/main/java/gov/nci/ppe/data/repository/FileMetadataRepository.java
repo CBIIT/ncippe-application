@@ -1,10 +1,10 @@
 package gov.nci.ppe.data.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -12,6 +12,22 @@ import gov.nci.ppe.data.entity.FileMetadata;
 @Repository
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
-	@Query(value = "SELECT * FROM FileMetadata RPT WHERE RPT.FileGUID = :fileGuid",nativeQuery=true)
-	Optional<FileMetadata> findFileByGUID(@Param("fileGuid") String fileGuid);
+	/**
+	 * Find FileMetadata by the GUID
+	 * 
+	 * @param fileGuid - Primary Key Identifier of the FileMetadat object
+	 * @return The FileMetadata object, if found
+	 */
+	Optional<FileMetadata> findByFileGUID(String fileGuid);
+
+	/**
+	 * Return list of FileMetadata objects uploaded during the specified period
+	 * 
+	 * @param startTime - Beginning of period
+	 * @param endTime   - End of period
+	 * @return - List of FileMetadata objects with DateUploaded field falling
+	 *         between startDate and endDate
+	 */
+	List<FileMetadata> findByDateUploadedBetween(LocalDateTime startTime, LocalDateTime endTime);
+
 }
