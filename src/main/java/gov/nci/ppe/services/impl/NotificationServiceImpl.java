@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,8 @@ import gov.nci.ppe.services.NotificationService;
  */
 @Component
 public class NotificationServiceImpl implements NotificationService {
+
+	private static final Logger logger = LogManager.getLogger(NotificationService.class);
 
 	@Autowired
 	private PortalNotificationRepository notificationRepo;
@@ -178,6 +182,27 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationObj.setViewedByUser(0);
 		notificationObj = notificationRepo.save(notificationObj);
 		return Optional.of(notificationObj);
+	}
+
+	@Override
+	public void notifyPatientReminderToReadBiomarkerReport(Long userId) {
+		this.addNotificationToAccount(notificationSrvConfig.getRemindPatientUnreadReportFrom(),
+				notificationSrvConfig.getRemindPatientUnreadReportSubjectEnglish(),
+				notificationSrvConfig.getRemindPatientUnreadReportSubjectSpanish(),
+				notificationSrvConfig.getRemindPatientUnreadReportMessageEnglish(),
+				notificationSrvConfig.getRemindPatientUnreadReportMessageSpanish(), userId);
+
+	}
+
+	@Override
+	public void notifyProviderCRCReminderToReadBiomarkerReport(String patientFullName, Long userId, String patientId) {
+		this.addNotification(notificationSrvConfig.getRemindCRCProviderUnreadReportFrom(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportSubjectEnglish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportSubjectSpanish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportMessageEnglish(),
+				notificationSrvConfig.getRemindCRCProviderUnreadReportMessageSpanish(), userId, null, patientFullName,
+				patientId);
+
 	}
 
 }

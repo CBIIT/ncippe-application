@@ -75,6 +75,9 @@ public class NCORPSite {
 	@Column(name = "Longitude", nullable = false, length = 11)
 	private String longitude;
 
+	@Column(name = "Website", nullable = true, length = 128)
+	private String website;
+
 	public String getGpsCoordinates() {
 		return latitude + "," + longitude;
 	}

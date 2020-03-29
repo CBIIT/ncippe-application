@@ -238,4 +238,31 @@ public class EmailServiceConfig {
 	@Value("${email.crc.when.patients.added.body.en}")
 	private String emailCRCWhenPatientIsAddedBodyEnglish;
 
+	/* Reminder email to Patient on unread test report */
+	
+	@Value("${email.reminder.unread.report.patient.subject.es}")
+	private String emailPatientReminderUnreadReportSubjectSpanish;
+
+	@Value("${email.reminder.unread.report.patient.subject.en}")
+	private String emailPatientReminderUnreadReportSubjectEnglish;
+
+	@Value("${email.reminder.unread.report.patient.body.es}")
+	private String emailPatientReminderUnreadReportBodySpanish;
+
+	@Value("${email.reminder.unread.report.patient.body.en}")
+	private String emailPatientReminderUnreadReportBodyEnglish;
+
+	/* Reminder email to CRC and Provider on unread test report */
+	@Value("${email.crc.provider.reminder.unread.biomarker.report.subject.en}")
+	private String emailCRCProviderReminderUnreadReportSubjectEnglish;
+
+	@Value("${email.crc.provider.reminder.unread.biomarker.report.subject.es}")
+	private String emailCRCProviderReminderUnreadReportSubjectSpanish;
+
+	@Value("${email.crc.provider.reminder.unread.biomarker.report.body.es}")
+	private String emailCRCProviderReminderUnreadReportBodySpanish;
+
+	@Value("${email.crc.provider.reminder.unread.biomarker.report.body.en}")
+	private String emailCRCProviderReminderUnreadReportBodyEnglish;
+
 }

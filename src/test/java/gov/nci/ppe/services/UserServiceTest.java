@@ -1,5 +1,6 @@
 package gov.nci.ppe.services;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +28,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.FileType;
@@ -56,27 +60,6 @@ public class UserServiceTest {
 	@Mock
 	private Logger logger;
 
-	@Mock
-	private UserRepository mockUserRepo;
-
-	@Mock
-	private CodeRepository mockCodeRepo;
-
-	@Mock
-	private RoleRepository mockRoleRepo;
-
-	@Mock
-	private ParticipantRepository mockParticipantRepo;
-
-	@Mock
-	private QuestionAnswerRepository mockQsAnsRepo;
-
-	@Mock
-	private ProviderRepository mockProviderRepo;
-
-	@Mock
-	private CRCRepository mockCrcRepo;
-
 	private static final String PARTICIPANT_UUID = "part-bbbb-cccc-dddd";
 	private static final String PROVIDER_UUID = "prov-bbbb-cccc-dddd";
 	private static final String CRC_UUID = "crcc-bbbb-cccc-dddd";
@@ -84,21 +67,58 @@ public class UserServiceTest {
 
 	private static final String phoneNumber = null;
 
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private CodeRepository codeRepository;
+
+	@Mock
+	private RoleRepository roleRepository;
+
+	@Mock
+	private ParticipantRepository participantRepository;
+
+	@Mock
+	private QuestionAnswerRepository qsAnsRepo;
+
+	@Mock
+	private ProviderRepository providerRepository;
+
+	@Mock
+	private CRCRepository crcRepository;
+
+	@Mock
+	private EmailLogService emailService;
+
+	@Mock
+	private NotificationServiceConfig notificationServiceConfig;
+
+	@Mock
+	private NotificationService notificationService;
+
+	@Mock
+	private FileService fileService;
+
+	@Mock
+	private AuditService auditService;
+
 	@Before
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
 	}
 
 	@Test
+
 	public void testGetAllRegisteredUsers() {
 		List<User> responseList = new ArrayList<>();
 		Participant pa = new Participant();
 		responseList.add(pa);
 
-		when(mockUserRepo.findAll()).thenReturn(responseList);
+		when(userRepository.findAll()).thenReturn(responseList);
 
 		List<User> result = userService.getAllRegisteredUsers();
-		verify(mockUserRepo, times(1)).findAll();
+		verify(userRepository, times(1)).findAll();
 		assertNotNull(result);
 	}
 
@@ -113,11 +133,11 @@ public class UserServiceTest {
 
 		Optional<User> userOpt = Optional.of(pa);
 
-		when(mockUserRepo.findByUserUUID(PARTICIPANT_UUID)).thenReturn(userOpt);
+		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(userOpt);
 
 		Optional<User> resultOpt = userService.findByUuid(PARTICIPANT_UUID);
 
-		verify(mockUserRepo).findByUserUUID(PARTICIPANT_UUID);
+		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
 		assertTrue(resultOpt.isPresent());
 		Participant result = (Participant) resultOpt.get();
 		assertFalse(result.getNotifications().isEmpty());
@@ -149,11 +169,11 @@ public class UserServiceTest {
 		prov.setPatients(patients);
 
 		Optional<User> provOpt = Optional.of(prov);
-		when(mockUserRepo.findByUserUUID(PROVIDER_UUID)).thenReturn(provOpt);
+		when(userRepository.findByUserUUID(PROVIDER_UUID)).thenReturn(provOpt);
 
 		Optional<User> resultOpt = userService.findByUuid(PROVIDER_UUID);
 
-		verify(mockUserRepo).findByUserUUID(PROVIDER_UUID);
+		verify(userRepository).findByUserUUID(PROVIDER_UUID);
 		assertTrue(resultOpt.isPresent());
 		Provider provResult = (Provider) resultOpt.get();
 		assertFalse(provResult.getPatients().isEmpty());
@@ -162,13 +182,13 @@ public class UserServiceTest {
 
 	@Test
 	public void testUpdateUserDetails_UserNotFound() {
-		when(mockUserRepo.findByUserUUID(PARTICIPANT_UUID)).thenReturn(Optional.empty());
-		when(mockUserRepo.findByUserUUID(CRC_UUID)).thenReturn(Optional.empty());
+		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(Optional.empty());
+		when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(Optional.empty());
 		Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
 				LanguageOption.ENGLISH, CRC_UUID);
 
-		verify(mockUserRepo).findByUserUUID(PARTICIPANT_UUID);
-		verify(mockUserRepo).findByUserUUID(CRC_UUID);
+		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
+		verify(userRepository).findByUserUUID(CRC_UUID);
 		assertTrue(resultOpt.isEmpty());
 	}
 
@@ -181,16 +201,16 @@ public class UserServiceTest {
 		crc.setUserId(-1L);
 		Optional<User> crcOpt = Optional.of(crc);
 
-		when(mockUserRepo.findByUserUUID(PARTICIPANT_UUID)).thenReturn(participantOpt);
-		when(mockUserRepo.findByUserUUID(CRC_UUID)).thenReturn(crcOpt);
-		when(mockUserRepo.save(pa)).thenReturn(pa);
+		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(participantOpt);
+		when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(crcOpt);
+		when(userRepository.save(pa)).thenReturn(pa);
 
 		Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
 				LanguageOption.ENGLISH, CRC_UUID);
 
-		verify(mockUserRepo).findByUserUUID(PARTICIPANT_UUID);
-		verify(mockUserRepo).findByUserUUID(CRC_UUID);
-		verify(mockUserRepo).save(pa);
+		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
+		verify(userRepository).findByUserUUID(CRC_UUID);
+		verify(userRepository).save(pa);
 
 		assertTrue(resultOpt.isPresent());
 		Participant result = (Participant) resultOpt.get();
@@ -203,9 +223,9 @@ public class UserServiceTest {
 
 	@Test
 	public void testActivateUser_UserNotFound() {
-		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.empty());
+		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.empty());
 		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
-		verify(mockUserRepo).findByEmail(PART_EMAIL);
+		verify(userRepository).findByEmail(PART_EMAIL);
 		assertTrue(result.isEmpty());
 	}
 
@@ -217,11 +237,11 @@ public class UserServiceTest {
 		status.setCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
 		pa.setPortalAccountStatus(status);
 
-		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
+		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
 
 		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
 		assertTrue(result.isEmpty());
-		verify(mockUserRepo).findByEmail(PART_EMAIL);
+		verify(userRepository).findByEmail(PART_EMAIL);
 	}
 
 	@Test
@@ -229,13 +249,13 @@ public class UserServiceTest {
 
 		Participant pa = new Participant();
 		pa.setUserId(-1L);
-		when(mockUserRepo.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
-		when(mockUserRepo.save(pa)).then(returnsFirstArg());
-		when(mockCodeRepo.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
+		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
+		when(userRepository.save(pa)).then(returnsFirstArg());
+		when(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
 				.thenReturn(getCode(PortalAccountStatus.ACCT_ACTIVE.name()));
 		Optional<User> resultOpt = userService.activateUser(PART_EMAIL, PARTICIPANT_UUID);
-		verify(mockUserRepo).findByEmail(PART_EMAIL);
-		verify(mockUserRepo).save(pa);
+		verify(userRepository).findByEmail(PART_EMAIL);
+		verify(userRepository).save(pa);
 		assertTrue(resultOpt.isPresent());
 		Participant result = (Participant) resultOpt.get();
 		assertEquals(PARTICIPANT_UUID, result.getUserUUID());
@@ -259,6 +279,20 @@ public class UserServiceTest {
 		Code code = new Code();
 		code.setCodeName(codeName);
 		return code;
+	}
+	
+	public void testGenerateUnreadReportReminderNotification() {
+		int daysUnread = 7;
+
+		LocalDate today = LocalDate.now();
+		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
+		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
+
+		List<FileMetadata> files = new ArrayList<>();
+		when(fileService.getFilesUploadedBetween(startOfPeriod, endOfPeriod)).thenReturn(files);
+
+		userService.generateUnreadReportReminderNotification(daysUnread);
+
 	}
 
 }
