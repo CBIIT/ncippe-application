@@ -36,10 +36,11 @@ public class NotificationController {
 	private NotificationService notificationService;
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
 
 	public NotificationController() {
 	}
+
 
 
 	/**
@@ -163,5 +164,6 @@ public class NotificationController {
 		}
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User " + userGUID + " is not present");
 	}
+
 
 }

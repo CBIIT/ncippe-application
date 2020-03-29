@@ -199,5 +199,38 @@ public class NotificationServiceConfig {
 
 	@Value("${notify.crc.when.patient.added.message.es}")
 	private String notifyCRCWhenPatientIsAddedMessageSpanish;
+	
+	// Properties for reminding patient of unread biomarker report
+	@Value("${reminder.unread.report.patient.from}")
+	private String remindPatientUnreadReportFrom;
+
+	@Value("reminder.unread.report.patient.subject.en}")
+	private String remindPatientUnreadReportSubjectEnglish;
+
+	@Value("${reminder.unread.report.patient.subject.es}")
+	private String remindPatientUnreadReportSubjectSpanish;
+
+	@Value("${reminder.unread.report.patient.message.en}")
+	private String remindPatientUnreadReportMessageEnglish;
+	
+	@Value("${reminder.unread.report.patient.message.es}")
+	private String remindPatientUnreadReportMessageSpanish;
+
+// Remind CRC/Provider of unread biomarker report
+
+	@Value("${reminder.unread.report.crc.provider.from}")
+	private String remindCRCProviderUnreadReportFrom;
+
+	@Value("${reminder.unread.report.crc.provider.subject.en}")
+	private String remindCRCProviderUnreadReportSubjectEnglish;
+
+	@Value("${reminder.unread.report.crc.provider.subject.es}")
+	private String remindCRCProviderUnreadReportSubjectSpanish;
+
+	@Value("${reminder.unread.report.crc.provider.message.en}")
+	private String remindCRCProviderUnreadReportMessageEnglish;
+
+	@Value("${reminder.unread.report.crc.provider.message.es}")
+	private String remindCRCProviderUnreadReportMessageSpanish;
 
 }

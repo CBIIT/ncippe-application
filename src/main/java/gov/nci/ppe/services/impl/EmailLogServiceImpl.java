@@ -270,9 +270,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportBodySpanish()
 				+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
 		} else {
-			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectSpanish();
-			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportBodySpanish()
-					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
+			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectEnglish();
+			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlypUloadedBiomarkerReportBodyEnglish()
+					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
@@ -301,10 +301,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
 			subject = emailServiceConfig.getEmailUploadReportPatientSubjectSpanish();
 		} else {
-			htmlBody = emailServiceConfig.getEmailUploadReportPatientBodySpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-			subject = emailServiceConfig.getEmailUploadReportPatientSubjectSpanish();
-
+			htmlBody = emailServiceConfig.getEmailUploadReportPatientBodyEnglish();
+			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
+			subject = emailServiceConfig.getEmailUploadReportPatientSubjectEnglish();
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
@@ -541,5 +540,68 @@ public class EmailLogServiceImpl implements EmailLogService {
 	}
 	private boolean useSpanish(LanguageOption preferredLanguage) {
 		return preferredLanguage != null && LanguageOption.SPANISH == preferredLanguage;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToParticipantReminderUnreadReport(String recipientEmail, String userFirstName,
+			LanguageOption preferredLanguage) {
+		String replaceStringWith[] = { userFirstName };
+		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String htmlBody;
+		String subject;
+		String signature;
+
+		if (useSpanish(preferredLanguage)) {
+			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodySpanish();
+			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
+			subject = emailServiceConfig.getEmailPatientReminderUnreadReportSubjectSpanish();
+		} else {
+			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodyEnglish();
+			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
+			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
+
+		}
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+
+		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true, signature);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
+
+	}
+
+	/**
+	 * 
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
+			String patientFullName, String patientId, LanguageOption preferredLanguage) {
+		String replaceStringWith[] = { salutationFirstName, patientFullName, patientId };
+		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
+		String htmlBody;
+		String subject;
+
+		if (useSpanish(preferredLanguage)) {
+			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectSpanish();
+			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportBodySpanish()
+					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
+		} else {
+			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectEnglish();
+			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlypUloadedBiomarkerReportBodyEnglish()
+					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
+		}
+		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
+
+		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
+		if (emailStatus.contains(CommonConstants.SUCCESS)) {
+			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+		}
+		return emailStatus;
 	}
 }

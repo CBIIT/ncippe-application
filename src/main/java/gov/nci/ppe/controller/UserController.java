@@ -91,6 +91,8 @@ public class UserController {
 	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
 	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
 	private ObjectMapper mapper = new ObjectMapper();
+	public static final String NOTIFICATION_GENERATED = "Reminder Notifications Generated";
+
 
 
 	@ApiOperation("Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
@@ -422,6 +424,15 @@ public class UserController {
 
 		return mapper.writerWithView(JsonViews.UsersSummaryView.class).writeValueAsString(userDTOList);
 
+	}
+
+	@ApiOperation(value = "Generate System Notification and Email to remind Users who have not read a Biomarker report for the specified number of days.")
+	@PostMapping(value = "/privateapi/v1/send-reminder")
+	public ResponseEntity<String> generateUnreadReportReminderNotification(
+			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
+
+		userService.generateUnreadReportReminderNotification(daysUnread);
+		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
 	}
 
 	/**
