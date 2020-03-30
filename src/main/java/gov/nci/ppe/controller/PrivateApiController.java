@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,9 +40,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @RestController
-public class OpenApiController {
+public class PrivateApiController {
 
-	protected Logger logger = Logger.getLogger(OpenApiController.class.getName());
+	protected Logger logger = Logger.getLogger(PrivateApiController.class.getName());
+	private static final String NOTIFICATION_GENERATED = "Reminder Notifications Generated";
 
 	@Autowired
 	@Qualifier("dozerBean")
@@ -69,6 +71,23 @@ public class OpenApiController {
 		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
 		String jsonFormat = convertUsersToJSON(newUsersList);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+	}
+
+	/**
+	 * Generate System Notification and Email to remind Users who have not read a
+	 * Biomarker report for the specified number of days.
+	 * 
+	 * @param daysUnread - number of days unread before report is generated.
+	 * 
+	 * @return
+	 */
+	@ApiOperation(value = "Generate System Notification and Email to remind Users who have not read a Biomarker report for the specified number of days.")
+	@PostMapping(value = "/privateapi/v1/send-reminder", produces = { MediaType.TEXT_PLAIN_VALUE })
+	public ResponseEntity<String> generateUnreadReportReminderNotification(
+			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
+
+		userService.generateUnreadReportReminderNotification(daysUnread);
+		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
 	}
 
 	/*
