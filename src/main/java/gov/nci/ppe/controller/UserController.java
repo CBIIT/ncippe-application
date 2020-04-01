@@ -3,6 +3,7 @@ package gov.nci.ppe.controller;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,11 +33,11 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.dozermapper.core.Mapper;
 
-import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.QuestionAnswerType;
+import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
@@ -94,31 +96,31 @@ public class UserController {
 	@Autowired
 	AuthorizationService authService;
 
-	private final String AUTHORIZATION = "Authorization";
-	private final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";
-	private final String NO_USER_FOUND_MSG = "{\n\"error\" : \"No User found \"\n}";
-	private final String INACTIVE_USER_MSG = "{\n\"error\" : \"User is in Inactive Status \"\n}";
-	private final String USER_UUID_ALREADY_USED_MSG = "{\n\"error\" : \"The specified UUID is already associated with an existing user\"\n}";
-	private ObjectMapper mapper = new ObjectMapper();
-	public static final String NOTIFICATION_GENERATED = "Reminder Notifications Generated";
+	@Autowired
+	private MessageSource messageSource;
 
+	private final String AUTHORIZATION = "Authorization";
+	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
 	 * This method will return all the registered users along with their roles. The
 	 * values included in the JSON response is mentioned in UserDTP
+	 * 
+	 * @param locale
 	 * 
 	 * @return JSON Response with HTTP status 200 or 204 if no content is available.
 	 * @throws JsonProcessingException
 	 */
 	@ApiOperation(value = "Return all the registered users along with their roles.")
 	@GetMapping(value = "/api/v1/users", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> getAllRegisteredUsers() throws JsonProcessingException {
+	public ResponseEntity<String> getAllRegisteredUsers(Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		List<User> userList = userService.getAllRegisteredUsers();
 		// If there are no registered users, return back no content
 		if (CollectionUtils.isEmpty(userList)) {
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(NO_USER_FOUND_MSG);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
 		String responseString = convertUsersToJSON(userList);
@@ -130,6 +132,7 @@ public class UserController {
 	 * 
 	 * @param uuid
 	 * @param email
+	 * @param locale
 	 * @return a JWT Token
 	 * @throws JsonProcessingException
 	 */
@@ -138,9 +141,10 @@ public class UserController {
 			@ApiResponse(code = 404, message = "User not found") })
 	@PostMapping(value = "/api/v1/login", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> login(@RequestParam(value = "uuid", required = true) String uuid,
-			@RequestParam(value = "email", required = true) String email) throws JsonProcessingException {
+			@RequestParam(value = "email", required = true) String email, Locale locale)
+			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		List<String> accountStatusList = new ArrayList<String>();
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 
@@ -152,12 +156,15 @@ public class UserController {
 			userOptional = userService.activateUser(email, uuid);
 
 			if (!userOptional.isPresent()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 			}
 
 			User user = userOptional.get();
 			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(USER_UUID_ALREADY_USED_MSG);
+				return ResponseEntity.status(HttpStatus.CONFLICT)
+						.body(messageSource.getMessage(messageSource.getMessage(
+								HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null, locale));
 			}
 		}
 
@@ -180,10 +187,10 @@ public class UserController {
 	@ApiOperation(value = "Returns the User Details for the specified User")
 	@GetMapping(value = "/api/v1/user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
+			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID, Locale locale)
 			throws JsonProcessingException {
 		userUUID = StringUtils.stripToEmpty(userUUID);
-		return fetchUser(request, userUUID, null, null);
+		return fetchUser(request, userUUID, null, null, locale);
 	}
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
@@ -191,12 +198,13 @@ public class UserController {
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
-			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId)
+			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId,
+			Locale locale)
 			throws JsonProcessingException {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);
-		return fetchUser(request, userUUID, email, patientId);
+		return fetchUser(request, userUUID, email, patientId, locale);
 	}
 
 	/**
@@ -206,6 +214,7 @@ public class UserController {
 	 * @param userGUID               - GUID of the user
 	 * @param phoneNumber
 	 * @param allowEmailNotification
+	 * @param locale
 	 * @return
 	 * @throws JsonProcessingException
 	 */
@@ -215,14 +224,18 @@ public class UserController {
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
 			@ApiParam(value = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification,
-			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage)
+			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage,
+			Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, userGUID)) {
-			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale),
+					httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		userGUID = StringUtils.stripToEmpty(userGUID);
@@ -233,13 +246,17 @@ public class UserController {
 		try {
 			preferredLang = LanguageOption.getLanguageOption(preferredLanguage);
 		} catch (IllegalArgumentException ex) {
-			return ResponseEntity.badRequest().body("Invalid Language Option selected : " + preferredLanguage);
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(
+					messageSource.getMessage(HttpResponseConstants.LANGUAGE_NOT_SUPPORTED,
+							new Object[] { preferredLanguage }, locale));
 		}
 
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
 				preferredLang);
 		if (!userOptional.isPresent()) {
-			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NO_CONTENT);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale), httpHeaders,
+					HttpStatus.NO_CONTENT);
 		}
 
 		User user = userOptional.get();
@@ -253,6 +270,7 @@ public class UserController {
 	 * 
 	 * @param request  - HTTPRequest object
 	 * @param userUUID - uuid for the user who is deactivating the account.
+	 * @param locale
 	 * @return
 	 * @throws JsonProcessingException
 	 */
@@ -261,15 +279,17 @@ public class UserController {
 	@ApiOperation(value = "Deactivates a particular user in the portal")
 	@PatchMapping(value = "/api/v1/deactivate-user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> deActivateUserByGuid(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID)
+			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID, Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String value = request.getHeader(AUTHORIZATION);
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
 		if (!authService.authorize(value, userUUID)) {
-			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
@@ -282,6 +302,7 @@ public class UserController {
 	 * 
 	 * @param request - the HTTP Request object
 	 * @param email   - the email used by the user to login to Login.gov
+	 * @param locale
 	 * @return
 	 * @throws JsonProcessingException
 	 */
@@ -289,14 +310,15 @@ public class UserController {
 	@PatchMapping(value = "/api/v1/authorize-user", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> authorizeUser(HttpServletRequest request,
 			@ApiParam(value = "The UUID for the patient", required = true) @RequestParam String uuid,
-			@ApiParam(value = "The email used by the user to login to Login.gov", required = true) @RequestParam String email)
+			@ApiParam(value = "The email used by the user to login to Login.gov", required = true) @RequestParam String email,
+			Locale locale)
 			throws JsonProcessingException {
 
 		uuid = StringUtils.stripToEmpty(uuid);
 		email = StringUtils.stripToEmpty(email);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		List<String> validAccountStatusList = new ArrayList<>();
 		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
 		validAccountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
@@ -304,7 +326,9 @@ public class UserController {
 		Optional<User> userOptional = userService.authorizeUser(email, uuid);
 		if (!userOptional.isPresent()) {
 			logger.info(" No User found for the search criteria : uuid = " + uuid + "  and email=" + email);
-			return new ResponseEntity<String>(NO_USER_FOUND_MSG, httpHeaders, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale), httpHeaders,
+					HttpStatus.NOT_FOUND);
 		}
 
 		User user = userOptional.get();
@@ -314,7 +338,9 @@ public class UserController {
 				|| PortalAccountStatus.ACCT_ACTIVE.name()
 						.equalsIgnoreCase(user.getPortalAccountStatus().getCodeName()))) {
 			logger.info(" Inactive user found for the search criteria : uuid = " + uuid + "  and email=" + email);
-			return new ResponseEntity<String>(INACTIVE_USER_MSG, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.INACTIVE_USER_MSG, null, locale), httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		String responseJsonWithToken = jwtMgmtService.createJWT(user);
@@ -331,6 +357,7 @@ public class UserController {
 	 * @param updatedByUser - UUID of the user responsible for withdrawing the
 	 *                      participant
 	 * @param qsAnsDTO      - List of Questions and Answers
+	 * @param locale
 	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
@@ -339,7 +366,8 @@ public class UserController {
 	public ResponseEntity<String> withdrawParticipationByParticipant(HttpServletRequest request,
 			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
-			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO)
+			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO,
+			Locale locale)
 			throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -347,15 +375,18 @@ public class UserController {
 
 		Optional<User> participantOptional = userService.findActiveParticipantByPatientId(patientId);
 		if (!participantOptional.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 		Participant patient = (Participant) participantOptional.get();
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, patient)) {
-			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
@@ -392,7 +423,8 @@ public class UserController {
 	@PatchMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
-			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId)
+			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
+			Locale locale)
 			throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -404,14 +436,17 @@ public class UserController {
 		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
 				validAccountStatusList);
 		if (participantOptional.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String value = request.getHeader(AUTHORIZATION);
 		if (!authService.authorize(value, participantOptional.get())) {
-			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		participantOptional = userService.invitePatientToPortal(patientId, updatedByUser);
@@ -436,12 +471,17 @@ public class UserController {
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String jsonFormat = convertUsersToJSON(newUsersList);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "User invited to PPE Portal"),
+			@ApiResponse(code = 401, message = "Not Authorized"),
+			@ApiResponse(code = 409, message = "User has already been activated with a different UUID."),
+			@ApiResponse(code = 404, message = "User not found"),
+			@ApiResponse(code = 406, message = "Language Not Supported") })
 	@PatchMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> enterUserDetails(HttpServletRequest request,
 			@ApiParam(value = "UUID for the User performing this action", required = true) @RequestParam(value = "updatedByUser", required = true) String updatedByUser,
@@ -449,7 +489,8 @@ public class UserController {
 			@ApiParam(value = "First name of the participant", required = true) @RequestParam(value = "firstName", required = true) String firstName,
 			@ApiParam(value = "Last name of the participant", required = true) @RequestParam(value = "lastName", required = true) String lastName,
 			@ApiParam(value = "Email Id for the participant", required = true) @RequestParam(value = "emailId", required = true) String emailId,
-			@ApiParam(value = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage)
+			@ApiParam(value = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
+			Locale locale)
 			throws JsonProcessingException {
 		patientId = StringUtils.stripToEmpty(patientId);
 		updatedByUser = StringUtils.stripToEmpty(updatedByUser);
@@ -462,7 +503,8 @@ public class UserController {
 		try {
 			preferredLang = LanguageOption.getLanguageOption(preferredLanguage);
 		} catch (IllegalArgumentException ex) {
-			return ResponseEntity.badRequest().body("Invalid Language Option selected : " + preferredLanguage);
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(messageSource.getMessage(
+					HttpResponseConstants.LANGUAGE_NOT_SUPPORTED, new Object[] { preferredLanguage }, locale));
 		}
 
 		List<String> validAccountStatusList = new ArrayList<>();
@@ -470,15 +512,18 @@ public class UserController {
 		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
 				validAccountStatusList);
 		if (participantOptional.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NO_USER_FOUND_MSG);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String value = request.getHeader(AUTHORIZATION);
 		User newPatient = participantOptional.get();
 		if (!authService.authorize(value, newPatient)) {
-			return new ResponseEntity<String>(UNAUTHORIZED_ACCESS, httpHeaders, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.UNAUTHORIZED);
 		}
 
 		// Fill in the details
@@ -520,7 +565,7 @@ public class UserController {
 			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
 
 		userService.generateUnreadReportReminderNotification(daysUnread);
-		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
+		return ResponseEntity.ok().body(HttpResponseConstants.NOTIFICATION_GENERATED);
 	}
 
 	/**
@@ -620,10 +665,11 @@ public class UserController {
 		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_WITHDRAW_FROM_PROGRAM.name());
 	}
 
-	private ResponseEntity<String> fetchUser(HttpServletRequest request, String uuid, String email, String patientId)
+	private ResponseEntity<String> fetchUser(HttpServletRequest request, String uuid, String email, String patientId,
+			Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		Optional<User> userOptional = null;
 		if (StringUtils.isNotBlank(uuid)) {
 			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());
@@ -636,13 +682,16 @@ public class UserController {
 			return ResponseEntity.badRequest().build();
 		}
 		if (!userOptional.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).headers(httpHeaders).body(NO_USER_FOUND_MSG);
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 		User user = userOptional.get();
 		String authToken = request.getHeader(AUTHORIZATION);
 		logger.finest("TOKEN #########" + authToken);
 		if (!authService.authorize(authToken, user)) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).headers(httpHeaders).body(UNAUTHORIZED_ACCESS);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale));
 		}
 
 		String userJson = convertUserToJSON(user);
