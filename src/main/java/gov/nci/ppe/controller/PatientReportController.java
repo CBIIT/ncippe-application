@@ -3,6 +3,7 @@ package gov.nci.ppe.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Locale;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,9 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
-import gov.nci.ppe.constants.CommonConstants;
+import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PatientReportConstants;
 import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
@@ -45,6 +48,8 @@ import gov.nci.ppe.services.UserService;
 import gov.nci.ppe.services.impl.ApiException;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * Controller class for Participant's Report related actions.
@@ -69,6 +74,9 @@ public class PatientReportController {
 	public FileService reportService;
 
 	@Autowired
+	private MessageSource messageSource;
+
+	@Autowired
 	@Qualifier("dozerBean")
 	private Mapper dozerBeanMapper;
 
@@ -88,12 +96,15 @@ public class PatientReportController {
 	 */
 	@RequestMapping(value = "/api/patientReport", method = RequestMethod.POST)
 	@ApiOperation(value = "Uploads a File andd associates it with the participant")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Patient Report uploaded"),
+			@ApiResponse(code = 500, message = "Internal Server Error"),
+			@ApiResponse(code = 400, message = "Uploaded File is empty") })
 	public ResponseEntity<String> handleFileUpload(
 			@ApiParam(value = "Patient file to Upload", required = true) @RequestParam(value = "reportFile", required = true) MultipartFile file,
 			@ApiParam(value = "Unique ID of the Patient whose file is to be uploaded", required = true) @RequestParam(value = "patientId", required = true) String patientId,
 			@ApiParam(value = "Unique ID of the User uploading the file", required = true) @RequestParam(value = "uuid", required = true) String uuid,
 			@ApiParam(value = "Uploaded File type", required = true, allowableValues = "PPE_FILETYPE_BIOMARKER_REPORT, PPE_FILETYPE_ECONSENT_FORM") @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
-			HttpServletRequest req) {
+			HttpServletRequest req, Locale locale) {
 
 		if (!file.isEmpty()) {
 			// This will form the part of the key using which the application will retrieve
@@ -118,15 +129,16 @@ public class PatientReportController {
 
 			} catch (Exception exception) {
 				logger.error(exception.getMessage());
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\nYou failed to upload "
-						+ file.getOriginalFilename() + " => " + exception.getMessage() + "\n}");
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_INTERNAL_ERROR, null, locale));
 			}
 			return ResponseEntity.status(HttpStatus.OK)
 					.body("{\n" + file.getOriginalFilename() + " was saved successfully \n}");
 		} else {
 			logger.error(" The file upload process failed as the file you are uploading is empty.");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("{\nYou failed to upload " + file.getOriginalFilename() + " because the file was empty.\n}");
+					.body(messageSource.getMessage(HttpResponseConstants.UPLOADED_FILE_EMPTY,
+							new Object[] { file.getOriginalFilename() }, locale));
 		}
 	}
 
@@ -140,18 +152,23 @@ public class PatientReportController {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@ApiOperation(value = "Returns a stream object to caller containing file requested for")
+	@ApiResponses({ @ApiResponse(code = 200, message = "Report downloaded"),
+			@ApiResponse(code = 400, message = "File GUID Missing"),
+			@ApiResponse(code = 404, message = "Requested File not found"),
+			@ApiResponse(code = 500, message = "Internal Server Error") })
 	@GetMapping(value = "/api/patientReport/{reportGUID}")
 	public @ResponseBody ResponseEntity fetchParticipantReportAsFile(
-			@ApiParam(value = "Unique ID of the report to be streamed", required = true) @PathVariable String reportGUID) {
+			@ApiParam(value = "Unique ID of the report to be streamed", required = true) @PathVariable String reportGUID,
+			Locale locale) {
 
 		if (StringUtils.isAllBlank(reportGUID)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("{\n FileGUID cannot be empty or blank spaces.\n}");
+					.body(messageSource.getMessage(HttpResponseConstants.MISSING_FILE_GUID, null, locale));
 		}
 
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_PDF);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_PDF_VALUE);
 		InputStreamResource resource = null;
 		if (rptOptional.isPresent()) {
 			File participantReport = new File("Error.pdf");
@@ -164,12 +181,12 @@ public class PatientReportController {
 				resource = new InputStreamResource(new FileInputStream(participantReport));
 			} catch (ApiException apiEx) {
 				logger.error("Error Message : " + apiEx.getMessage());
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\n Cannot retrieve the file "
-						+ rptOptional.get().getFileName() + " due to => " + apiEx.getMessage() + "\n}");
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+						messageSource.getMessage(HttpResponseConstants.FILE_DOWNLOAD_INTERNAL_ERROR, null, locale));
 			} catch (FileNotFoundException fileNotFndEx) {
 				logger.error("FILENOTFOUND Error Message : " + fileNotFndEx.getMessage());
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\n Cannot retrieve the file "
-						+ rptOptional.get().getFileName() + " due to => " + fileNotFndEx.getMessage() + "\n}");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource.getMessage(
+						HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
 			}
 		}
 
@@ -188,7 +205,8 @@ public class PatientReportController {
 	@PutMapping(value = "/api/patientReport/{reportGUID}")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
 			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
-			@ApiParam(value = "Unique ID of the user having read the report", required = true) @RequestParam("viewedByUserId") String uuid)
+			@ApiParam(value = "Unique ID of the user having read the report", required = true) @RequestParam("viewedByUserId") String uuid,
+			Locale locale)
 			throws JsonProcessingException {
 		StringBuilder errorMsg = new StringBuilder();
 

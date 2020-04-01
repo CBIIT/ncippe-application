@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +17,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
-import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.data.entity.NCORPSite;
 import gov.nci.ppe.data.entity.dto.NCORPSiteDTO;
 import gov.nci.ppe.services.NCORPSiteService;
 import io.swagger.annotations.ApiOperation;
+
 
 /**
  * Rest Endpoint for returning NCORP Site information
@@ -48,7 +49,7 @@ public class NCORPSiteController {
 	@GetMapping(value = "/publicapi/v1/sites")
 	public ResponseEntity<String> getAllActiveSites() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		List<NCORPSite> sitesList = siteService.getAllActiveSites();
 		// If there are no registered users, return back no content
 		if (CollectionUtils.isEmpty(sitesList)) {
