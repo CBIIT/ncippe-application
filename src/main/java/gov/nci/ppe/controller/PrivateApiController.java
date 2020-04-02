@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github.dozermapper.core.Mapper;
 
-import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
+import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.ContentEditor;
@@ -43,8 +43,6 @@ import io.swagger.annotations.ApiParam;
 public class PrivateApiController {
 
 	protected Logger logger = Logger.getLogger(PrivateApiController.class.getName());
-	private static final String NOTIFICATION_GENERATED = "Reminder Notifications Generated";
-
 	@Autowired
 	@Qualifier("dozerBean")
 	private Mapper dozerBeanMapper;
@@ -68,7 +66,7 @@ public class PrivateApiController {
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", CommonConstants.APPLICATION_CONTENTTYPE_JSON);
+		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String jsonFormat = convertUsersToJSON(newUsersList);
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
@@ -87,7 +85,7 @@ public class PrivateApiController {
 			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
 
 		userService.generateUnreadReportReminderNotification(daysUnread);
-		return ResponseEntity.ok().body(NOTIFICATION_GENERATED);
+		return ResponseEntity.ok().body(HttpResponseConstants.NOTIFICATION_GENERATED);
 	}
 
 	/*

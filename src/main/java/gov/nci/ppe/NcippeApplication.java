@@ -6,8 +6,10 @@ import java.io.IOException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -38,6 +40,13 @@ public class NcippeApplication {
 				.build().apiInfo(new ApiInfo("NCI PPE Api Documentation", "Documentation automatically generated", null,
 						null, new Contact("PublicisSapient", null, null), null, null));
 
+	}
+
+	@Bean
+	public MessageSource messageSource() {
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+		messageSource.setBasenames("messages/errors/error");
+		return messageSource;
 	}
 
 }

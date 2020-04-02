@@ -23,6 +23,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
@@ -110,16 +111,20 @@ public class FileServiceTest {
 	public void testGetFilesUploadedBetween() {
 		LocalDateTime startTime = LocalDateTime.now();
 		LocalDateTime endTime = startTime.plusDays(2);
-
+		Code eConsentType = new Code();
+		eConsentType.setCodeId(-1l);
+		eConsentType.setCodeName(FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType());
 		List<FileMetadata> expectedFiles = new ArrayList<>();
 		FileMetadata fm = new FileMetadata();
 		fm.setFileGUID(GUID);
+		fm.setFileType(eConsentType);
 		expectedFiles.add(fm);
 
-		when(mockFileMetadataRepo.findByDateUploadedBetween(startTime, endTime)).thenReturn(expectedFiles);
+		when(mockFileMetadataRepo.findByFileTypeAndDateUploadedBetween(eConsentType, startTime, endTime))
+				.thenReturn(expectedFiles);
 
-		List<FileMetadata> results = fileService.getFilesUploadedBetween(startTime, endTime);
-		verify(mockFileMetadataRepo).findByDateUploadedBetween(startTime, endTime);
+		List<FileMetadata> results = fileService.getFilesUploadedBetween(eConsentType, startTime, endTime);
+		verify(mockFileMetadataRepo).findByFileTypeAndDateUploadedBetween(eConsentType, startTime, endTime);
 
 		assertFalse(results.isEmpty());
 		assertEquals(GUID, results.get(0).getFileGUID());
