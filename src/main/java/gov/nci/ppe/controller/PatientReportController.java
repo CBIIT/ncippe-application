@@ -84,10 +84,10 @@ public class PatientReportController {
 	private String applicationDataBucket;
 
 	/**
-	 * Uploads a File andd associates it with the participant
+	 * Uploads a File and associates it with the participant
 	 * 
 	 * @param file             - Patient file to Upload
-	 * @param patientId      - Unique ID of the Patient whose file is to be
+	 * @param patientId        - Unique ID of the Patient whose file is to be
 	 *                         uploaded
 	 * @param uuid             - Unique ID of the User uploading the file
 	 * @param uploadedFileType - Uploaded File type
@@ -208,29 +208,18 @@ public class PatientReportController {
 			@ApiParam(value = "Unique ID of the user having read the report", required = true) @RequestParam("viewedByUserId") String uuid,
 			Locale locale)
 			throws JsonProcessingException {
-		StringBuilder errorMsg = new StringBuilder();
-
-		if (StringUtils.isEmpty(reportGUID)) {
-			errorMsg.append("\\n ReportGUID cannot be empty or blank spaces.\\n");
-		}
-		if (StringUtils.isEmpty(uuid)) {
-			errorMsg.append("\\n UserGUID cannot be empty or blank spaces.\\n");
-		}
-		if (errorMsg.length() != 0) {
-			errorMsg.insert(0, "{");
-			errorMsg.append("}");
-			return ResponseEntity.badRequest().body(errorMsg.toString());
-		}
 
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);
 		if (rptOptional.isEmpty()) {
-			return ResponseEntity.notFound().build();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource
+					.getMessage(HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
 		}
 
 		Optional<User> usrOptional = userService.findByUuid(uuid);
 
 		if (usrOptional.isEmpty()) {
-			return ResponseEntity.badRequest().body("{\nNo User found with UserID " + uuid + "}");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
 		FileMetadata updatedRpt = reportService.markReportAsViewed(rptOptional.get(), usrOptional.get());
