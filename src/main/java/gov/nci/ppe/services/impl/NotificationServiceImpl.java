@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.data.entity.PortalNotification;
+import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
 import gov.nci.ppe.services.NotificationService;
 
@@ -81,8 +82,12 @@ public class NotificationServiceImpl implements NotificationService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
-			List<PortalNotification> notificationsForUpdate) {
+	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(User user) {
+		List<PortalNotification> notificationsForUpdate = getAllNotificationsForUserByUserId(user.getUserId());
+
+		notificationsForUpdate.forEach(notification -> {
+			notification.setViewedByUser(1);
+		});
 		return notificationRepo.saveAll(notificationsForUpdate);
 	}
 

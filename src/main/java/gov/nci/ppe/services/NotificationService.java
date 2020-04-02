@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import gov.nci.ppe.data.entity.PortalNotification;
+import gov.nci.ppe.data.entity.User;
 
 /**
  * @author PublicisSapient
@@ -60,11 +61,11 @@ public interface NotificationService {
 	/**
 	 * Update all notifications for a particular user by marking them as {READ}
 	 * 
-	 * @param notificationsForUpdate
+	 * @param user - User whose notifications are to be marked as read
 	 * @return List of {PortalNotification} Objects
 	 */
 	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
-			List<PortalNotification> notificationsForUpdate);
+			User user);
 	/**
 	 * Method to add notify Patient when their CRC is replaced
 	 * @param userId - Id of the recipient for whom the notification message is intended
