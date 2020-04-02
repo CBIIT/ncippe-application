@@ -87,13 +87,6 @@
 			<version>2.5</version>
 		</dependency>
 
-		<!-- GSON -->
-		<!-- This is required to convert Maps and List to JSON format -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-		</dependency>
-
 		<!-- Dozer Mapping -->
 		<dependency>
 		    <groupId>com.github.dozermapper</groupId>
