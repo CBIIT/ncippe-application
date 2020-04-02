@@ -52,9 +52,10 @@ public interface FileService {
 	/**
 	 * Fetch files uploaded during a given time period
 	 * 
+	 * @param fileType  - Type of file
 	 * @param startTime - start of the period
 	 * @param endTime   - end of the period
 	 * @return List of FileMetadata objects
 	 */
-	public List<FileMetadata> getFilesUploadedBetween(LocalDateTime startTime, LocalDateTime endTime);
+	public List<FileMetadata> getFilesUploadedBetween(Code fileType, LocalDateTime startTime, LocalDateTime endTime);
 }

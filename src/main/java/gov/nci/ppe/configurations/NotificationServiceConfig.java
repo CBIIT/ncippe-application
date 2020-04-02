@@ -204,7 +204,7 @@ public class NotificationServiceConfig {
 	@Value("${reminder.unread.report.patient.from}")
 	private String remindPatientUnreadReportFrom;
 
-	@Value("reminder.unread.report.patient.subject.en}")
+	@Value("${reminder.unread.report.patient.subject.en}")
 	private String remindPatientUnreadReportSubjectEnglish;
 
 	@Value("${reminder.unread.report.patient.subject.es}")
