@@ -120,11 +120,11 @@ public class FileServiceTest {
 		fm.setFileType(eConsentType);
 		expectedFiles.add(fm);
 
-		when(mockFileMetadataRepo.findByFileTypeandDateUploadedBetween(eConsentType, startTime, endTime))
+		when(mockFileMetadataRepo.findByFileTypeAndDateUploadedBetween(eConsentType, startTime, endTime))
 				.thenReturn(expectedFiles);
 
 		List<FileMetadata> results = fileService.getFilesUploadedBetween(eConsentType, startTime, endTime);
-		verify(mockFileMetadataRepo).findByFileTypeandDateUploadedBetween(eConsentType, startTime, endTime);
+		verify(mockFileMetadataRepo).findByFileTypeAndDateUploadedBetween(eConsentType, startTime, endTime);
 
 		assertFalse(results.isEmpty());
 		assertEquals(GUID, results.get(0).getFileGUID());
