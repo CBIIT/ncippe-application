@@ -962,12 +962,17 @@ public class UserServiceImpl implements UserService {
 		System.out.println(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
 				+ " and "
 				+ endOfPeriod.toString());
-		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(startOfPeriod, endOfPeriod);
+		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
+				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
+				endOfPeriod);
 		uploadedFiles.stream().forEach(file -> sendOverdueNotification(file));
 
 	}
 
 	private void sendOverdueNotification(FileMetadata fileMetadata) {
+
+		logger.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
 		CRC assocCRC = patient.getCrc();
 		Set<Provider> associatedProviders = patient.getProviders();
