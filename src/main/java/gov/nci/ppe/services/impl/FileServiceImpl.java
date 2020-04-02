@@ -69,9 +69,9 @@ public class FileServiceImpl implements FileService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<FileMetadata> getFilesUploadedBetween(LocalDateTime startTime, LocalDateTime endTime) {
+	public List<FileMetadata> getFilesUploadedBetween(Code fileType, LocalDateTime startTime, LocalDateTime endTime) {
 
-		return fileMetadataRepo.findByDateUploadedBetween(startTime, endTime);
+		return fileMetadataRepo.findByFileTypeandDateUploadedBetween(fileType, startTime, endTime);
 	}
 
 

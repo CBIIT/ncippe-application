@@ -561,7 +561,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		} else {
 			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodyEnglish();
 			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
+			subject = emailServiceConfig.getEmailPatientReminderUnreadReportSubjectEnglish();
 
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
@@ -592,7 +592,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
 		} else {
 			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
-			htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenBodyEnglish()
+			htmlBody = emailServiceConfig.getEmailCRCProviderReminderUnreadReportBodyEnglish()
 					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);

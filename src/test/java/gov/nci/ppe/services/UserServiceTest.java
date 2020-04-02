@@ -17,6 +17,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
+import gov.nci.ppe.constants.FileType;
+import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.repository.CRCRepository;
 import gov.nci.ppe.data.repository.CodeRepository;
@@ -83,8 +85,12 @@ public class UserServiceTest {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
+		Code biomarkerReportType = new Code();
+		biomarkerReportType.setCodeId(-1l);
+		biomarkerReportType.setCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType());
+
 		List<FileMetadata> files = new ArrayList<>();
-		when(fileService.getFilesUploadedBetween(startOfPeriod, endOfPeriod)).thenReturn(files);
+		when(fileService.getFilesUploadedBetween(biomarkerReportType, startOfPeriod, endOfPeriod)).thenReturn(files);
 
 		userService.generateUnreadReportReminderNotification(daysUnread);
 	}
