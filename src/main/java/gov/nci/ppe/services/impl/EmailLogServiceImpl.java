@@ -561,7 +561,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		} else {
 			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodyEnglish();
 			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
+			subject = emailServiceConfig.getEmailPatientReminderUnreadReportSubjectEnglish();
 
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
@@ -587,12 +587,12 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String subject;
 
 		if (useSpanish(preferredLanguage)) {
-			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectSpanish();
-			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportBodySpanish()
+			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectSpanish();
+			htmlBody = emailServiceConfig.getEmailCRCProviderReminderUnreadReportBodySpanish()
 					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
 		} else {
-			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectEnglish();
-			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlypUloadedBiomarkerReportBodyEnglish()
+			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
+			htmlBody = emailServiceConfig.getEmailCRCProviderReminderUnreadReportBodyEnglish()
 					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
