@@ -31,7 +31,7 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
 	 * @return - List of FileMetadata objects with DateUploaded field falling
 	 *         between startDate and endDate
 	 */
-	List<FileMetadata> findByFileTypeandDateUploadedBetween(Code fileType, LocalDateTime startTime,
+	List<FileMetadata> findByFileTypeAndDateUploadedBetween(Code fileType, LocalDateTime startTime,
 			LocalDateTime endTime);
 
 }

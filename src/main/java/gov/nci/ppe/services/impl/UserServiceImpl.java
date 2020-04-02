@@ -970,6 +970,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 	private void sendOverdueNotification(FileMetadata fileMetadata) {
+
+		logger.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
 		CRC assocCRC = patient.getCrc();
 		Set<Provider> associatedProviders = patient.getProviders();
