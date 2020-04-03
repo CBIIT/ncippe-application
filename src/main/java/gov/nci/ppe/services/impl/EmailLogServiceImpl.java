@@ -332,9 +332,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 			subject = emailServiceConfig.getEmailUploadEConsentSubjectSpanish();
 			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
 		} else {
-			htmlBody = emailServiceConfig.getEmailUploadEConsentBodySpanish();
-			subject = emailServiceConfig.getEmailUploadEConsentSubjectSpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
+			htmlBody = emailServiceConfig.getEmailUploadEConsentBodyEnglish();
+			subject = emailServiceConfig.getEmailUploadEConsentSubjectEnglish();
+			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
 		}
 		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
 
