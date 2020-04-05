@@ -45,7 +45,7 @@ public class NcippeApplication {
 	@Bean
 	public MessageSource messageSource() {
 		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-		messageSource.setBasenames("messages/errors/error");
+		messageSource.setBasenames("messages/errors/error", "messages/emails/email");
 		return messageSource;
 	}
 
