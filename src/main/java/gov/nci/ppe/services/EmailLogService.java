@@ -20,12 +20,10 @@ public interface EmailLogService {
 	 * @param senderEmail    - Sender's email address
 	 * @param subject        - Subject for the email
 	 * @param htmlBody       - The text for the body (in HTML format) of the email
-	 * @param textBody       - The text for the body of the email
 	 * 
 	 * @return Email Status if the email was sent out successfully
 	 */
-	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody,
-			String textBody);
+	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody);
 
 	/**
 	 * Method to send an Invitation email to Patient
@@ -79,12 +77,11 @@ public interface EmailLogService {
 	 * @param recipientEmail      - CRC/Provider's email id
 	 * @param patientName         - Full Name of the patient for whom the biomarker
 	 *                            report was uploaded
-	 * @param patientId           - Patient Id
 	 * @param preferredLanguage   - Recipient's preferred language
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName, String recipientEmail, String patientName,
-			String patientId, LanguageOption preferredLanguage);
+			LanguageOption preferredLanguage);
 
 	/**
 	 * Method to send an email to participant after their biomarker report is
@@ -169,7 +166,7 @@ public interface EmailLogService {
 	 * @param preferredLanguage - Recipient's preferred language
 	 * @return - Success or Failure of the email process
 	 */
-	public String sendEmailToParticipantAfterCRCWithdrawsPatient(String firstName, String lastName,
+	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName,
 			String salutationName, String emailId, String questionAnswers, LanguageOption preferredLanguage);
 
 	/**
@@ -206,13 +203,10 @@ public interface EmailLogService {
 	 * 
 	 * @param salutationFirstName - First Name for CRC/Provider
 	 * @param recipientEmail      - CRC/Provider's email id
-	 * @param patientFullName     - Full Name of the patient for whom the biomarker
-	 *                            report was uploaded
-	 * @param patientId           - Patient Id
 	 * @param preferredLanguage   - Recipient's preferred language
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
-			String patientFullName, String patientId, LanguageOption preferredLanguage);
+			LanguageOption preferredLanguage);
 
 }

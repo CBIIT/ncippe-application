@@ -418,7 +418,7 @@ public class UserServiceImpl implements UserService {
 			}
 		} else {
 			if (withdrawnPatient.isAllowEmailNotification()) {
-				emailService.sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
+				emailService.sendEmailToPatientAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
 						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getEmail(), questionAnswers.toString(),
 						withdrawnPatient.getPreferredLanguage());
@@ -759,7 +759,7 @@ public class UserServiceImpl implements UserService {
 						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
 								patient.getPatientId());
 						if (crc.isAllowEmailNotification()) {
-							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFullName(),
+							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFirstName(),
 									crc.getPreferredLanguage());
 						}
 					}
@@ -989,8 +989,7 @@ public class UserServiceImpl implements UserService {
 		if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
 			if (assocCRC.isAllowEmailNotification()) {
 				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
-						assocCRC.getEmail(), patient.getFullName(), patient.getPatientId(),
-						assocCRC.getPreferredLanguage());
+						assocCRC.getEmail(), assocCRC.getPreferredLanguage());
 				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
 						assocCRC.getUserId(), patient.getPatientId());
 			}
@@ -999,8 +998,7 @@ public class UserServiceImpl implements UserService {
 		for (Provider provider : associatedProviders) {
 			if (!fileMetadata.hasViewed(provider.getUserUUID())) {
 				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(provider.getFirstName(),
-						provider.getEmail(), patient.getFullName(), patient.getPatientId(),
-						provider.getPreferredLanguage());
+						provider.getEmail(), provider.getPreferredLanguage());
 				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
 						provider.getUserId(), patient.getPatientId());
 			}
