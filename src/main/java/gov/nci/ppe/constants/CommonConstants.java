@@ -1,5 +1,6 @@
 package gov.nci.ppe.constants;
 
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +46,9 @@ public class CommonConstants {
 					.orElseThrow(IllegalArgumentException::new);
 		}
 
+		public Locale getLocale() {
+			return new Locale(this.language);
+		}
 	}
 
 	public static final String HEADER_UUID = "sm_user";
