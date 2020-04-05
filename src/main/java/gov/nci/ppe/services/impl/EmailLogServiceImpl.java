@@ -3,6 +3,7 @@ package gov.nci.ppe.services.impl;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -11,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -25,9 +28,9 @@ import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 import com.amazonaws.services.simpleemail.model.SendEmailResult;
 
-import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import gov.nci.ppe.constants.EmailConstants;
 import gov.nci.ppe.data.entity.EmailLog;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.repository.EmailLogRepository;
@@ -47,10 +50,19 @@ public class EmailLogServiceImpl implements EmailLogService {
 	private EmailLogRepository emailLogRepository;
 
 	@Autowired
-	private EmailServiceConfig emailServiceConfig;
+	private JavaMailSender nihMailSender;
 
 	@Autowired
-	private JavaMailSender nihMailSender;
+	private MessageSource messageSource;
+
+	@Value("${hostname}")
+	private String hostname;
+
+	@Value("${email.use.aws}")
+	private boolean useAWSSES;
+
+	@Value("${sender.email.address}")
+	private String senderEmailAddress;
 
 	private static final Logger logger = LogManager.getLogger(EmailLogServiceImpl.class);
 
@@ -80,8 +92,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody,
-			String textBody) {
+	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody) {
 		String emailStatus = sendEmail(recipientEmail, subject, htmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, htmlBody);
@@ -95,29 +106,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToInvitePatient(String recipientEmail, String patientFirstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { patientFirstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String replaceStringWith[] = { hostname, patientFirstName };
 
-		String htmlBody;
-		String subject;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailPatientInviteBodySpanish()
-					+ emailServiceConfig.getJoiningSignatureSpanish();
-			subject = emailServiceConfig.getEmailPatientInviteSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailPatientInviteBodyEnglish()
-					+ emailServiceConfig.getJoiningSignatureEnglish();
-			subject = emailServiceConfig.getEmailPatientInviteSubjectEnglish();
-		}
-
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
-
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_INVITE_PORTAL_BODY,
+				EmailConstants.PATIENT_INVITE_PORTAL_SUBJECT, EmailConstants.JOINING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 
 	/**
@@ -126,55 +119,36 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToProviderOnPatientInvitation(String recipientEmail, String providerFirstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { providerFirstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String replaceStringWith[] = { hostname, providerFirstName };
+		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PROVIDER_PATIENT_ADDED_BODY,
+				EmailConstants.PROVIDER_PATIENT_ADDED_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 
-		String htmlBody;
-		String subject;
+	}
 
-		if (useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailProviderPatientInviteBodySpanish()
-					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
-			subject = emailServiceConfig.getEmailProviderPatientInviteSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailProviderPatientInviteBodyEnglish()
-					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
-			subject = emailServiceConfig.getEmailProviderPatientInviteSubjectEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
+	private String sendEmailAndLogStatus(String recipientEmail, String emailBodyCode, String subjectCode,
+			String signatureCode, String[] replaceStringWith, LanguageOption preferredLanguage) {
+		Locale locale = preferredLanguage.getLocale();
+		String htmlBody = messageSource.getMessage(emailBodyCode, replaceStringWith, locale);
+		String subject = messageSource.getMessage(subjectCode, null, locale);
+		String signature = messageSource.getMessage(signatureCode, null, locale);
+
+		String updatedHtmlBody = htmlBody + signature;
 		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
 		}
 		return emailStatus;
-
 	}
 
 	@Override
 	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { firstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
+		String replaceStringWith[] = { hostname, firstName };
 
-		String htmlBody;
-		String subject;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenBodySpanish()
-				+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
-			subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenBodyEnglish()
-					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
-			subject = emailServiceConfig.getEmailCRCAboutNewPatientDataFromOpenSubjectEnglish();
-
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PATIENT_ADDED_FROM_OPEN_BODY,
+				EmailConstants.CRC_PATIENT_ADDED_FROM_OPEN_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE,
+				replaceStringWith, preferredLanguage);
 	}
 
 	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat) {
@@ -188,7 +162,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 			messageBody = messageBody + signature;
 		}
 
-		if (emailServiceConfig.isUseAWSSES()) {
+		if (useAWSSES) {
 			try {
 				AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.defaultClient();
 
@@ -197,7 +171,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 						.withMessage(new Message()
 								.withBody(new Body().withHtml(new Content().withCharset(charSet).withData(messageBody)))
 								.withSubject(new Content().withCharset(charSet).withData(subject)))
-						.withSource(emailServiceConfig.getSenderEmailAddress());
+						.withSource(senderEmailAddress);
 				SendEmailResult result = client.sendEmail(request);
 
 				return StringUtils.join(CommonConstants.SUCCESS, " : Email sent successfully!", result.getMessageId());
@@ -212,7 +186,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 				MimeMessage message = nihMailSender.createMimeMessage();
 				MimeMessageHelper htmlMailHelper = new MimeMessageHelper(message, true);
 				htmlMailHelper.setTo(recipientEmail);
-				htmlMailHelper.setFrom(emailServiceConfig.getSenderEmailAddress());
+				htmlMailHelper.setFrom(senderEmailAddress);
 				htmlMailHelper.setSubject(subject);
 				htmlMailHelper.setText(messageBody, true);
 				nihMailSender.send(message);
@@ -231,27 +205,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToInviteNonPatients(String recipientEmail, String firstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { firstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
-		String htmlBody;
-		String subject;
+		String replaceStringWith[] = { hostname, firstName };
 
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailNonPatientInviteBodySpanish()
-					+ emailServiceConfig.getJoiningSignatureSpanish();
-			subject = emailServiceConfig.getEmailNonPatientInviteSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailNonPatientInviteBodyEnglish()
-					+ emailServiceConfig.getJoiningSignatureEnglish();
-			subject = emailServiceConfig.getEmailNonPatientInviteSubjectEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PROVIDER_ADD_FROM_OPEN_BODY,
+				EmailConstants.CRC_PROVIDER_ADD_FROM_OPEN_SUBJECT, EmailConstants.JOINING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 
 	/**
@@ -259,29 +217,12 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName,
-			String recipientEmail, String patientFullName, String patientId, LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { salutationFirstName, patientFullName, patientId };
-		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
-		String htmlBody;
-		String subject;
+			String recipientEmail, String patientFullName, LanguageOption preferredLanguage) {
+		String replaceStringWith[] = { hostname, salutationFirstName, patientFullName };
 
-		if ( useSpanish(preferredLanguage)) {
-			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectSpanish();
-			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportBodySpanish()
-				+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
-		} else {
-			subject = emailServiceConfig.getEmailCRCAndProvidersAboutNewlyUploadedBiomarkerReportSubjectEnglish();
-			htmlBody = emailServiceConfig.getEmailCRCAndProvidersAboutNewlypUloadedBiomarkerReportBodyEnglish()
-					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PROVIDER_UPLOAD_REPORT_BODY,
+				EmailConstants.CRC_PROVIDER_UPLOAD_REPORT_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE,
+				replaceStringWith, preferredLanguage);
 	}
 
 	/**
@@ -290,29 +231,10 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToPatientAfterUploadingReport(String recipientEmail, String userFirstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { userFirstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
-		String htmlBody;
-		String subject;
-		String signature;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailUploadReportPatientBodySpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-			subject = emailServiceConfig.getEmailUploadReportPatientSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailUploadReportPatientBodyEnglish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-			subject = emailServiceConfig.getEmailUploadReportPatientSubjectEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true, signature);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
-
+		String replaceStringWith[] = { hostname, userFirstName };
+		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_UPLOAD_REPORT_BODY,
+				EmailConstants.PATIENT_UPLOAD_REPORT_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 
 	/**
@@ -321,28 +243,10 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToPatientAfterUploadingEconsent(String recipientEmail, String firstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { firstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
-		String htmlBody;
-		String subject;
-		String signature;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailUploadEConsentBodySpanish();
-			subject = emailServiceConfig.getEmailUploadEConsentSubjectSpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailUploadEConsentBodyEnglish();
-			subject = emailServiceConfig.getEmailUploadEConsentSubjectEnglish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith) + signature;
-
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		final String replaceStringWith[] = { hostname, firstName };
+		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_UPLOAD_ECONSENT_BODY,
+				EmailConstants.PATIENT_UPLOAD_ECONSENT_SUBJECT, EmailConstants.JOINING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 
 	/**
@@ -360,27 +264,20 @@ public class EmailLogServiceImpl implements EmailLogService {
 		/* Replace the variables in the EmailBody */
 		String replaceStringWith[] = { participant.getFirstName(), participant.getLastName(),
 				participant.getPatientId(), dateTime[0], dateTime[1] };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{UserGUID}", "%{date}", "%{time}" };
-		String htmlBody;
-		String subject;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailAdminBodySpanish();
-			subject = emailServiceConfig.getEmailAdminSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailAdminBodyEnglish();
-			subject = emailServiceConfig.getEmailAdminSubjectEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
 
 		/* Replace the variables in the Subject Line */
 		String replaceSubjectStringWith[] = { participant.getPatientId() };
-		String replaceThisStringForSubject[] = { "%{UserGUID}" };
-		subject = StringUtils.replaceEach(subject, replaceThisStringForSubject, replaceSubjectStringWith);
 
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true);
+		Locale locale = preferredLanguage.getLocale();
+
+		String htmlBody = messageSource.getMessage(EmailConstants.LAB_ADMIN_UPLOAD_REPORT_BODY, replaceStringWith,
+				locale);
+		String subject = messageSource.getMessage(EmailConstants.LAB_ADMIN_UPLOAD_REPORT_SUBJECT,
+				replaceSubjectStringWith, locale);
+
+		String emailStatus = sendEmail(recipientEmail, subject, htmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
+			logEmailStatus(recipientEmail, subject, htmlBody);
 		}
 		return emailStatus;
 	}
@@ -391,29 +288,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToPatientWhenProviderChanges(String recipientEmail, String patientFirstName,
 			String patientId, LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { patientFirstName , patientId };
-		String replaceThisString[] = { "%{SalutationFirstName}", "%{PatientId}" };
+		String replaceStringWith[] = { hostname, patientFirstName, patientId };
 
-		String htmlBody;
-		String subject;
-		String signature;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedBodySpanish();
-			subject = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedSubjectSpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedBodyEnglish();
-			subject = emailServiceConfig.getEmailPatientWhenProvidersAreReplacedSubjectEnglish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_CHANGE_PROVIDER_BODY,
+				EmailConstants.PATIENT_CHANGE_PROVIDER_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE,
+				replaceStringWith, preferredLanguage);
 	}	
 
 	/**
@@ -422,28 +301,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToPatientWhenCRCChanges(String recipientEmail, String patientirstName, String patientId,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { patientirstName , patientId };
-		String replaceThisString[] = { "%{SalutationFirstName}", "%{PatientId}" };
+		String replaceStringWith[] = { hostname, patientirstName, patientId };
 
-		String htmlBody;
-		String subject;
-		String signature;
-
-		if ( useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailPatientWhenCRCIsReplacedBodySpanish();
-			subject = emailServiceConfig.getEmailPatientWhenCRCIsReplacedSubjectSpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailPatientWhenCRCIsReplacedBodyEnglish();
-			subject = emailServiceConfig.getEmailPatientWhenCRCIsReplacedSubjectEnglish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_CHANGE_CRC_BODY,
+				EmailConstants.PATIENT_CHANGE_CRC_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}	
 	
 	/**
@@ -452,59 +314,25 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToCRCWhenPatientIsAdded(String recipientEmail, String CRCFullName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { CRCFullName};
-		String replaceThisString[] = { "%{SalutationFirstName}"};	
-		String htmlBody;
-		String subject;
-		String signature;
+		String replaceStringWith[] = { hostname, CRCFullName };
 
-		if ( useSpanish(preferredLanguage)) {
-			subject = emailServiceConfig.getEmailCRCWhenPatientIsAddedSubjectSpanish();
-			htmlBody = emailServiceConfig.getEmailCRCWhenPatientIsAddedBodySpanish();
-			signature = emailServiceConfig.getThankYouForContributionSignatureSpanish();
-		} else {
-			subject = emailServiceConfig.getEmailCRCWhenPatientIsAddedSubjectEnglish();
-			htmlBody = emailServiceConfig.getEmailCRCWhenPatientIsAddedBodyEnglish();
-			signature = emailServiceConfig.getThankYouForContributionSignatureEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody+signature, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PATIENT_ADDED_BODY,
+				EmailConstants.CRC_PATIENT_ADDED_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String sendEmailToParticipantAfterCRCWithdrawsPatient(String firstName, String lastName,
+	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName,
 			String salutationName, String emailId, String questionAnswers, LanguageOption preferredLanguage) {
 
-		String htmlBody;
-		String subject;
-		String signature;
+		final String replaceStringWith[] = { hostname, firstName, lastName, salutationName, questionAnswers };
 
-		if (useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailPatientWhenCRCWithdrawsBodySpanish();
-			subject = emailServiceConfig.getEmailPatientWhenCRCWithdrawsSubjectSpanish();
-			signature = emailServiceConfig.getThankYouForContributionSignatureSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailPatientWhenCRCWithdrawsBodyEnglish();
-			subject = emailServiceConfig.getEmailPatientWhenCRCWithdrawsSubjectEnglish();
-			signature = emailServiceConfig.getThankYouForContributionSignatureEnglish();
-		}
-
-		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}" };
-
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		return sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(), subject,
-				updatedHtmlBody + signature, updatedHtmlBody + signature);
+		return this.sendEmailAndLogStatus(emailId, EmailConstants.PATIENT_CRC_WITHDRAW_BODY,
+				EmailConstants.PATIENT_CRC_WITHDRAW_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE, replaceStringWith,
+				preferredLanguage);
 	}
 
 	/**
@@ -513,34 +341,21 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToCRCAfterParticipantWithdraws(String firstName, String lastName, String salutationName,
 			String emailId, String questionAnswers, String patientId, LanguageOption preferredLanguage) {
-		String htmlBody;
-		String subject;
 
 		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}",
-				"%{PatientId}" };
-		if (useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailCRCWhenPatientWithdrawsBodySpanish()
-					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
-			subject = emailServiceConfig.getEmailCRCWhenPatientWithdrawsSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailCRCWhenPatientWithdrawsBodyEnglish()
-					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
-			subject = emailServiceConfig.getEmailCRCWhenPatientWithdrawsSubjectEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		/* Replace the variables in the Subject Line */
+		final String replaceStringWith[] = { hostname, firstName, lastName, salutationName, questionAnswers,
+				patientId };
 		String replaceSubjectStringWith[] = { firstName, lastName };
-		String replaceThisStringForSubject[] = { "%{FirstName}", "%{LastName}" };
-		subject = StringUtils.replaceEach(subject, replaceThisStringForSubject, replaceSubjectStringWith);
-		return sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(), subject,
-				updatedHtmlBody, updatedHtmlBody);
+		final Locale locale = preferredLanguage.getLocale();
+
+		String htmlBody = messageSource.getMessage(EmailConstants.CRC_PATIENT_WITHDRAW_BODY, replaceStringWith, locale);
+		String subject = messageSource.getMessage(EmailConstants.CRC_PATIENT_WITHDRAW_SUBJECT, replaceSubjectStringWith,
+				locale);
+
+		return sendEmailNotification(emailId, senderEmailAddress, subject,
+				htmlBody);
 	}
-	private boolean useSpanish(LanguageOption preferredLanguage) {
-		return preferredLanguage != null && LanguageOption.SPANISH == preferredLanguage;
-	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -548,30 +363,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Override
 	public String sendEmailToParticipantReminderUnreadReport(String recipientEmail, String userFirstName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { userFirstName };
-		String replaceThisString[] = { "%{SalutationFirstName}" };
-		String htmlBody;
-		String subject;
-		String signature;
+		String replaceStringWith[] = { hostname, userFirstName };
 
-		if (useSpanish(preferredLanguage)) {
-			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodySpanish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureSpanish();
-			subject = emailServiceConfig.getEmailPatientReminderUnreadReportSubjectSpanish();
-		} else {
-			htmlBody = emailServiceConfig.getEmailPatientReminderUnreadReportBodyEnglish();
-			signature = emailServiceConfig.getThankYouParticipatingSignatureEnglish();
-			subject = emailServiceConfig.getEmailPatientReminderUnreadReportSubjectEnglish();
-
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, subject, updatedHtmlBody, true, signature);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
-
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_REMINDER_REPORT_BODY,
+				EmailConstants.PATIENT_REMINDER_REPORT_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE,
+				replaceStringWith, preferredLanguage);
 	}
 
 	/**
@@ -580,28 +376,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
-			String patientFullName, String patientId, LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { salutationFirstName, patientFullName, patientId };
-		String replaceThisString[] = { "%{SalutationFirstName}", "%{FullName}", "%{PatientId}" };
-		String htmlBody;
-		String subject;
+			LanguageOption preferredLanguage) {
+		String replaceStringWith[] = { hostname, salutationFirstName };
 
-		if (useSpanish(preferredLanguage)) {
-			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectSpanish();
-			htmlBody = emailServiceConfig.getEmailCRCProviderReminderUnreadReportBodySpanish()
-					+ emailServiceConfig.getThankYouForContributionSignatureSpanish();
-		} else {
-			subject = emailServiceConfig.getEmailCRCProviderReminderUnreadReportSubjectEnglish();
-			htmlBody = emailServiceConfig.getEmailCRCProviderReminderUnreadReportBodyEnglish()
-					+ emailServiceConfig.getThankYouForContributionSignatureEnglish();
-		}
-		String updatedHtmlBody = StringUtils.replaceEach(htmlBody, replaceThisString, replaceStringWith);
-		String updatedSubject = StringUtils.replaceEach(subject, replaceThisString, replaceStringWith);
-
-		String emailStatus = sendEmail(recipientEmail, updatedSubject, updatedHtmlBody, true);
-		if (emailStatus.contains(CommonConstants.SUCCESS)) {
-			logEmailStatus(recipientEmail, subject, updatedHtmlBody);
-		}
-		return emailStatus;
+		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PROVIDER_REMINDER_REPORT_BODY,
+				EmailConstants.CRC_PROVIDER_REMINDER_REPORT_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE,
+				replaceStringWith, preferredLanguage);
 	}
 }
