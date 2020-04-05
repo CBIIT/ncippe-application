@@ -377,11 +377,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 						patient.getPreferredLanguage());
 			}
 			/* Fetch email Ids for CRC and Providers */
-			Map<String, String> emailIds = getEmailIds(patient);
-			emailIds.forEach((name, emailId) -> {
-				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(name, emailId,
-						patient.getFullName(), patient.getPatientId(), patient.getPreferredLanguage());
-			});
+			sendEmailsToAssociatedProvidersAndCRC(patient);
 
 		}
 	}
@@ -395,22 +391,21 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * @param uploadedFileType - For the type of report for which the email is being
 	 *                         sent.
 	 */
-	private Map<String, String> getEmailIds(Participant patient) {
-		Map<String, String> emailIds = new HashMap<String, String>();
-
+	private void sendEmailsToAssociatedProvidersAndCRC(Participant patient) {
 		Set<Provider> providers = patient.getProviders();
 		providers.forEach(provider -> {
 			if (provider.isAllowEmailNotification()) {
-				emailIds.put(provider.getFirstName(), provider.getEmail()); // email for providers
+				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(provider.getFirstName(),
+						provider.getEmail(), patient.getFullName(), provider.getPreferredLanguage());
 			}
 		});
 
 		CRC crcforPatient = patient.getCrc();
 		if (crcforPatient.isAllowEmailNotification()) {
-			emailIds.put(crcforPatient.getFirstName(), crcforPatient.getEmail()); // email for CRC
+			emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(crcforPatient.getFirstName(),
+					crcforPatient.getEmail(), patient.getFullName(), crcforPatient.getPreferredLanguage());
 		}
 
-		return emailIds;
 	}
 
 	/**
