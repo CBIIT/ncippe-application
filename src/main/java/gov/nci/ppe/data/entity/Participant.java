@@ -31,12 +31,13 @@ import lombok.EqualsAndHashCode;
 @Entity
 @DiscriminatorValue("1")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class Participant extends User {
 
 	@Column(name = "UserId")
 	private Long participantId;
 
+	@EqualsAndHashCode.Include
 	@Column(name = "PatientID", nullable = false, length = 20)
 	private String patientId;
 

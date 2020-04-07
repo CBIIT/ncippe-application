@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,11 +9,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.Data;
+
 /**
  * @author PublicisSapient
  * @version 1.0
  * @since 2019-08-13
  */
+@Data
 @Entity
 @Table(name = "EmailLog")
 public class EmailLog {
@@ -32,46 +35,10 @@ public class EmailLog {
 	private String emailBody;
 	
 	@Column(name="EmailRequestedOn", nullable = false)
-	private Timestamp emailRequestedOn;
+	private LocalDateTime emailRequestedOn;
 	
 	@Column(name="EmailSentOn", nullable = false)
-	private Timestamp emailSentOn;
+	private LocalDateTime emailSentOn;
 	
-	public Long getEmailLogId() {
-		return emailLogId;
-	}
-	public void setEmailLogId(Long emailLogId) {
-		this.emailLogId = emailLogId;
-	}
-	public String getRecipientAddress() {
-		return recipientAddress;
-	}
-	public void setRecipientAddress(String recipientAddress) {
-		this.recipientAddress = recipientAddress;
-	}
-	public String getEmailSubject() {
-		return emailSubject;
-	}
-	public void setEmailSubject(String emailSubject) {
-		this.emailSubject = emailSubject;
-	}
-	public String getEmailBody() {
-		return emailBody;
-	}
-	public void setEmailBody(String emailBody) {
-		this.emailBody = emailBody;
-	}
-	public Timestamp getEmailRequestedOn() {
-		return emailRequestedOn;
-	}
-	public void setEmailRequestedOn(Timestamp emailRequestedOn) {
-		this.emailRequestedOn = emailRequestedOn;
-	}
-	public Timestamp getEmailSentOn() {
-		return emailSentOn;
-	}
-	public void setEmailSentOn(Timestamp emailSentOn) {
-		this.emailSentOn = emailSentOn;
-	}
 
 }
