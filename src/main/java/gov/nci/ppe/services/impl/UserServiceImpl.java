@@ -987,7 +987,7 @@ public class UserServiceImpl implements UserService {
 		if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
 			if (assocCRC.isAllowEmailNotification()) {
 				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
-						assocCRC.getEmail(), assocCRC.getPreferredLanguage());
+						assocCRC.getEmail(), patient.getFullName(), assocCRC.getPreferredLanguage());
 				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
 						assocCRC.getUserId(), patient.getPatientId());
 			}
@@ -996,7 +996,7 @@ public class UserServiceImpl implements UserService {
 		for (Provider provider : associatedProviders) {
 			if (!fileMetadata.hasViewed(provider.getUserUUID())) {
 				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(provider.getFirstName(),
-						provider.getEmail(), provider.getPreferredLanguage());
+						provider.getEmail(), patient.getFullName(), provider.getPreferredLanguage());
 				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
 						provider.getUserId(), patient.getPatientId());
 			}
