@@ -436,7 +436,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 			CRC crc = patient.getCrc();
 			if (crc != null) {
-				userDetailMap.put(crc.getCrcId(), crc.getFirstName());
+				userDetailMap.put(crc.getUserId(), crc.getFirstName());
 			}
 		}
 

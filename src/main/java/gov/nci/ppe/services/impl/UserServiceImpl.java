@@ -1,6 +1,5 @@
 package gov.nci.ppe.services.impl;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -51,7 +50,6 @@ import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
-import gov.nci.ppe.util.TimeUtil;
 
 /**
  * This is a Service class that orchestrates all the calls to entities and
@@ -150,7 +148,7 @@ public class UserServiceImpl implements UserService {
 			user.setPreferredLanguage(preferredLang);
 		}
 		user.setLastRevisedUser(user.getUserId());
-		user.setLastRevisedDate(TimeUtil.now());
+		user.setLastRevisedDate(LocalDateTime.now());
 		User updateUser = userRepository.save(user);
 
 		return Optional.of(updateUser);
@@ -198,7 +196,7 @@ public class UserServiceImpl implements UserService {
 			if (StringUtils.isBlank(user.getUserUUID())) {
 				// Fill in the user's UUID and save.
 				user.setUserUUID(userUUID);
-				Timestamp currentTime = TimeUtil.now();
+				LocalDateTime currentTime = LocalDateTime.now();
 				user.setDateActivated(currentTime);
 				user.setLastRevisedDate(currentTime);
 				user.setLastRevisedUser(user.getUserId());
@@ -278,7 +276,7 @@ public class UserServiceImpl implements UserService {
 		user.setPortalAccountStatus(portalAccountStatusCode);
 		user.setLastRevisedUser(user.getUserId());
 		user.setAllowEmailNotification(false);
-		user.setLastRevisedDate(TimeUtil.now());
+		user.setLastRevisedDate(LocalDateTime.now());
 		User updateUser = userRepository.save(user);
 		return Optional.of(updateUser);
 	}
@@ -288,7 +286,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList) {
-		Timestamp qsAnsInsertionTime = TimeUtil.now();
+		LocalDateTime qsAnsInsertionTime = LocalDateTime.now();
 		qsAnsList.forEach(qs -> {
 			qs.setDateAnswered(qsAnsInsertionTime);
 		});
@@ -305,7 +303,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Optional<User> authorizeUser(String email, String uuid) {
 		boolean userUpdatedFlag = false;
-		Timestamp updatedTime = TimeUtil.now();
+		LocalDateTime updatedTime = LocalDateTime.now();
 		Optional<User> userOptional = findByUuid(uuid);
 		if (userOptional.isEmpty()) {
 			// No uuid match. Could be a first time user. Search by email.
@@ -412,7 +410,7 @@ public class UserServiceImpl implements UserService {
 						notificationTitleEnglish, notificationTitleSpanish,
 						notificationServiceConfig.getParticipantWithdrawsSelfMessageEnglish(),
 						notificationServiceConfig.getParticipantWithdrawsSelfMessageSpanish(),
-						withdrawnPatient.getCrc().getCrcId(), withdrawnPatient.getFirstName(),
+						withdrawnPatient.getCrc().getUserId(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getFirstName(), withdrawnPatient.getPatientId());
 
 			}
@@ -453,7 +451,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updateUser(User user) {
-		user.setLastRevisedDate(TimeUtil.now());
+		user.setLastRevisedDate(LocalDateTime.now());
 		return Optional.of(userRepository.save(user));
 	}
 
@@ -478,7 +476,7 @@ public class UserServiceImpl implements UserService {
 		Optional<User> crcOptional = findByUuid(uuid);
 		if (crcOptional.isPresent()) {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
-			participant.setLastRevisedDate(TimeUtil.now());
+			participant.setLastRevisedDate(LocalDateTime.now());
 		}
 
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
@@ -499,7 +497,7 @@ public class UserServiceImpl implements UserService {
 							provider.getPreferredLanguage());
 				}
 				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
-						provider.getProviderId(), participant.getPatientId());
+						provider.getUserId(), participant.getPatientId());
 
 			}
 		}
@@ -522,8 +520,8 @@ public class UserServiceImpl implements UserService {
 		newPatient.setPortalAccountStatus(portalAccountStatusCode);
 		newPatient.setAllowEmailNotification(true);
 		newPatient.setActiveBiobankParticipant(true);
-		newPatient.setDateCreated(TimeUtil.now());
-		newPatient.setLastRevisedDate(TimeUtil.now());
+		newPatient.setDateCreated(LocalDateTime.now());
+		newPatient.setLastRevisedDate(LocalDateTime.now());
 		Optional<User> patientOptional = Optional.of(userRepository.save(newPatient));
 		CRC crc = newPatient.getCrc();
 		if (null != crc) {
@@ -552,7 +550,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider) {
-		Timestamp currentTimestamp = TimeUtil.now();
+		LocalDateTime currentTimestamp = LocalDateTime.now();
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_PROVIDER.name());
 		provider.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
@@ -583,7 +581,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc) {
-		Timestamp currentTimestamp = TimeUtil.now();
+		LocalDateTime currentTimestamp = LocalDateTime.now();
 		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_CRC.name());
 		crc.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_CRC.name());
@@ -812,7 +810,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient) {
-		existingPatient.setLastRevisedDate(TimeUtil.now());
+		existingPatient.setLastRevisedDate(LocalDateTime.now());
 		return Optional.of(userRepository.save(existingPatient));
 	}
 

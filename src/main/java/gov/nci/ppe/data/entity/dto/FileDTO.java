@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity.dto;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Set;
 
 import lombok.Data;
@@ -24,7 +24,7 @@ public class FileDTO {
 
 	private String fileName;
 
-	private LocalDateTime dateUploaded;
+	private Timestamp dateUploaded;
 
 	private Set<String> viewedBy;
 

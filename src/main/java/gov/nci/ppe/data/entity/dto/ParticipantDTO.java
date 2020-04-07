@@ -21,9 +21,10 @@ import lombok.EqualsAndHashCode;
  * @since 2019-08-26
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ParticipantDTO extends UserDTO {
 
+	@EqualsAndHashCode.Include
 	private String patientId;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
