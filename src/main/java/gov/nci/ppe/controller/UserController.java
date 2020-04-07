@@ -1,6 +1,6 @@
 package gov.nci.ppe.controller;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -394,7 +394,7 @@ public class UserController {
 		if (!CollectionUtils.isEmpty(qsAnsDTO)) {
 			qsAnsDTO.forEach(qs -> {
 				QuestionAnswer questionAnswer = dozerBeanMapper.map(qs, QuestionAnswer.class);
-				questionAnswer.setDateAnswered(new Timestamp(System.currentTimeMillis()));
+				questionAnswer.setDateAnswered(LocalDateTime.now());
 				questionAnswer.setParticipantForQA(patient);
 				questionAnswer.setQuestionCategory(code);
 				qsAnsList.add(questionAnswer);

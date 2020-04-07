@@ -1,6 +1,6 @@
 package gov.nci.ppe.services.impl;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -183,7 +183,7 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationObj.setMessageEnglish(messageEnglish);
 		notificationObj.setMessageSpanish(messageSpanish);
 		notificationObj.setUserId(userId);
-		notificationObj.setDateGenerated(new Timestamp(System.currentTimeMillis()));
+		notificationObj.setDateGenerated(LocalDateTime.now());
 		notificationObj.setViewedByUser(0);
 		notificationObj = notificationRepo.save(notificationObj);
 		return Optional.of(notificationObj);
