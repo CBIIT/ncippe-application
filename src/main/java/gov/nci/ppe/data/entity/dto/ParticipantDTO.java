@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -42,6 +43,7 @@ public class ParticipantDTO extends UserDTO {
 	@JsonView(JsonViews.ParticipantDetailView.class)
 	private List<FileMetadata> otherDocuments = null;
 
+	@JsonProperty("isActiveBiobankParticipant")
 	private boolean isActiveBiobankParticipant;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
