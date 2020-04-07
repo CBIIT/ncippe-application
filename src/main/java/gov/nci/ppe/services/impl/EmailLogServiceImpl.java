@@ -1,6 +1,5 @@
 package gov.nci.ppe.services.impl;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -84,7 +83,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		emailLog.setRecipientAddress(recipientEmailId);
 		emailLog.setEmailSubject(emailSubject);
 		emailLog.setEmailBody(emailBody);
-		emailLog.setEmailRequestedOn(new Timestamp(System.currentTimeMillis()));
+		emailLog.setEmailRequestedOn(LocalDateTime.now());
 		return this.emailLogRepository.save(emailLog);
 	}
 

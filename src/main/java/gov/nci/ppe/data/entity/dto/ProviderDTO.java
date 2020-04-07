@@ -5,6 +5,11 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ProviderDTO extends UserDTO {
 
 	@JsonView(JsonViews.ProviderDetailView.class)
@@ -12,21 +17,7 @@ public class ProviderDTO extends UserDTO {
 
 	@JsonView(JsonViews.ProviderDetailView.class)
 	private CrcDTO crcDto;
-	
 
-	public CrcDTO getCrcDto() {
-		return crcDto;
-	}
-
-	public void setCrcDto(CrcDTO crcDto) {
-		this.crcDto = crcDto;
-	}
-
-	public Set<ParticipantDTO> getPatients() {
-		return patients;
-	}
-
-	public void setPatients(Set<ParticipantDTO> patients) {
-		this.patients = patients;
-	}
+	@EqualsAndHashCode.Include
+	private Long openCtepID;
 }

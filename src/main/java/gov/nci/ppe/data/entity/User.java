@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.dto.JsonViews;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author PublicisSapient
@@ -41,12 +42,14 @@ import lombok.Data;
 @DiscriminatorOptions(force = true)
 @DiscriminatorColumn(name = "UserType", discriminatorType = DiscriminatorType.INTEGER)
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long userId;
 
+	@EqualsAndHashCode.Include
 	@Column(name = "UserUUID", nullable = true, length = 36)
 	private String userUUID;
 
@@ -76,16 +79,16 @@ public class User {
 	private Code userType;
 
 	@Column(name = "DateCreated", nullable = false)
-	private Timestamp dateCreated;
+	private LocalDateTime dateCreated;
 
 	@Column(name = "DateActivated", nullable = false)
-	private Timestamp dateActivated;
+	private LocalDateTime dateActivated;
 
 	@Column(name = "DateDeactivated", nullable = false)
-	private Timestamp dateDeactivated;
+	private LocalDateTime dateDeactivated;
 
 	@Column(name = "LastRevisedDate", nullable = false)
-	private Timestamp lastRevisedDate;
+	private LocalDateTime lastRevisedDate;
 
 	@Column(name = "LastRevisedUser", nullable = true)
 	private Long lastRevisedUser;

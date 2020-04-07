@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,7 +33,7 @@ public class NCORPSite {
 	private NCORPSite parentSite;
 
 	@Column(name = "LastRevisedDate", nullable = false)
-	private Timestamp lastRevisedDate;
+	private LocalDateTime lastRevisedDate;
 
 	@ManyToOne
 	@JoinColumn(name = "LastRevisedUser")

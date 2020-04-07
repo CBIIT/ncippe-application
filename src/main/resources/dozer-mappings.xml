@@ -10,6 +10,10 @@
 			    <class-a>gov.nci.ppe.data.entity.User</class-a>
 			    <class-b>java.lang.String</class-b>
 			</converter>
+			<converter type="gov.nci.ppe.data.dozer.LocalDateTimeToTimestampDozerConverter">
+				<class-a>java.time.LocalDateTime</class-a>
+				<class-b>java.sql.Timestamp</class-b>
+			</converter>
 		</custom-converters>
 	</configuration>
 
