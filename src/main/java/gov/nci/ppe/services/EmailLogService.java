@@ -203,10 +203,11 @@ public interface EmailLogService {
 	 * 
 	 * @param salutationFirstName - First Name for CRC/Provider
 	 * @param recipientEmail      - CRC/Provider's email id
+	 * @param patientFullName     - Full name of Participant whose report is unread.
 	 * @param preferredLanguage   - Recipient's preferred language
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
-			LanguageOption preferredLanguage);
+			String patientFullName, LanguageOption preferredLanguage);
 
 }

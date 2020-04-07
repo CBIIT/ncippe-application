@@ -375,8 +375,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
+			String patientFullName,
 			LanguageOption preferredLanguage) {
-		String replaceStringWith[] = { hostname, salutationFirstName };
+		String replaceStringWith[] = { hostname, salutationFirstName, patientFullName };
 
 		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PROVIDER_REMINDER_REPORT_BODY,
 				EmailConstants.CRC_PROVIDER_REMINDER_REPORT_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE,
