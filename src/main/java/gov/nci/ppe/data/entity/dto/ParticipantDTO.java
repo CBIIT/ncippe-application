@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -21,9 +22,10 @@ import lombok.EqualsAndHashCode;
  * @since 2019-08-26
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ParticipantDTO extends UserDTO {
 
+	@EqualsAndHashCode.Include
 	private String patientId;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
@@ -41,6 +43,7 @@ public class ParticipantDTO extends UserDTO {
 	@JsonView(JsonViews.ParticipantDetailView.class)
 	private List<FileMetadata> otherDocuments = null;
 
+	@JsonProperty("isActiveBiobankParticipant")
 	private boolean isActiveBiobankParticipant;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)

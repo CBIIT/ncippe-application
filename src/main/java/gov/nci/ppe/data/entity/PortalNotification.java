@@ -1,6 +1,6 @@
 package gov.nci.ppe.data.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,7 +32,7 @@ public class PortalNotification {
 	private String messageSpanish;
 
 	@Column(name = "DateGenerated", nullable = false)
-	private Timestamp dateGenerated;
+	private LocalDateTime dateGenerated;
 
 	@Column(name = "UserId", nullable = false, length = 11)
 	private Long userId;

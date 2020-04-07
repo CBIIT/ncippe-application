@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This class hides all the fields from USER object and display only the
@@ -21,6 +22,7 @@ import lombok.Data;
  */
 
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class UserDTO {
 
 	private String firstName;
@@ -29,6 +31,7 @@ public class UserDTO {
 
 	private String email;
 
+	@EqualsAndHashCode.Include
 	private String uuid;
 
 	private String phoneNumber;
@@ -69,25 +72,5 @@ public class UserDTO {
 		return retValue.toString();
 	}
 
-	/**
-	 * @return the portalAccountStatus
-	 */
-	public String getPortalAccountStatus() {
-		return portalAccountStatus;
-	}
 
-	/**
-	 * @param portalAccountStatus the portalAccountStatus to set
-	 */
-	public void setPortalAccountStatus(String portalAccountStatus) {
-		this.portalAccountStatus = portalAccountStatus;
-	}
-
-	public Timestamp getDateDeactivated() {
-		return dateDeactivated;
-	}
-
-	public void setDateDeactivated(Timestamp dateDeactivated) {
-		this.dateDeactivated = dateDeactivated;
-	}
 }
