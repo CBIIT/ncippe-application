@@ -885,7 +885,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		System.out.println(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
 				+ " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
