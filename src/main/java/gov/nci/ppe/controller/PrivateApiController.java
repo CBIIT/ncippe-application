@@ -42,13 +42,14 @@ import io.swagger.annotations.ApiParam;
 @RestController
 public class PrivateApiController {
 
-	protected Logger logger = Logger.getLogger(PrivateApiController.class.getName());
+	private Logger logger = Logger.getLogger(PrivateApiController.class.getName());
+
 	@Autowired
 	@Qualifier("dozerBean")
 	private Mapper dozerBeanMapper;
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
 
 	/**
 	 * This method will insert new patient, provider and CRC details into PPE
@@ -63,11 +64,13 @@ public class PrivateApiController {
 	public ResponseEntity<String> insertDataFromOpen(
 			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
 			throws JsonProcessingException {
+		logger.info("Initiate Insert from Open");
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String jsonFormat = convertUsersToJSON(newUsersList);
+		logger.info("OPEN Insertion complete");
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
@@ -83,7 +86,7 @@ public class PrivateApiController {
 	@PostMapping(value = "/privateapi/v1/send-reminder", produces = { MediaType.TEXT_PLAIN_VALUE })
 	public ResponseEntity<String> generateUnreadReportReminderNotification(
 			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
-
+		logger.info("Unread Report Reminder for " + daysUnread + " days.");
 		userService.generateUnreadReportReminderNotification(daysUnread);
 		return ResponseEntity.ok().body(HttpResponseConstants.NOTIFICATION_GENERATED);
 	}
