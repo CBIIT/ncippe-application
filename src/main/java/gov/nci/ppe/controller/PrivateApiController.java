@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github.dozermapper.core.Mapper;
 
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
@@ -50,6 +52,9 @@ public class PrivateApiController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private MessageSource messageSource;
 
 	/**
 	 * This method will insert new patient, provider and CRC details into PPE
@@ -88,7 +93,8 @@ public class PrivateApiController {
 			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
 		logger.info("Unread Report Reminder for " + daysUnread + " days.");
 		userService.generateUnreadReportReminderNotification(daysUnread);
-		return ResponseEntity.ok().body(HttpResponseConstants.NOTIFICATION_GENERATED);
+		return ResponseEntity.ok().body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_GENERATED, null,
+				LanguageOption.ENGLISH.getLocale()));
 	}
 
 	/*
