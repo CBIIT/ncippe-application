@@ -79,6 +79,7 @@ public class PatientReportController {
 	@Autowired
 	private MessageSource messageSource;
 
+	@Autowired
 	@Qualifier("dozerBean")
 	private Mapper dozerBeanMapper;
 
