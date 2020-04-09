@@ -106,6 +106,8 @@ public class PatientReportController {
 			@ApiParam(value = "Uploaded File type", required = true, allowableValues = "PPE_FILETYPE_BIOMARKER_REPORT, PPE_FILETYPE_ECONSENT_FORM") @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
 			HttpServletRequest req, Locale locale) {
 
+		logger.info("File Upload request for patient id=" + patientId + " for file type " + uploadedFileType
+				+ " filename =" + file.getOriginalFilename());
 		String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
 
 		if (!authorizationService.authorizeFileUpload(requestingUserUUID, patientId, uploadedFileType)) {
