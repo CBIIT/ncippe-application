@@ -106,9 +106,9 @@ public class PatientReportController {
 			@ApiParam(value = "Uploaded File type", required = true, allowableValues = "PPE_FILETYPE_BIOMARKER_REPORT, PPE_FILETYPE_ECONSENT_FORM") @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
 			HttpServletRequest req, Locale locale) {
 
-		logger.info("File Upload request for patient id=" + patientId + " for file type " + uploadedFileType
-				+ " filename =" + file.getOriginalFilename());
 		String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
+		logger.info("File Upload request for patient id=" + patientId + " for file type " + uploadedFileType
+				+ " filename =" + file.getOriginalFilename() + " by " + requestingUserUUID);
 
 		if (!authorizationService.authorizeFileUpload(requestingUserUUID, patientId, uploadedFileType)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not Authorized");
@@ -133,14 +133,15 @@ public class PatientReportController {
 				amazonS3Service.putObjectOnS3(file.getInputStream(), folderWithFileName.toString(), file.getSize(),
 						file.getContentType(), CannedAccessControlList.BucketOwnerFullControl, patient, adminUser,
 						file.getOriginalFilename(), uploadedFileType);
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_SUCCESS,
+								new Object[] { file.getOriginalFilename(), patientId }, locale));
 
 			} catch (Exception exception) {
 				logger.error(exception.getMessage());
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_INTERNAL_ERROR, null, locale));
 			}
-			return ResponseEntity.status(HttpStatus.OK)
-					.body("{\n" + file.getOriginalFilename() + " was saved successfully \n}");
 		} else {
 			logger.error(" The file upload process failed as the file you are uploading is empty.");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
