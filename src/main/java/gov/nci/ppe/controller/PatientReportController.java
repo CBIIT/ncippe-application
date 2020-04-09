@@ -221,7 +221,6 @@ public class PatientReportController {
 	@PostMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
 			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
-			@ApiParam(value = "Unique ID of the user having read the report", required = true) @RequestParam("viewedByUserId") String uuid,
 			HttpServletRequest req,
 			Locale locale)
 			throws JsonProcessingException {
