@@ -1,9 +1,9 @@
 package gov.nci.ppe.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,16 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.data.entity.Code;
@@ -31,7 +29,6 @@ import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.FileMetadataRepository;
 import gov.nci.ppe.services.impl.FileServiceImpl;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
 public class FileServiceTest {
 
@@ -43,7 +40,7 @@ public class FileServiceTest {
 	@Mock
 	private FileMetadataRepository mockFileMetadataRepo;
 
-	@Before
+	@BeforeEach
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
 	}
@@ -51,7 +48,7 @@ public class FileServiceTest {
 	@Test
 	public void testGetFileByFileGUID() {
 		String uuid = "uuuu-uuuu-iiii-dddd";
-		FileMetadata expected =   new FileMetadata();
+		FileMetadata expected = new FileMetadata();
 		expected.setFileGUID(uuid);
 		Optional<FileMetadata> expectedOpt = Optional.of(expected);
 
@@ -69,7 +66,6 @@ public class FileServiceTest {
 		User user = new User();
 		user.setUserId(1L);
 		Mockito.when(mockFileMetadataRepo.save(fileMetadata)).thenReturn(fileMetadata);
-
 
 		FileMetadata result = fileService.markReportAsViewed(fileMetadata, user);
 

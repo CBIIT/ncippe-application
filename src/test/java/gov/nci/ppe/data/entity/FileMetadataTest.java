@@ -1,18 +1,13 @@
 package gov.nci.ppe.data.entity;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ActiveProfiles("unittest")
 public class FileMetadataTest {
 
 	private static final String UUID_PRESENT = "aaaa";
@@ -20,7 +15,7 @@ public class FileMetadataTest {
 
 	private FileMetadata classUnderTest;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		classUnderTest = new FileMetadata();
 		HashSet<User> viewBy = new HashSet<>();
