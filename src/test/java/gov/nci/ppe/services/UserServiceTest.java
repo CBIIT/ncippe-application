@@ -1,10 +1,9 @@
 package gov.nci.ppe.services;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -19,14 +18,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
@@ -50,7 +47,6 @@ import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.impl.UserServiceImpl;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
 public class UserServiceTest {
 
@@ -103,13 +99,12 @@ public class UserServiceTest {
 	@Mock
 	private AuditService auditService;
 
-	@Before
+	@BeforeEach
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
 	}
 
 	@Test
-
 	public void testGetAllRegisteredUsers() {
 		List<User> responseList = new ArrayList<>();
 		Participant pa = new Participant();
@@ -280,7 +275,8 @@ public class UserServiceTest {
 		code.setCodeName(codeName);
 		return code;
 	}
-	
+
+	@Test
 	public void testGenerateUnreadReportReminderNotification() {
 		int daysUnread = 7;
 
@@ -290,13 +286,17 @@ public class UserServiceTest {
 
 		Code biomarkerReportType = new Code();
 		biomarkerReportType.setCodeId(-1l);
-		biomarkerReportType.setCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType());
+		final String codeName = FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType();
+		biomarkerReportType.setCodeName(codeName);
 
 		List<FileMetadata> files = new ArrayList<>();
+		when(codeRepository.findByCodeName(codeName)).thenReturn(biomarkerReportType);
 		when(fileService.getFilesUploadedBetween(biomarkerReportType, startOfPeriod, endOfPeriod)).thenReturn(files);
 
 		userService.generateUnreadReportReminderNotification(daysUnread);
 
+		verify(fileService).getFilesUploadedBetween(biomarkerReportType, startOfPeriod, endOfPeriod);
+		verify(codeRepository).findByCodeName(codeName);
 	}
 
 }
