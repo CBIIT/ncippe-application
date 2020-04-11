@@ -1,23 +1,20 @@
 package gov.nci.ppe.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.services.impl.CodeServiceImpl;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
 public class CodeServiceTest {
 
@@ -27,7 +24,7 @@ public class CodeServiceTest {
 	@Mock
 	private CodeRepository mockCodeRepo;
 
-	@Before
+	@BeforeEach
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
 	}
@@ -37,7 +34,7 @@ public class CodeServiceTest {
 		String input = "input";
 		Code expected = new Code();
 		expected.setCodeName(input);
-		
+
 		Mockito.when(mockCodeRepo.findByCodeName(input)).thenReturn(expected);
 
 		Code actual = codeService.getCode(input);
