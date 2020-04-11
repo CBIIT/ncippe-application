@@ -1,26 +1,23 @@
 package gov.nci.ppe.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import gov.nci.ppe.data.entity.NCORPSite;
 import gov.nci.ppe.data.repository.NCORPSiteRepository;
 import gov.nci.ppe.services.impl.NCORPSiteServiceImpl;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("unittest")
 public class NCORPSiteServiceTest {
 
@@ -30,7 +27,7 @@ public class NCORPSiteServiceTest {
 	@Mock
 	private NCORPSiteRepository mockSiteRepo;
 
-	@Before
+	@BeforeEach
 	public void initMocks() {
 		MockitoAnnotations.initMocks(this);
 	}
