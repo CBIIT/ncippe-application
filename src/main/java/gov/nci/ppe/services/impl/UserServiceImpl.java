@@ -394,7 +394,7 @@ public class UserServiceImpl implements UserService {
 						withdrawnPatient.getLastName(),
 						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
 						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getPreferredLanguage());
+						withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
