@@ -325,9 +325,10 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
-						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
-						withdrawnPatient.getPatientId(), withdrawnPatient.getPreferredLanguage());
+						withdrawnPatient.getLastName(),
+						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
+						questionAnswers.toString(), withdrawnPatient.getPatientId(),
+						withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
