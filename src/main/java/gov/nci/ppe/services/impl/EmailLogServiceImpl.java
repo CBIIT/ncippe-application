@@ -244,7 +244,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 			LanguageOption preferredLanguage) {
 		final String replaceStringWith[] = { hostname, firstName };
 		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_UPLOAD_ECONSENT_BODY,
-				EmailConstants.PATIENT_UPLOAD_ECONSENT_SUBJECT, EmailConstants.JOINING_SIGNATURE, replaceStringWith,
+				EmailConstants.PATIENT_UPLOAD_ECONSENT_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE,
+				replaceStringWith,
 				preferredLanguage);
 	}
 
