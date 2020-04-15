@@ -109,7 +109,7 @@ public class UserController {
 
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		List<String> accountStatusList = new ArrayList<String>();
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 
@@ -172,7 +172,7 @@ public class UserController {
 			Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 		if (!authService.authorize(requestingUserUUID, userGUID)) {
@@ -226,8 +226,7 @@ public class UserController {
 	public ResponseEntity<String> deActivateUserByGuid(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID, Locale locale)
 			throws JsonProcessingException {
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
@@ -273,8 +272,7 @@ public class UserController {
 		}
 		Participant patient = (Participant) participantOptional.get();
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
 
 		if (!authService.authorize(updatedByUserUUID, patient)) {
 			return new ResponseEntity<String>(
@@ -335,8 +333,7 @@ public class UserController {
 					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
 
 		if (!authService.authorize(updatedByUserUUID, participantOptional.get())) {
 			return new ResponseEntity<String>(
@@ -391,8 +388,7 @@ public class UserController {
 					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
 		
 		User newPatient = participantOptional.get();
 		if (!authService.authorize(updatedByUserUUID, newPatient)) {
@@ -419,6 +415,13 @@ public class UserController {
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
+
+	private HttpHeaders createHeader() {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+		return httpHeaders;
+	}
 
 	/**
 	 * Convert User or its subclass into its corresponding DTO Object before
@@ -513,7 +516,7 @@ public class UserController {
 			Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		Optional<User> userOptional = null;
 		if (StringUtils.isNotBlank(uuid)) {
 			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());
