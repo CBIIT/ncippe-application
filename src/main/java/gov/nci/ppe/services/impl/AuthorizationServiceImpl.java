@@ -71,11 +71,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 				.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
 		if (requestingProviderOptional.isEmpty()) {
 			logger.log(Level.WARNING,
-					"Provider " + requestingUserUUID + " denied access to patient " + targetUser.getUserUUID());
+					"Provider " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
 			return false;
 		} else {
 			logger.log(Level.INFO,
-					"Provider " + requestingUserUUID + " allowed access to patient " + targetUser.getUserUUID());
+					"Provider " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
 			return true;
 		}
 	}
@@ -83,11 +83,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
 		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
 			logger.log(Level.INFO,
-					"CRC " + requestingUserUUID + " allowed access to patient " + targetUser.getUserUUID());
+					"CRC " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
 			return true;
 		} else {
 			logger.log(Level.WARNING,
-					"CRC " + requestingUserUUID + " denied access to patient " + targetUser.getUserUUID());
+					"CRC " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
 			return false;
 		}
 	}
