@@ -1,5 +1,6 @@
 package gov.nci.ppe.services;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -209,10 +210,10 @@ public class UserServiceTest {
 
 		assertTrue(resultOpt.isPresent());
 		Participant result = (Participant) resultOpt.get();
-		assertEquals(crc.getUserId(), result.getLastRevisedUser());
-		assertEquals(phoneNumber, result.getPhoneNumber());
-		assertEquals(LanguageOption.ENGLISH, result.getPreferredLanguage());
-		assertTrue(result.isAllowEmailNotification());
+		assertAll(() -> assertEquals(crc.getUserId(), result.getLastRevisedUser()),
+				() -> assertEquals(phoneNumber, result.getPhoneNumber()),
+				() -> assertEquals(LanguageOption.ENGLISH, result.getPreferredLanguage()),
+				() -> assertTrue(result.isAllowEmailNotification()));
 
 	}
 
@@ -253,10 +254,11 @@ public class UserServiceTest {
 		verify(userRepository).save(pa);
 		assertTrue(resultOpt.isPresent());
 		Participant result = (Participant) resultOpt.get();
-		assertEquals(PARTICIPANT_UUID, result.getUserUUID());
-		assertEquals(pa.getUserId(), result.getLastRevisedUser());
-		assertEquals(result.getLastRevisedDate(), result.getDateActivated());
-		assertEquals(PortalAccountStatus.ACCT_ACTIVE.name(), result.getPortalAccountStatus().getCodeName());
+		assertAll(() -> assertEquals(PARTICIPANT_UUID, result.getUserUUID()),
+				() -> assertEquals(pa.getUserId(), result.getLastRevisedUser()),
+				() -> assertEquals(result.getLastRevisedDate(), result.getDateActivated()),
+				() -> assertEquals(PortalAccountStatus.ACCT_ACTIVE.name(),
+						result.getPortalAccountStatus().getCodeName()));
 
 	}
 
