@@ -174,9 +174,7 @@ public class NotificationController {
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
 			Locale locale) {
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+		HttpHeaders httpHeaders = createHeader();
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
 		// An user can request notifications only for self.
@@ -213,6 +211,15 @@ public class NotificationController {
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
 
+
+
+	private HttpHeaders createHeader() {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
+		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+		return httpHeaders;
+	}
+
 	/**
 	 * Mark an individual notification as read for a given user
 	 * 
@@ -229,8 +236,7 @@ public class NotificationController {
 			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId,
 			Locale locale) {
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
+		HttpHeaders httpHeaders = createHeader();
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 

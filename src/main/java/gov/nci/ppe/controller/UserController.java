@@ -418,7 +418,7 @@ public class UserController {
 
 	private HttpHeaders createHeader() {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
 		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
 		return httpHeaders;
 	}
