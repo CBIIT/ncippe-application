@@ -76,7 +76,7 @@ public class NotificationController {
 			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
@@ -131,7 +131,7 @@ public class NotificationController {
 			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
@@ -175,8 +175,8 @@ public class NotificationController {
 			Locale locale) {
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
 		// An user can request notifications only for self.
@@ -230,7 +230,7 @@ public class NotificationController {
 			Locale locale) {
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
