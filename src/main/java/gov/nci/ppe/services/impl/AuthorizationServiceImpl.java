@@ -172,7 +172,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		User requester = requesterOpt.get();
 		Optional<User> targetUserOpt = userService.findActiveParticipantByPatientId(targetPatientId);
 		if (targetUserOpt.isEmpty()) {
-			logger.log(Level.WARNING, "No requesting user found with UUID " + targetPatientId);
+			logger.log(Level.WARNING, "No Patient found with Patient ID " + targetPatientId);
 			return false;
 		}
 		Participant targetUser = (Participant) targetUserOpt.get();
@@ -189,21 +189,17 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return true;
 		}
 
-		if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.name().equals(fileType)) {
-			Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
-					.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
-			if (requestingProviderOptional.isEmpty()) {
-				logger.log(Level.WARNING,
-						"Provider " + requestingUserUUID + " denied access to patient " + targetUser.getUserUUID());
-				return false;
-			} else {
-				logger.log(Level.INFO,
-						"Provider " + requestingUserUUID + " allowed access to patient " + targetUser.getUserUUID());
-				return true;
-			}
+		Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
+				.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
+		if (requestingProviderOptional.isEmpty()) {
+			logger.log(Level.WARNING,
+					"Provider " + requestingUserUUID + " denied access to patient file " + targetUser.getUserUUID());
+			return false;
+		} else {
+			logger.log(Level.INFO,
+					"Provider " + requestingUserUUID + " allowed access to patient file " + targetUser.getUserUUID());
+			return true;
 		}
-
-		return false;
 	}
 
 }
