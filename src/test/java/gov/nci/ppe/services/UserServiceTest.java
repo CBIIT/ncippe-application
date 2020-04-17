@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -118,148 +119,157 @@ public class UserServiceTest {
 		assertNotNull(result);
 	}
 
-	@Test
-	public void testFindByUuid_Participant() {
-		Participant pa = new Participant();
-		pa.setUserUUID(PARTICIPANT_UUID);
-		List<PortalNotification> notifications = new ArrayList<>();
-		PortalNotification notice = new PortalNotification();
-		notifications.add(notice);
-		pa.setNotifications(notifications);
+	@Nested
+	class Test_FindByUuid {
+		@Test
+		public void testFindByUuid_Participant() {
+			Participant pa = new Participant();
+			pa.setUserUUID(PARTICIPANT_UUID);
+			List<PortalNotification> notifications = new ArrayList<>();
+			PortalNotification notice = new PortalNotification();
+			notifications.add(notice);
+			pa.setNotifications(notifications);
 
-		Optional<User> userOpt = Optional.of(pa);
+			Optional<User> userOpt = Optional.of(pa);
 
-		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(userOpt);
+			when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(userOpt);
 
-		Optional<User> resultOpt = userService.findByUuid(PARTICIPANT_UUID);
+			Optional<User> resultOpt = userService.findByUuid(PARTICIPANT_UUID);
 
-		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
-		assertTrue(resultOpt.isPresent());
-		Participant result = (Participant) resultOpt.get();
-		assertFalse(result.getNotifications().isEmpty());
-		assertFalse(result.isHasNewReports());
+			verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
+			assertTrue(resultOpt.isPresent());
+			Participant result = (Participant) resultOpt.get();
+			assertFalse(result.getNotifications().isEmpty());
+			assertFalse(result.isHasNewReports());
+		}
+
+		@Test
+		public void testFindByUuids_Provider() {
+			Participant pa = new Participant();
+			pa.setUserUUID(PARTICIPANT_UUID);
+
+			List<PortalNotification> notifications = new ArrayList<>();
+			PortalNotification notice = new PortalNotification();
+			notifications.add(notice);
+			pa.setNotifications(notifications);
+
+			FileMetadata report = new FileMetadata();
+			report.setFileType(getFileTypeCode(FileType.PPE_FILETYPE_BIOMARKER_REPORT));
+			List<FileMetadata> reports = new ArrayList<>();
+			reports.add(report);
+			pa.setReports(reports);
+
+			Provider prov = new Provider();
+			prov.setUserUUID(PROVIDER_UUID);
+			prov.setRole(getRole(PPERole.ROLE_PPE_PROVIDER));
+
+			Set<Participant> patients = new HashSet<>();
+			patients.add(pa);
+			prov.setPatients(patients);
+
+			Optional<User> provOpt = Optional.of(prov);
+			when(userRepository.findByUserUUID(PROVIDER_UUID)).thenReturn(provOpt);
+
+			Optional<User> resultOpt = userService.findByUuid(PROVIDER_UUID);
+
+			verify(userRepository).findByUserUUID(PROVIDER_UUID);
+			assertTrue(resultOpt.isPresent());
+			Provider provResult = (Provider) resultOpt.get();
+			assertFalse(provResult.getPatients().isEmpty());
+			provResult.getPatients().stream().forEach(pat -> assertTrue(pat.getNotifications().isEmpty()));
+		}
 	}
 
-	@Test
-	public void testFindByUuids_Provider() {
-		Participant pa = new Participant();
-		pa.setUserUUID(PARTICIPANT_UUID);
+	@Nested
+	class TestUpdateUserDetails {
+		@Test
+		public void testUpdateUserDetails_UserNotFound() {
+			when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(Optional.empty());
+			when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(Optional.empty());
+			Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
+					LanguageOption.ENGLISH, CRC_UUID);
 
-		List<PortalNotification> notifications = new ArrayList<>();
-		PortalNotification notice = new PortalNotification();
-		notifications.add(notice);
-		pa.setNotifications(notifications);
+			verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
+			verify(userRepository).findByUserUUID(CRC_UUID);
+			assertTrue(resultOpt.isEmpty());
+		}
 
-		FileMetadata report = new FileMetadata();
-		report.setFileType(getFileTypeCode(FileType.PPE_FILETYPE_BIOMARKER_REPORT));
-		List<FileMetadata> reports = new ArrayList<>();
-		reports.add(report);
-		pa.setReports(reports);
+		@Test
+		public void testUpdateUserDetails_Success() {
+			Participant pa = new Participant();
+			pa.setUserUUID(PARTICIPANT_UUID);
+			Optional<User> participantOpt = Optional.of(pa);
+			CRC crc = new CRC();
+			crc.setUserId(-1L);
+			Optional<User> crcOpt = Optional.of(crc);
 
-		Provider prov = new Provider();
-		prov.setUserUUID(PROVIDER_UUID);
-		prov.setRole(getRole(PPERole.ROLE_PPE_PROVIDER));
+			when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(participantOpt);
+			when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(crcOpt);
+			when(userRepository.save(pa)).thenReturn(pa);
 
-		Set<Participant> patients = new HashSet<>();
-		patients.add(pa);
-		prov.setPatients(patients);
+			Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
+					LanguageOption.ENGLISH, CRC_UUID);
 
-		Optional<User> provOpt = Optional.of(prov);
-		when(userRepository.findByUserUUID(PROVIDER_UUID)).thenReturn(provOpt);
+			verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
+			verify(userRepository).findByUserUUID(CRC_UUID);
+			verify(userRepository).save(pa);
 
-		Optional<User> resultOpt = userService.findByUuid(PROVIDER_UUID);
+			assertTrue(resultOpt.isPresent());
+			Participant result = (Participant) resultOpt.get();
+			assertAll(() -> assertEquals(crc.getUserId(), result.getLastRevisedUser()),
+					() -> assertEquals(phoneNumber, result.getPhoneNumber()),
+					() -> assertEquals(LanguageOption.ENGLISH, result.getPreferredLanguage()),
+					() -> assertTrue(result.isAllowEmailNotification()));
 
-		verify(userRepository).findByUserUUID(PROVIDER_UUID);
-		assertTrue(resultOpt.isPresent());
-		Provider provResult = (Provider) resultOpt.get();
-		assertFalse(provResult.getPatients().isEmpty());
-		provResult.getPatients().stream().forEach(pat -> assertTrue(pat.getNotifications().isEmpty()));
+		}
 	}
 
-	@Test
-	public void testUpdateUserDetails_UserNotFound() {
-		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(Optional.empty());
-		when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(Optional.empty());
-		Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
-				LanguageOption.ENGLISH, CRC_UUID);
+	@Nested
+	class TestActivateUser {
+		@Test
+		public void testActivateUser_UserNotFound() {
+			when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.empty());
+			Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
+			verify(userRepository).findByEmail(PART_EMAIL);
+			assertTrue(result.isEmpty());
+		}
 
-		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
-		verify(userRepository).findByUserUUID(CRC_UUID);
-		assertTrue(resultOpt.isEmpty());
-	}
+		@Test
+		public void testActivateUser_UserInActive() {
+			Participant pa = new Participant();
+			pa.setUserUUID(PARTICIPANT_UUID);
+			Code status = new Code();
+			status.setCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
+			pa.setPortalAccountStatus(status);
 
-	@Test
-	public void testUpdateUserDetails_Success() {
-		Participant pa = new Participant();
-		pa.setUserUUID(PARTICIPANT_UUID);
-		Optional<User> participantOpt = Optional.of(pa);
-		CRC crc = new CRC();
-		crc.setUserId(-1L);
-		Optional<User> crcOpt = Optional.of(crc);
+			when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
 
-		when(userRepository.findByUserUUID(PARTICIPANT_UUID)).thenReturn(participantOpt);
-		when(userRepository.findByUserUUID(CRC_UUID)).thenReturn(crcOpt);
-		when(userRepository.save(pa)).thenReturn(pa);
+			Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
+			assertTrue(result.isEmpty());
+			verify(userRepository).findByEmail(PART_EMAIL);
+		}
 
-		Optional<User> resultOpt = userService.updateUserDetails(PARTICIPANT_UUID, true, phoneNumber,
-				LanguageOption.ENGLISH, CRC_UUID);
+		@Test
+		public void testActivateUser_Success() {
 
-		verify(userRepository).findByUserUUID(PARTICIPANT_UUID);
-		verify(userRepository).findByUserUUID(CRC_UUID);
-		verify(userRepository).save(pa);
+			Participant pa = new Participant();
+			pa.setUserId(-1L);
+			when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
+			when(userRepository.save(pa)).then(returnsFirstArg());
+			when(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
+					.thenReturn(getCode(PortalAccountStatus.ACCT_ACTIVE.name()));
+			Optional<User> resultOpt = userService.activateUser(PART_EMAIL, PARTICIPANT_UUID);
+			verify(userRepository).findByEmail(PART_EMAIL);
+			verify(userRepository).save(pa);
+			assertTrue(resultOpt.isPresent());
+			Participant result = (Participant) resultOpt.get();
+			assertAll(() -> assertEquals(PARTICIPANT_UUID, result.getUserUUID()),
+					() -> assertEquals(pa.getUserId(), result.getLastRevisedUser()),
+					() -> assertEquals(result.getLastRevisedDate(), result.getDateActivated()),
+					() -> assertEquals(PortalAccountStatus.ACCT_ACTIVE.name(),
+							result.getPortalAccountStatus().getCodeName()));
 
-		assertTrue(resultOpt.isPresent());
-		Participant result = (Participant) resultOpt.get();
-		assertAll(() -> assertEquals(crc.getUserId(), result.getLastRevisedUser()),
-				() -> assertEquals(phoneNumber, result.getPhoneNumber()),
-				() -> assertEquals(LanguageOption.ENGLISH, result.getPreferredLanguage()),
-				() -> assertTrue(result.isAllowEmailNotification()));
-
-	}
-
-	@Test
-	public void testActivateUser_UserNotFound() {
-		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.empty());
-		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
-		verify(userRepository).findByEmail(PART_EMAIL);
-		assertTrue(result.isEmpty());
-	}
-
-	@Test
-	public void testActivateUser_UserInActive() {
-		Participant pa = new Participant();
-		pa.setUserUUID(PARTICIPANT_UUID);
-		Code status = new Code();
-		status.setCodeName(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name());
-		pa.setPortalAccountStatus(status);
-
-		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
-
-		Optional<User> result = userService.activateUser(PART_EMAIL, CRC_UUID);
-		assertTrue(result.isEmpty());
-		verify(userRepository).findByEmail(PART_EMAIL);
-	}
-
-	@Test
-	public void testActivateUser_Success() {
-
-		Participant pa = new Participant();
-		pa.setUserId(-1L);
-		when(userRepository.findByEmail(PART_EMAIL)).thenReturn(Optional.of(pa));
-		when(userRepository.save(pa)).then(returnsFirstArg());
-		when(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
-				.thenReturn(getCode(PortalAccountStatus.ACCT_ACTIVE.name()));
-		Optional<User> resultOpt = userService.activateUser(PART_EMAIL, PARTICIPANT_UUID);
-		verify(userRepository).findByEmail(PART_EMAIL);
-		verify(userRepository).save(pa);
-		assertTrue(resultOpt.isPresent());
-		Participant result = (Participant) resultOpt.get();
-		assertAll(() -> assertEquals(PARTICIPANT_UUID, result.getUserUUID()),
-				() -> assertEquals(pa.getUserId(), result.getLastRevisedUser()),
-				() -> assertEquals(result.getLastRevisedDate(), result.getDateActivated()),
-				() -> assertEquals(PortalAccountStatus.ACCT_ACTIVE.name(),
-						result.getPortalAccountStatus().getCodeName()));
-
+		}
 	}
 
 	private Role getRole(PPERole roleType) {
