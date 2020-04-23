@@ -28,6 +28,14 @@
 	  		<type>pom</type>
 	  		<scope>import</scope>
 	  	</dependency>
+		<dependency>
+		    <groupId>org.junit</groupId>
+		    <artifactId>junit-bom</artifactId>
+		    <version>5.6.2</version>
+		    <type>pom</type>
+		    <scope>import</scope>
+		</dependency>
+		        
 	  </dependencies>
 	</dependencyManagement>
 
@@ -170,6 +178,7 @@
 			<scope>provided</scope>
 		</dependency>
         <!-- junit 5 -->
+        <!-- https://mvnrepository.com/artifact/org.junit/junit-bom -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -181,7 +190,13 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
-		
+        
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter-params</artifactId>
+		    <scope>test</scope>
+		</dependency>
+				
 	</dependencies>
 
 	<build>

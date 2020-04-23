@@ -45,6 +45,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
 		if (requesterOpt.isEmpty()) {
 			logger.log(Level.SEVERE, "No record found for UUID=" + requestingUserUUID);
+			return false;
 		}
 
 		final String requestingUserRole = requesterOpt.get().getRole().getRoleName();
@@ -143,12 +144,6 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 						+ targetPatientId + " without " + PPERole.ROLE_PPE_MOCHA_ADMIN.name() + " role");
 				return false;
 			} else {
-
-				if (targetUserOpt.isEmpty()) {
-					logger.log(Level.WARNING, "No requesting user found with UUID " + targetPatientId);
-					return false;
-				}
-				// If the patient is found, allow upload
 				return true;
 			}
 		}
