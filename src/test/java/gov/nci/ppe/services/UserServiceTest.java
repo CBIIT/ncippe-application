@@ -20,7 +20,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -50,6 +52,8 @@ import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.impl.UserServiceImpl;
 
 @ActiveProfiles("unittest")
+@DisplayName("Unit Tests for UserServiceImpl class")
+@Tag("service")
 public class UserServiceTest {
 
 	@InjectMocks

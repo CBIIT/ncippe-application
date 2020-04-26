@@ -1,6 +1,5 @@
 package gov.nci.ppe.controller;
 
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -22,8 +21,6 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 public class HealthCheckController {
-
-	protected Logger logger = Logger.getLogger(HealthCheckController.class.getName());
 
 	@ApiOperation(value = "Healthcheck operation. Returns Healthy if server is working")
 	@GetMapping("/healthcheck")
