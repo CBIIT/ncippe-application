@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -19,6 +21,8 @@ import gov.nci.ppe.data.repository.NCORPSiteRepository;
 import gov.nci.ppe.services.impl.NCORPSiteServiceImpl;
 
 @ActiveProfiles("unittest")
+@Tag("service")
+@DisplayName("Unit Tests for NCORPSiteServiceImpl class")
 public class NCORPSiteServiceTest {
 
 	@InjectMocks

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -31,6 +33,8 @@ import gov.nci.ppe.data.repository.FileMetadataRepository;
 import gov.nci.ppe.services.impl.FileServiceImpl;
 
 @ActiveProfiles("unittest")
+@Tag("service")
+@DisplayName("Unit Tests for FileServiceImpl class")
 public class FileServiceTest {
 
 	private static final String GUID = "aaaa";

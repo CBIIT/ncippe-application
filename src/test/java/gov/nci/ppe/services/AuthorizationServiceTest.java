@@ -11,7 +11,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -33,6 +35,8 @@ import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.services.impl.AuthorizationServiceImpl;
 
 @ActiveProfiles("unittest")
+@Tag("service")
+@DisplayName("Unit Tests for AutherizationServiceImpl class")
 public class AuthorizationServiceTest {
 	private static final String targetUUID = "aaaa-bbbb";
 	private static final String requester = "req-user";
