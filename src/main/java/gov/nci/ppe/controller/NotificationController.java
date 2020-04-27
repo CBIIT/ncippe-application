@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,12 +17,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
@@ -69,11 +72,21 @@ public class NotificationController {
 	 */
 	@ApiOperation(value = "Retrieves all notifications for the specified User")
 	@GetMapping(value = "/api/v1/user/{userGUID}/notifications")
-	public ResponseEntity<String> getAllNotificationsForUser(
+	public ResponseEntity<String> getAllNotificationsForUser(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<User> userOptional = userService.findByUuid(userGUID);
 
@@ -113,12 +126,22 @@ public class NotificationController {
 	 */
 	@ApiOperation(value = "Retrieve the notification for the given user with the specified notification id")
 	@GetMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}")
-	public ResponseEntity<String> getNotificationForNotificationId(
+	public ResponseEntity<String> getNotificationForNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notification is to be retrieved", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<PortalNotification> notificationOptional = notificationService
 				.getNotificationByNotificationId(Long.valueOf(notificationId));
@@ -146,13 +169,21 @@ public class NotificationController {
 	 * @return List of User Notifications with Read indicator set
 	 */
 	@ApiOperation(value = "Mark all notifications as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
-	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(
+	@PostMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
+	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
 			Locale locale) {
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<User> userOptional = userService.findByUuid(userGUID);
 
@@ -180,6 +211,15 @@ public class NotificationController {
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
 
+
+
+	private HttpHeaders createHeader() {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
+		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+		return httpHeaders;
+	}
+
 	/**
 	 * Mark an individual notification as read for a given user
 	 * 
@@ -190,14 +230,23 @@ public class NotificationController {
 	 * @return
 	 */
 	@ApiOperation(value = "Mark an individual notification as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
-	public ResponseEntity<String> updateNotificationAsReadByNotificationId(
+	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
+	public ResponseEntity<String> updateNotificationAsReadByNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId,
 			Locale locale) {
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		HttpHeaders httpHeaders = createHeader();
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<PortalNotification> notifyOptional = notificationService
 				.getNotificationByNotificationId(Long.valueOf(notificationId));

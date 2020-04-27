@@ -1,5 +1,6 @@
 package gov.nci.ppe.data.entity;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -47,5 +48,16 @@ public class CRC extends User {
 				.append(StringUtils.CR).append("Email Id : ").append(this.getEmail())
 				.append(StringUtils.CR).append("}");
 		return retValue.toString();
+	}
+
+	/**
+	 * Method to check if the CRC has an assigned patient with the given patient ID
+	 * 
+	 * @param patientId - PatientID of the participant
+	 * 
+	 * @return Optional object with Participant object if found, or empty otherwise
+	 */
+	public Optional<Participant> hasPatient(String patientId) {
+		return getPatients().stream().filter(provider -> patientId.equals(provider.getUserUUID())).findAny();
 	}
 }
