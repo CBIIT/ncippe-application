@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,6 +18,8 @@ import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.services.impl.CodeServiceImpl;
 
 @ActiveProfiles("unittest")
+@Tag("service")
+@DisplayName("Unit Tests for CodeServiceImpl class")
 public class CodeServiceTest {
 
 	@InjectMocks

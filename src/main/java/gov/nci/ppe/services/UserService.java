@@ -43,15 +43,17 @@ public interface UserService {
 	 * This method will update the registered user's email notification preference
 	 * and phone number.
 	 * 
-	 * @param userGUID               - GUID of the user
 	 * @param phoneNumber            - the value can be empty string if the user
 	 *                               wishes to delete his/her number.
 	 * @param preferredLang          - Preferred Language for the User
+	 * @param userGUID               - GUID of the user
 	 * @param allowEmailNotification - value can be only 1 (true) or 2 (false)
+	 * @param requestingUserUUID     - requesting User UUID
+	 * 
 	 * @return JSON String containing User information that was updated
 	 */
 	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
-			LanguageOption preferredLang);
+			LanguageOption preferredLang, String requestingUserUUID);
 
 	/**
 	 * Fetch the user based on the user's UserId
@@ -69,15 +71,6 @@ public interface UserService {
 	 * @return - the updated User
 	 */
 	public Optional<User> activateUser(String userEmail, String userUUID);
-
-	/**
-	 * Changes the user's registered email address
-	 * 
-	 * @param userUUID  - UUID of the User
-	 * @param userEmail - new email address to change to
-	 * @return
-	 */
-	public Optional<User> updateEmail(String userUUID, String userEmail);
 
 	/**
 	 * Fetch the user based on their userGUID and PortalAccountStatus.
@@ -101,29 +94,14 @@ public interface UserService {
 
 	/**
 	 * Withdraw patient participation from Biobank program.
-	 * @param patient   - Participant object representing the patient who is been withdrawn from PPE
-	 * @param qsAnsList - A list of survey questions and their answers provided during withdrawal
-	 * @return          - a User Object whose status will be withdrawn from the program
+	 * 
+	 * @param patient   - Participant object representing the patient who is been
+	 *                  withdrawn from PPE
+	 * @param qsAnsList - A list of survey questions and their answers provided
+	 *                  during withdrawal
+	 * @return - a User Object whose status will be withdrawn from the program
 	 */
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList);
-
-	/**
-	 * Authorizes the User based on the idToken and email
-	 * 
-	 * @param email - email of the user to authorize
-	 * @param uuid  - login.gov supplied uuid
-	 * 
-	 * @return The authorized user
-	 */
-	public Optional<User> authorizeUser(String email, String uuid);
-
-	/**
-	 * Decrypts the id_toen object from login.gov using logn.gov's pubic key
-	 * 
-	 * @param idToken
-	 * @return
-	 */
-	public String decryptLoginGovToken(String idToken);
 
 	/**
 	 * Fetch the user based on their email and PortalAccountStatus.
@@ -150,24 +128,31 @@ public interface UserService {
 	 * @return a User object
 	 */
 	public Optional<User> findActiveParticipantByPatientId(String patientId);
-	
+
 	/**
-	 * Withdraw patient participation from Biobank program and sends an email to subscribers.
-	 * @param patient   - Participant object representing the patient who is been withdrawn from PPE
-	 * @param qsAnsList - A list of survey questions and their answers provided during withdrawal
-	 * @return          - a User Object whose status will be withdrawn from the program
+	 * Withdraw patient participation from Biobank program and sends an email to
+	 * subscribers.
+	 * 
+	 * @param patient   - Participant object representing the patient who is been
+	 *                  withdrawn from PPE
+	 * @param qsAnsList - A list of survey questions and their answers provided
+	 *                  during withdrawal
+	 * @return - a User Object whose status will be withdrawn from the program
 	 */
-	public Optional<User> withdrawParticipationFromBiobankProgramAndSendNotification(Participant patient, List<QuestionAnswer> qsAnsList);
-	
+	public Optional<User> withdrawParticipationFromBiobankProgramAndSendNotification(Participant patient,
+			List<QuestionAnswer> qsAnsList);
+
 	/**
 	 * Fetch a user by their email id
+	 * 
 	 * @param emailId - Email id to search for the user
 	 * @return a User Object
 	 */
 	public Optional<User> findByEmail(String emailId);
-	
+
 	/**
 	 * Update the User record in database
+	 * 
 	 * @param user - a User Object with updated values
 	 * @return a User Object
 	 */
@@ -177,59 +162,65 @@ public interface UserService {
 	 * Updates a Patient record to include patient name and email, changes state
 	 * from NEW to INITIATED, and sends an invitation email to the patient.
 	 * 
-	 * @param patientId         - Unique Patient Id of the Patient
-	 * @param uuid              - Unique login Id of the CRC performing the action
+	 * @param patientId - Unique Patient Id of the Patient
+	 * @param uuid      - Unique login Id of the CRC performing the action
 	 * @return Updated Patient record
 	 * @throws JsonProcessingException
 	 */
-	public Optional<User> invitePatientToPortal(String patientId, String uuid)
-			throws JsonProcessingException;
-	
+	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException;
+
 	/**
-	 * Inserts a new patient record into PPE database based on the patient ID if one doesn't
-	 * already exist. The patient details are fetched from OPEN.
+	 * Inserts a new patient record into PPE database based on the patient ID if one
+	 * doesn't already exist. The patient details are fetched from OPEN.
+	 * 
 	 * @param patientId - Unique patientId that OPEN sends.
 	 * @return - User object
 	 */
 	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient);
-	
+
 	/**
 	 * Inserts a new provider record into PPE database
+	 * 
 	 * @param provider - An entity object contain mandatory details.
 	 * @return Optional User object
 	 */
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider);
-	
+
 	/**
 	 * Find a provider based on the CtepId passed. CtepID is provided by OPEN.
+	 * 
 	 * @param ctepId
 	 * @return an optional User.
 	 */
 	public Optional<Provider> findProviderByCtepId(Long ctepId);
-	
+
 	/**
 	 * Inserts a new CRC record into PPE database
+	 * 
 	 * @param provider - An entity object contain mandatory details.
 	 * @return Optional User object
 	 */
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc);
-	
+
 	/**
 	 * Find a CRC based on the CtepId passed. CtepID is provided by OPEN.
+	 * 
 	 * @param ctepId
 	 * @return an optional User.
 	 */
 	public Optional<CRC> findCRCByCtepId(Long ctepId);
-	
+
 	/**
 	 * Insert the data fetched from OPEN into PPE DB
+	 * 
 	 * @param openResponseDTO - Data from OPEN
 	 * @return List of Users that were inserted into PPE DB
 	 */
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO);
 
 	/**
-	 * Update an existing patient with details fetched from OPEN 
+	 * Update an existing patient with details fetched from OPEN
+	 * 
 	 * @param existingPatient - Existing Patient in PPE
 	 * @return an optional User.
 	 */

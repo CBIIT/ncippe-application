@@ -1,5 +1,6 @@
 package gov.nci.ppe.services;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -30,6 +33,8 @@ import gov.nci.ppe.data.repository.FileMetadataRepository;
 import gov.nci.ppe.services.impl.FileServiceImpl;
 
 @ActiveProfiles("unittest")
+@Tag("service")
+@DisplayName("Unit Tests for FileServiceImpl class")
 public class FileServiceTest {
 
 	private static final String GUID = "aaaa";
@@ -92,15 +97,12 @@ public class FileServiceTest {
 
 		Mockito.verify(mockFileMetadataRepo).save(arg.capture());
 		FileMetadata savedFM = arg.getValue();
-		assertEquals(S3Url, savedFM.getS3Url());
-		assertEquals(searchKey, savedFM.getSearchKey());
-		assertEquals(fileName, savedFM.getFileName());
-		assertEquals(source, savedFM.getSource());
-		assertEquals(uploadedBy, savedFM.getUploadedBy());
-		assertEquals(patient, savedFM.getParticipant());
-		assertEquals(fileType, savedFM.getFileType());
-		assertNotNull(savedFM.getFileGUID());
-		assertNotNull(savedFM.getDateUploaded());
+		assertAll(() -> assertEquals(S3Url, savedFM.getS3Url()), () -> assertEquals(searchKey, savedFM.getSearchKey()),
+				() -> assertEquals(fileName, savedFM.getFileName()), () -> assertEquals(source, savedFM.getSource()),
+				() -> assertEquals(uploadedBy, savedFM.getUploadedBy()),
+				() -> assertEquals(patient, savedFM.getParticipant()),
+				() -> assertEquals(fileType, savedFM.getFileType()), () -> assertNotNull(savedFM.getFileGUID()),
+				() -> assertNotNull(savedFM.getDateUploaded()));
 	}
 
 	@Test

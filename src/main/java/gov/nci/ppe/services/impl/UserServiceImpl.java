@@ -62,7 +62,7 @@ import gov.nci.ppe.services.UserService;
 @Component
 public class UserServiceImpl implements UserService {
 
-	protected Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
+	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
 
@@ -133,11 +133,11 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
-			LanguageOption preferredLang) {
+			LanguageOption preferredLang, String requestingUserUUID) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userGuid);
-
+		Optional<User> requesterOptional = userRepository.findByUserUUID(requestingUserUUID);
 		/* Check if the user is present in the system */
-		if (!userOptional.isPresent()) {
+		if (userOptional.isEmpty() || requesterOptional.isEmpty()) {
 			return userOptional;
 		}
 
@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
 		if (preferredLang != null) {
 			user.setPreferredLanguage(preferredLang);
 		}
-		user.setLastRevisedUser(user.getUserId());
+		user.setLastRevisedUser(requesterOptional.get().getUserId());
 		user.setLastRevisedDate(LocalDateTime.now());
 		User updateUser = userRepository.save(user);
 
@@ -207,21 +207,6 @@ public class UserServiceImpl implements UserService {
 					.equals(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name())) {
 				optionalUser = Optional.empty();
 			}
-		}
-		return optionalUser;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> updateEmail(String userUUID, String userEmail) {
-		Optional<User> optionalUser = userRepository.findByUserUUID(userUUID);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			user.setEmail(userEmail);
-			user = userRepository.save(user);
-			optionalUser = Optional.of(user);
 		}
 		return optionalUser;
 	}
@@ -295,57 +280,6 @@ public class UserServiceImpl implements UserService {
 		patient.setActiveBiobankParticipant(false);
 		patient.setDateDeactivated(qsAnsInsertionTime);
 		return Optional.of(userRepository.save(patient));
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> authorizeUser(String email, String uuid) {
-		boolean userUpdatedFlag = false;
-		LocalDateTime updatedTime = LocalDateTime.now();
-		Optional<User> userOptional = findByUuid(uuid);
-		if (userOptional.isEmpty()) {
-			// No uuid match. Could be a first time user. Search by email.
-			userOptional = findByEmail(email);
-			if (!userOptional.isPresent() || StringUtils.isNotBlank(userOptional.get().getUserUUID())) {
-
-				return Optional.empty();
-			}
-		}
-
-		User user = userOptional.get();
-
-		// Update the email id if they don't match
-		if (!StringUtils.equalsIgnoreCase(email, user.getEmail())) {
-			user.setEmail(email);
-			userUpdatedFlag = true;
-		}
-
-		// activate the user if they are not already done
-		if (StringUtils.isAllBlank(user.getUserUUID())) {
-			user.setUserUUID(uuid);
-			user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
-			user.setDateActivated(updatedTime);
-			userUpdatedFlag = true;
-		}
-
-		// Update the record in the database if there are any changes
-		if (userUpdatedFlag) {
-			user.setLastRevisedDate(updatedTime);
-			user.setLastRevisedUser(user.getUserId());
-			Optional<User> updatedUserOptional = updateUser(user);
-			user = updatedUserOptional.get();
-		}
-
-		return Optional.of(user);
-
-	}
-
-	@Override
-	public String decryptLoginGovToken(String idToken) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
@@ -435,7 +369,7 @@ public class UserServiceImpl implements UserService {
 						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
 			}
 		}
-		return Optional.of(userOptional.get());
+		return Optional.of(withdrawnPatient);
 	}
 
 	/**
@@ -455,16 +389,11 @@ public class UserServiceImpl implements UserService {
 		return Optional.of(userRepository.save(user));
 	}
 
-
-
-
-
 	/*
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> invitePatientToPortal(String patientId, String uuid)
-			throws JsonProcessingException {
+	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
 			return participantOptional;
@@ -957,7 +886,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		System.out.println(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
 				+ " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
