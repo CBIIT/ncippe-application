@@ -19,16 +19,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import gov.nci.ppe.BaseMockitoTest;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
@@ -54,7 +53,7 @@ import gov.nci.ppe.services.impl.UserServiceImpl;
 @ActiveProfiles("unittest")
 @DisplayName("Unit Tests for UserServiceImpl class")
 @Tag("service")
-public class UserServiceTest {
+public class UserServiceTest implements BaseMockitoTest {
 
 	@InjectMocks
 	private UserServiceImpl userService;
@@ -105,10 +104,6 @@ public class UserServiceTest {
 	@Mock
 	private AuditService auditService;
 
-	@BeforeEach
-	public void initMocks() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
 	public void testGetAllRegisteredUsers() {

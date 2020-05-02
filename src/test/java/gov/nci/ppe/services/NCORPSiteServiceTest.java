@@ -9,15 +9,14 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import gov.nci.ppe.BaseMockitoTest;
 import gov.nci.ppe.data.entity.NCORPSite;
 import gov.nci.ppe.data.repository.NCORPSiteRepository;
 import gov.nci.ppe.services.impl.NCORPSiteServiceImpl;
@@ -25,7 +24,7 @@ import gov.nci.ppe.services.impl.NCORPSiteServiceImpl;
 @ActiveProfiles("unittest")
 @Tag("service")
 @DisplayName("Unit Tests for NCORPSiteServiceImpl class")
-public class NCORPSiteServiceTest {
+public class NCORPSiteServiceTest implements BaseMockitoTest {
 
 	@InjectMocks
 	private NCORPSiteServiceImpl ncorpSiteService;
@@ -33,10 +32,6 @@ public class NCORPSiteServiceTest {
 	@Mock
 	private NCORPSiteRepository mockSiteRepo;
 
-	@BeforeEach
-	public void initMocks() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
 	public void testGetAllActiveSites() {

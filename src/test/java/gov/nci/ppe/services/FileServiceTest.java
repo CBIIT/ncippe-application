@@ -13,17 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import gov.nci.ppe.BaseMockitoTest;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -35,7 +33,7 @@ import gov.nci.ppe.services.impl.FileServiceImpl;
 @ActiveProfiles("unittest")
 @Tag("service")
 @DisplayName("Unit Tests for FileServiceImpl class")
-public class FileServiceTest {
+public class FileServiceTest implements BaseMockitoTest {
 
 	private static final String GUID = "aaaa";
 
@@ -45,10 +43,6 @@ public class FileServiceTest {
 	@Mock
 	private FileMetadataRepository mockFileMetadataRepo;
 
-	@BeforeEach
-	public void initMocks() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
 	public void testGetFileByFileGUID() {
@@ -57,12 +51,12 @@ public class FileServiceTest {
 		expected.setFileGUID(uuid);
 		Optional<FileMetadata> expectedOpt = Optional.of(expected);
 
-		Mockito.when(mockFileMetadataRepo.findByFileGUID(uuid)).thenReturn(expectedOpt);
+		when(mockFileMetadataRepo.findByFileGUID(uuid)).thenReturn(expectedOpt);
 
 		Optional<FileMetadata> resultOpt = fileService.getFileByFileGUID(uuid);
 
 		assertEquals(expected, resultOpt.get());
-		Mockito.verify(mockFileMetadataRepo).findByFileGUID(uuid);
+		verify(mockFileMetadataRepo).findByFileGUID(uuid);
 	}
 
 	@Test
@@ -70,12 +64,12 @@ public class FileServiceTest {
 		FileMetadata fileMetadata = new FileMetadata();
 		User user = new User();
 		user.setUserId(1L);
-		Mockito.when(mockFileMetadataRepo.save(fileMetadata)).thenReturn(fileMetadata);
+		when(mockFileMetadataRepo.save(fileMetadata)).thenReturn(fileMetadata);
 
 		FileMetadata result = fileService.markReportAsViewed(fileMetadata, user);
 
 		assertNotNull(result);
-		Mockito.verify(mockFileMetadataRepo).save(fileMetadata);
+		verify(mockFileMetadataRepo).save(fileMetadata);
 		assertTrue(result.getViewedBy().contains(user));
 	}
 
@@ -95,7 +89,7 @@ public class FileServiceTest {
 		fileType.setCodeName("File Type Report");
 		fileService.logFileMetadata(S3Url, searchKey, fileName, source, uploadedBy, patient, fileType);
 
-		Mockito.verify(mockFileMetadataRepo).save(arg.capture());
+		verify(mockFileMetadataRepo).save(arg.capture());
 		FileMetadata savedFM = arg.getValue();
 		assertAll(() -> assertEquals(S3Url, savedFM.getS3Url()), () -> assertEquals(searchKey, savedFM.getSearchKey()),
 				() -> assertEquals(fileName, savedFM.getFileName()), () -> assertEquals(source, savedFM.getSource()),

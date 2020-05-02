@@ -2,17 +2,17 @@ package gov.nci.ppe.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import gov.nci.ppe.BaseMockitoTest;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.repository.CodeRepository;
 import gov.nci.ppe.services.impl.CodeServiceImpl;
@@ -20,7 +20,7 @@ import gov.nci.ppe.services.impl.CodeServiceImpl;
 @ActiveProfiles("unittest")
 @Tag("service")
 @DisplayName("Unit Tests for CodeServiceImpl class")
-public class CodeServiceTest {
+public class CodeServiceTest implements BaseMockitoTest {
 
 	@InjectMocks
 	private CodeServiceImpl codeService;
@@ -28,10 +28,6 @@ public class CodeServiceTest {
 	@Mock
 	private CodeRepository mockCodeRepo;
 
-	@BeforeEach
-	public void initMocks() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Test
 	public void testGetCode() {
@@ -39,13 +35,13 @@ public class CodeServiceTest {
 		Code expected = new Code();
 		expected.setCodeName(input);
 
-		Mockito.when(mockCodeRepo.findByCodeName(input)).thenReturn(expected);
+		when(mockCodeRepo.findByCodeName(input)).thenReturn(expected);
 
 		Code actual = codeService.getCode(input);
 
 		assertNotNull(actual);
 
 		assertEquals(expected, actual);
-		Mockito.verify(mockCodeRepo).findByCodeName(input);
+		verify(mockCodeRepo).findByCodeName(input);
 	}
 }

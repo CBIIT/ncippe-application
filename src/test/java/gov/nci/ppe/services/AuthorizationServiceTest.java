@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -21,9 +20,9 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
 
+import gov.nci.ppe.BaseMockitoTest;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
@@ -37,7 +36,7 @@ import gov.nci.ppe.services.impl.AuthorizationServiceImpl;
 @ActiveProfiles("unittest")
 @Tag("service")
 @DisplayName("Unit Tests for AutherizationServiceImpl class")
-public class AuthorizationServiceTest {
+public class AuthorizationServiceTest implements BaseMockitoTest {
 	private static final String targetUUID = "aaaa-bbbb";
 	private static final String requester = "req-user";
 	private static final String assigned = "assigned-user";
@@ -51,10 +50,6 @@ public class AuthorizationServiceTest {
 	@InjectMocks
 	private AuthorizationServiceImpl authService;
 
-	@BeforeEach
-	public void initMocks() {
-		MockitoAnnotations.initMocks(this);
-	}
 
 	@Nested
 	class TestAuthorize {
