@@ -57,22 +57,22 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Autowired
 	private MessageSource messageSource;
 
-	@Value("${hostname}")
+	@Value("${email.hostname}")
 	private String hostname;
 
-	@Value("${use.aws}")
+	@Value("${email.use.aws}")
 	private boolean useAWSSES;
 
-	@Value("${sender.address}")
+	@Value("${email.sender.address}")
 	private String senderEmailAddress;
 
-	@Value("restrict.outgoing.domain")
+	@Value("${email.restrict.outgoing.domain}")
 	private boolean restrictOutgoingEmailDomain;
 
-	@Value("allowed.outgoing.domain")
+	@Value("${email.allowed.outgoing.domain}")
 	private List<String> allowedEmailDomains;
 
-	@Value("forward.restricted.emails.to")
+	@Value("${email.forward.restricted.emails.to}")
 	private String defaultEmailAddress;
 
 	private static final Logger logger = LogManager.getLogger(EmailLogServiceImpl.class);
