@@ -174,7 +174,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 			// Check if the recipient Email is part of the allowed email
 			String domain = recipientEmail.split("@")[1];
 			logger.info("Checking if allowed to send email to " + domain);
-			if (allowedEmailDomains.contains(domain)) {
+			if (!allowedEmailDomains.contains(domain)) {
 				logger.info("Replacing recipient email address " + recipientEmail + " with " + defaultEmailAddress);
 				recipientEmail = defaultEmailAddress;
 			}
