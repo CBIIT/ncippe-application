@@ -93,9 +93,7 @@ public class UserController {
 	@Autowired
 	private MessageSource messageSource;
 
-
 	private ObjectMapper mapper = new ObjectMapper();
-
 
 	@ApiOperation("Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User data found"),
@@ -107,6 +105,7 @@ public class UserController {
 		String uuid = request.getHeader(CommonConstants.HEADER_UUID);
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
 
+		logger.info("Received Login request with uuid " + uuid + " and email " + email);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -118,15 +117,17 @@ public class UserController {
 			userOptional = userService.activateUser(email, uuid);
 
 			if (!userOptional.isPresent()) {
+				logger.severe("Did not find user with " + email + " and " + uuid);
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 			}
 
 			User user = userOptional.get();
 			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				return ResponseEntity.status(HttpStatus.CONFLICT)
-						.body(messageSource.getMessage(messageSource.getMessage(
-								HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null, locale));
+				logger.severe("Did not find user with " + email + " and " + uuid);
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(
+						messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null,
+						locale));
 			}
 		}
 
@@ -136,15 +137,13 @@ public class UserController {
 
 	}
 
-
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
 	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
 			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
 			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -169,16 +168,14 @@ public class UserController {
 			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
 			@ApiParam(value = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification,
 			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 		if (!authService.authorize(requestingUserUUID, userGUID)) {
-						return new ResponseEntity<String>(
-					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale),
-					httpHeaders,
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 
 					HttpStatus.UNAUTHORIZED);
 		}
@@ -191,9 +188,8 @@ public class UserController {
 		try {
 			preferredLang = LanguageOption.getLanguageOption(preferredLanguage);
 		} catch (IllegalArgumentException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(
-					messageSource.getMessage(HttpResponseConstants.LANGUAGE_NOT_SUPPORTED,
-							new Object[] { preferredLanguage }, locale));
+			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(messageSource.getMessage(
+					HttpResponseConstants.LANGUAGE_NOT_SUPPORTED, new Object[] { preferredLanguage }, locale));
 		}
 
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
@@ -245,11 +241,11 @@ public class UserController {
 	 * This method will allow a participant to withdraw from the program. A CRC can
 	 * also withdraw a participant from the program.
 	 * 
-	 * @param request       - HTTPRequest object
-	 * @param patientId     - Unique Patient Id assigned to each Patient
+	 * @param request           - HTTPRequest object
+	 * @param patientId         - Unique Patient Id assigned to each Patient
 	 * @param updatedByUserUUID - UUID of the user responsible for withdrawing the
-	 *                      participant
-	 * @param qsAnsDTO      - List of Questions and Answers
+	 *                          participant
+	 * @param qsAnsDTO          - List of Questions and Answers
 	 * @param locale
 	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
@@ -259,8 +255,7 @@ public class UserController {
 	public ResponseEntity<String> withdrawParticipationByParticipant(HttpServletRequest request,
 			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,
 			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
 		String updatedByUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
@@ -317,12 +312,10 @@ public class UserController {
 	@PostMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
 			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
 		String updatedByUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-
 
 		List<String> validAccountStatusList = new ArrayList<>();
 		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
@@ -347,7 +340,6 @@ public class UserController {
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
-
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
 	@PostMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User invited to PPE Portal"),
@@ -361,8 +353,7 @@ public class UserController {
 			@ApiParam(value = "Last name of the participant", required = true) @RequestParam(value = "lastName", required = true) String lastName,
 			@ApiParam(value = "Email Id for the participant", required = true) @RequestParam(value = "emailId", required = true) String emailId,
 			@ApiParam(value = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 		String updatedByUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -389,7 +380,7 @@ public class UserController {
 		}
 
 		HttpHeaders httpHeaders = createHeader();
-		
+
 		User newPatient = participantOptional.get();
 		if (!authService.authorize(updatedByUserUUID, newPatient)) {
 			return new ResponseEntity<String>(
@@ -414,7 +405,6 @@ public class UserController {
 		String jsonFormat = convertUserToJSON(participantOptional.get());
 		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
-
 
 	private HttpHeaders createHeader() {
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -466,7 +456,6 @@ public class UserController {
 			providerDTO.getPatients().removeIf(
 					patient -> patient.getPortalAccountStatus().equalsIgnoreCase(PortalAccountStatus.ACCT_NEW.name()));
 
-
 			userDTO = providerDTO;
 			break;
 
@@ -478,12 +467,11 @@ public class UserController {
 			if (participantDTO.getCrc().getNotifications() != null) {
 				participantDTO.getCrc().getNotifications().clear();
 			}
-			participantDTO.getProviders()
-					.forEach(associatedProvider -> {
-						if (associatedProvider.getNotifications() != null) { 
-							associatedProvider.getNotifications().clear();
-						}
-					});
+			participantDTO.getProviders().forEach(associatedProvider -> {
+				if (associatedProvider.getNotifications() != null) {
+					associatedProvider.getNotifications().clear();
+				}
+			});
 			userDTO = participantDTO;
 			break;
 
@@ -513,8 +501,7 @@ public class UserController {
 	}
 
 	private ResponseEntity<String> fetchUser(HttpServletRequest request, String uuid, String email, String patientId,
-			Locale locale)
-			throws JsonProcessingException {
+			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		Optional<User> userOptional = null;
