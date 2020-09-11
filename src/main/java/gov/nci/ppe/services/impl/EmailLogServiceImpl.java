@@ -2,6 +2,7 @@ package gov.nci.ppe.services.impl;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 import javax.mail.MessagingException;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -41,6 +43,7 @@ import gov.nci.ppe.services.EmailLogService;
  * @since 2019-08-13
  */
 @Component
+@ConfigurationProperties("email")
 public class EmailLogServiceImpl implements EmailLogService {
 
 	private String charSet = "UTF-8";
@@ -54,14 +57,23 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Autowired
 	private MessageSource messageSource;
 
-	@Value("${hostname}")
+	@Value("${email.hostname}")
 	private String hostname;
 
 	@Value("${email.use.aws}")
 	private boolean useAWSSES;
 
-	@Value("${sender.email.address}")
+	@Value("${email.sender.address}")
 	private String senderEmailAddress;
+
+	@Value("${email.restrict.outgoing.domain}")
+	private boolean restrictOutgoingEmailDomain;
+
+	@Value("${email.allowed.outgoing.domain}")
+	private List<String> allowedEmailDomains;
+
+	@Value("${email.forward.restricted.emails.to}")
+	private String defaultEmailAddress;
 
 	private static final Logger logger = LogManager.getLogger(EmailLogServiceImpl.class);
 
@@ -156,6 +168,17 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 	private String sendEmail(String recipientEmail, String subject, String messageBody, boolean isHtmlFormat,
 			String signature) {
+
+		// Check if restrict email domains is on.
+		if (restrictOutgoingEmailDomain) {
+			// Check if the recipient Email is part of the allowed email
+			String domain = recipientEmail.split("@")[1];
+			logger.info("Checking if allowed to send email to " + domain);
+			if (!allowedEmailDomains.contains(domain)) {
+				logger.info("Replacing recipient email address " + recipientEmail + " with " + defaultEmailAddress);
+				recipientEmail = defaultEmailAddress;
+			}
+		}
 		// If there is a signature, append to the message body
 		if (StringUtils.isNotBlank(signature)) {
 			messageBody = messageBody + signature;
@@ -245,8 +268,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		final String replaceStringWith[] = { hostname, firstName };
 		return sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_UPLOAD_ECONSENT_BODY,
 				EmailConstants.PATIENT_UPLOAD_ECONSENT_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE,
-				replaceStringWith,
-				preferredLanguage);
+				replaceStringWith, preferredLanguage);
 	}
 
 	/**
@@ -281,7 +303,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		}
 		return emailStatus;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -293,7 +315,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_CHANGE_PROVIDER_BODY,
 				EmailConstants.PATIENT_CHANGE_PROVIDER_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE,
 				replaceStringWith, preferredLanguage);
-	}	
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -306,8 +328,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.PATIENT_CHANGE_CRC_BODY,
 				EmailConstants.PATIENT_CHANGE_CRC_SUBJECT, EmailConstants.PARTICIPATING_SIGNATURE, replaceStringWith,
 				preferredLanguage);
-	}	
-	
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -320,13 +342,13 @@ public class EmailLogServiceImpl implements EmailLogService {
 				EmailConstants.CRC_PATIENT_ADDED_SUBJECT, EmailConstants.CONTRIBUTING_SIGNATURE, replaceStringWith,
 				preferredLanguage);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName,
-			String salutationName, String emailId, String questionAnswers, LanguageOption preferredLanguage) {
+	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName, String salutationName,
+			String emailId, String questionAnswers, LanguageOption preferredLanguage) {
 
 		final String replaceStringWith[] = { hostname, firstName, lastName, salutationName, questionAnswers };
 
@@ -352,10 +374,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 		String subject = messageSource.getMessage(EmailConstants.CRC_PATIENT_WITHDRAW_SUBJECT, replaceSubjectStringWith,
 				locale);
 
-		return sendEmailNotification(emailId, senderEmailAddress, subject,
-				htmlBody);
+		return sendEmailNotification(emailId, senderEmailAddress, subject, htmlBody);
 	}
-
 
 	/**
 	 * {@inheritDoc}
@@ -376,8 +396,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailToCRCAndProvidersReminderUnreadReport(String salutationFirstName, String recipientEmail,
-			String patientFullName,
-			LanguageOption preferredLanguage) {
+			String patientFullName, LanguageOption preferredLanguage) {
 		String replaceStringWith[] = { hostname, salutationFirstName, patientFullName };
 
 		return this.sendEmailAndLogStatus(recipientEmail, EmailConstants.CRC_PROVIDER_REMINDER_REPORT_BODY,
