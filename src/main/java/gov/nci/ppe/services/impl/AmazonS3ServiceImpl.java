@@ -289,7 +289,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(uploadedFileType)
 				&& admin.isAllowEmailNotification()) {
 			String emailStatus = emailLogService.sendEmailToAdminAfterFileUpload(patient, admin.getEmail(),
-					admin.getPreferredLanguage());
+					admin.getPreferredLanguage(), originalFileName);
 			logger.info("Action of sending email was " + emailStatus);
 		}
 
@@ -471,8 +471,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageSubjectSpanish(),
 					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageEnglish(),
 					notificationServiceConfig.getNotifyCRCProvidersBiomarkerReportUploadMessageSpanish(), userId,
-					userName,
-					patient.getFullName(), patient.getPatientId());
+					userName, patient.getFullName(), patient.getPatientId());
 		});
 	}
 
