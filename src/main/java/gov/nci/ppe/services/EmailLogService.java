@@ -68,7 +68,7 @@ public interface EmailLogService {
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToCRCOnNewPatient(String recipientEmail, String firstName, LanguageOption preferredLanguage);
-	
+
 	/**
 	 * Method to send an email to CRC and Providers after Mocha Admin uploads a
 	 * biomarker report for a participant.
@@ -80,8 +80,8 @@ public interface EmailLogService {
 	 * @param preferredLanguage   - Recipient's preferred language
 	 * @return Email Status if the email was sent out successfully
 	 */
-	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName, String recipientEmail, String patientName,
-			LanguageOption preferredLanguage);
+	public String sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(String salutationFirstName,
+			String recipientEmail, String patientName, LanguageOption preferredLanguage);
 
 	/**
 	 * Method to send an email to participant after their biomarker report is
@@ -105,18 +105,20 @@ public interface EmailLogService {
 	 */
 	public String sendEmailToPatientAfterUploadingEconsent(String recipientEmail, String firstName,
 			LanguageOption preferredLanguage);
-	
+
 	/**
 	 * Method to send out email to Mocha Admin when a file is uploaded biomarker
 	 * report is uploaded by the admin
 	 * 
+	 * @param preferredLanguage - Recipient's preferred language
+	 * @param fileName          - File Name of the Biomarker report uploaded
 	 * @param patient           - An object of Participant
 	 * @param admin             - An object of User
-	 * @param preferredLanguage - Recipient's preferred language
+	 * 
 	 * @return Email Status if the email was sent out successfully
 	 */
 	public String sendEmailToAdminAfterFileUpload(Participant participant, String emailId,
-			LanguageOption preferredLanguage);
+			LanguageOption preferredLanguage, String fileName);
 
 	/**
 	 * Method to send an email to Patient when there is a change in their Provider
@@ -166,19 +168,20 @@ public interface EmailLogService {
 	 * @param preferredLanguage - Recipient's preferred language
 	 * @return - Success or Failure of the email process
 	 */
-	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName,
-			String salutationName, String emailId, String questionAnswers, LanguageOption preferredLanguage);
+	public String sendEmailToPatientAfterCRCWithdrawsPatient(String firstName, String lastName, String salutationName,
+			String emailId, String questionAnswers, LanguageOption preferredLanguage);
 
 	/**
 	 * Method to send out email to CRC when an active participant withdraws self
 	 * from the PPE Program
 	 * 
-	 * @param firstName       - Patient's First Name
-	 * @param lastName        - Patient's Last Name
-	 * @param salutationName  - Email Subscriber's first name
-	 * @param emailId         - Email Subscriber's email id
-	 * @param questionAnswers - Survey question and answers taken by the participant
-	 * @param patientId       - Unique Id of the Patient
+	 * @param firstName         - Patient's First Name
+	 * @param lastName          - Patient's Last Name
+	 * @param salutationName    - Email Subscriber's first name
+	 * @param emailId           - Email Subscriber's email id
+	 * @param questionAnswers   - Survey question and answers taken by the
+	 *                          participant
+	 * @param patientId         - Unique Id of the Patient
 	 * @param preferredLanguage - Recipient's preferred language
 	 * @return - Success or Failure of the email process
 	 */

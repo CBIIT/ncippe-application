@@ -276,16 +276,16 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailToAdminAfterFileUpload(Participant participant, String recipientEmail,
-			LanguageOption preferredLanguage) {
+			LanguageOption preferredLanguage, String fileName) {
 
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm:ss");
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyyy-HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		dtf.format(now);
 		String[] dateTime = StringUtils.split(dtf.format(now), "-");
 
 		/* Replace the variables in the EmailBody */
 		String replaceStringWith[] = { participant.getFirstName(), participant.getLastName(),
-				participant.getPatientId(), dateTime[0], dateTime[1] };
+				participant.getPatientId(), dateTime[0], dateTime[1], fileName };
 
 		/* Replace the variables in the Subject Line */
 		String replaceSubjectStringWith[] = { participant.getPatientId() };
