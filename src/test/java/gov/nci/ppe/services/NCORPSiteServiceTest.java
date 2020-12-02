@@ -1,13 +1,16 @@
 package gov.nci.ppe.services;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,5 +51,34 @@ public class NCORPSiteServiceTest {
 		assertEquals(expected.size(), actual.size());
 
 		verify(mockSiteRepo).findByActiveTrue();
+		verifyNoMoreInteractions(mockSiteRepo);
+	}
+
+	@Test
+	public void testGetSite_Found() {
+		NCORPSite expected = new NCORPSite();
+		final String ctepId = UUID.randomUUID().toString();
+		expected.setCTEPId(ctepId);
+		when(mockSiteRepo.findByCTEPId(ctepId)).thenReturn(Optional.of(expected));
+
+		NCORPSite actual = ncorpSiteService.getSite(ctepId);
+
+		assertNotNull(actual);
+		assertEquals(actual.getCTEPId(), ctepId);
+		verify(mockSiteRepo).findByCTEPId(ctepId);
+		verifyNoMoreInteractions(mockSiteRepo);
+	}
+
+	@Test
+	public void testGetSite_NotFound() {
+		final String ctepId = UUID.randomUUID().toString();
+		when(mockSiteRepo.findByCTEPId(ctepId)).thenReturn(Optional.empty());
+
+		NCORPSite actual = ncorpSiteService.getSite(ctepId);
+
+		assertNull(actual);
+		verify(mockSiteRepo).findByCTEPId(ctepId);
+		verifyNoMoreInteractions(mockSiteRepo);
+
 	}
 }

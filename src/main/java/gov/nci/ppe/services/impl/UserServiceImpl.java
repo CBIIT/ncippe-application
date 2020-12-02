@@ -31,6 +31,7 @@ import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
+import gov.nci.ppe.data.entity.NCORPSite;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
@@ -48,6 +49,7 @@ import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.FileService;
+import gov.nci.ppe.services.NCORPSiteService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
 
@@ -90,6 +92,8 @@ public class UserServiceImpl implements UserService {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
+	private NCORPSiteService ncorpSiteService;
+
 	public UserServiceImpl() {
 	}
 
@@ -98,7 +102,7 @@ public class UserServiceImpl implements UserService {
 			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository,
 			CRCRepository crcRepository, EmailLogService emailService,
 			NotificationServiceConfig notificationServiceConfig, NotificationService notificationService,
-			FileService fileService, AuditService auditService) {
+			FileService fileService, AuditService auditService, NCORPSiteService ncorpSiteService) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
@@ -112,6 +116,7 @@ public class UserServiceImpl implements UserService {
 		this.notificationService = notificationService;
 		this.fileService = fileService;
 		this.auditService = auditService;
+		this.ncorpSiteService = ncorpSiteService;
 	}
 
 	/**
@@ -325,10 +330,9 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(),
-						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getCrc().getPreferredLanguage());
+						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -425,8 +429,8 @@ public class UserServiceImpl implements UserService {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
 							provider.getPreferredLanguage());
 				}
-				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
-						provider.getUserId(), participant.getPatientId());
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
+						participant.getPatientId());
 
 			}
 		}
@@ -542,6 +546,7 @@ public class UserServiceImpl implements UserService {
 		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
 		List<User> newUsersList = new ArrayList<>();
 		userEnrollmentData.forEach(patientData -> {
+
 			Set<Provider> providerSet = new HashSet<Provider>();
 			/*
 			 * Verify if the provider for a particular patient is already in the system If
@@ -608,6 +613,8 @@ public class UserServiceImpl implements UserService {
 				if (null != crc) {
 					newPatient.setCrc(crc);
 				}
+
+				newPatient = updateSiteInfo(newPatient, patientData.getCurrentSiteCtepId());
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 
 				newUsersList.add(patientOptional.get());
@@ -646,74 +653,85 @@ public class UserServiceImpl implements UserService {
 					}
 				}
 
+				patient = updateSiteInfo(patient, patientData.getCurrentSiteCtepId());
+
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
 				if (providerUpdatedFlag) {
-					Set<Long> providerOpenId = mapOFProviders.get("NewProviders");
-					providerOpenId.forEach(providerCtepId -> {
-						Optional<Provider> providerOptional = findProviderByCtepId(providerCtepId);
-						if (providerOptional.isPresent()) {
-							Provider newProvider = providerOptional.get();
-							notificationService.notifyProviderWhenPatientIsAdded(patient.getFullName(),
-									newProvider.getUserId(), patient.getPatientId());
-
-							if (newProvider.isAllowEmailNotification()) {
-								emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
-										newProvider.getFirstName(), newProvider.getPreferredLanguage());
-							}
-
-						}
-					});
-					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
-						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
-								patient.getPatientId(), patient.getPreferredLanguage());
-					}
-					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
-					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
-							mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
-							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+					notifyPatientAndProviderOfUpdatedAssignment(patient, mapOFProviders);
 				}
 				if (crcUpdatedFlag) {
-					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
-						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
-								patient.getPatientId(), patient.getPreferredLanguage());
-					}
-					// Notify the patient in the system
-					notificationService.notifyPatientWhenCRCIsReplaced(patient.getUserId());
-
-					if (null != crc) {
-						// Notify the CRC in the system
-						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
-								patient.getPatientId());
-						if (crc.isAllowEmailNotification()) {
-							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFirstName(),
-									crc.getPreferredLanguage());
-						}
-					}
-					final Long crcOpentCtepId = crc.getOpenCtepID();
-					if (null != existingCRC) {
-						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {
-							{
-								add(existingCRC.getOpenCtepID());
-							}
-						}, new HashSet<Long>() {
-							{
-								add(crcOpentCtepId);
-							}
-						}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
-					} else {
-						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>(),
-								new HashSet<Long>() {
-									{
-										add(crcOpentCtepId);
-									}
-								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
-					}
+					notifyCRCAndProviderOfUpdatedAssignment(crc, patient, existingCRC);
 				}
 			}
 		});
 
 		return newUsersList;
+	}
+
+	private void notifyCRCAndProviderOfUpdatedAssignment(CRC crc, Participant patient, CRC existingCRC) {
+		if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+			emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
+					patient.getPatientId(), patient.getPreferredLanguage());
+		}
+		// Notify the patient in the system
+		notificationService.notifyPatientWhenCRCIsReplaced(patient.getUserId());
+
+		if (null != crc) {
+			// Notify the CRC in the system
+			notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
+					patient.getPatientId());
+			if (crc.isAllowEmailNotification()) {
+				emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFirstName(),
+						crc.getPreferredLanguage());
+			}
+		}
+		final Long crcOpentCtepId = crc.getOpenCtepID();
+		if (null != existingCRC) {
+			raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {
+				{
+					add(existingCRC.getOpenCtepID());
+				}
+			}, new HashSet<Long>() {
+				{
+					add(crcOpentCtepId);
+				}
+			}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+		} else {
+			raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>(),
+					new HashSet<Long>() {
+						{
+							add(crcOpentCtepId);
+						}
+					}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+		}
+	}
+
+	private void notifyPatientAndProviderOfUpdatedAssignment(Participant patient,
+			Map<String, Set<Long>> mapOFProviders) {
+		Set<Long> providerOpenId = mapOFProviders.get("NewProviders");
+		providerOpenId.forEach(providerCtepId -> {
+			Optional<Provider> providerOptional = findProviderByCtepId(providerCtepId);
+			if (providerOptional.isPresent()) {
+				Provider newProvider = providerOptional.get();
+				notificationService.notifyProviderWhenPatientIsAdded(patient.getFullName(),
+						newProvider.getUserId(), patient.getPatientId());
+
+				if (newProvider.isAllowEmailNotification()) {
+					emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
+							newProvider.getFirstName(), newProvider.getPreferredLanguage());
+				}
+
+			}
+		});
+		if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+			emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
+					patient.getPatientId(), patient.getPreferredLanguage());
+		}
+		notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
+		raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
+				mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
+				patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 	}
 
 	/*
@@ -886,8 +904,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
-				+ " and "
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
 				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
@@ -932,4 +949,24 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	private Participant updateSiteInfo(Participant participant, String siteCtepId) {
+		if (participant.getCurrentSite() != null
+				&& participant.getCurrentSite().getCTEPId().equalsIgnoreCase(siteCtepId)) {
+			// No change in site assignment
+			return participant;
+		}
+
+		NCORPSite assignedSite = ncorpSiteService.getSite(siteCtepId);
+		if (assignedSite == null) {
+			logger.log(Level.SEVERE, "Participant " + participant.getPatientId()
+					+ " assigned to Unknown Site with CTEP Id " + siteCtepId);
+		}
+
+		if (participant.getCurrentSite() != null) {
+			logger.log(Level.INFO, "Participant " + participant.getPatientId() + " switched from Site "
+					+ participant.getCurrentSite().getCTEPId() + " to Site " + siteCtepId);
+		}
+		participant.setCurrentSite(assignedSite);
+		return participant;
+	}
 }

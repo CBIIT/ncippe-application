@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
@@ -73,6 +74,10 @@ public class Participant extends User {
 	@Column(name = "PatientDOB")
 	private LocalDate dateOfBirth;
 
+	@ManyToOne
+	@JoinColumn(name = "NCORPSiteId")
+	private NCORPSite currentSite;
+
 	@Override
 	public String toString() {
 		StringBuilder retValue = new StringBuilder("{");
@@ -80,13 +85,9 @@ public class Participant extends User {
 				.append(StringUtils.CR).append(" Name : ").append(this.getFirstName()).append(" ")
 				.append(this.getLastName()).append(StringUtils.CR).append("Phone : ").append(this.getPhoneNumber())
 				.append(",").append(StringUtils.CR).append("Email Id : ").append(this.getEmail()).append(StringUtils.CR)
+				.append(",").append(StringUtils.CR).append("Site Name : ").append(this.getCurrentSite().getSiteName())
 				.append("}");
 		return retValue.toString();
 	}
-
-
-
-
-
 
 }

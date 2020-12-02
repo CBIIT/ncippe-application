@@ -13,4 +13,12 @@ public interface NCORPSiteService {
 	 */
 	public List<NCORPSite> getAllActiveSites();
 
+	/**
+	 * Fetches the Site by its CTEP ID
+	 * 
+	 * @param siteCtepId
+	 * @return
+	 */
+	public NCORPSite getSite(String siteCtepId);
+
 }
