@@ -1,6 +1,7 @@
 package gov.nci.ppe.data.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -21,4 +22,12 @@ public interface NCORPSiteRepository extends JpaRepository<NCORPSite, Long> {
 	 * @return List of Sites with the Active status
 	 */
 	public List<NCORPSite> findByActiveTrue();
+
+	/**
+	 * Returns the {@link NCORPSite} with the specified CTEP Id
+	 * 
+	 * @param ctepId - CTEP Id to search by
+	 * @return the matching {@link NCORPSite}
+	 */
+	public Optional<NCORPSite> findByCTEPId(String ctepId);
 }
