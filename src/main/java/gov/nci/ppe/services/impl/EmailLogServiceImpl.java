@@ -278,7 +278,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 	public String sendEmailToAdminAfterFileUpload(Participant participant, String recipientEmail,
 			LanguageOption preferredLanguage, String fileName) {
 
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm:ss");
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("/MM/dd/yyyy-HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		dtf.format(now);
 		String[] dateTime = StringUtils.split(dtf.format(now), "-");
