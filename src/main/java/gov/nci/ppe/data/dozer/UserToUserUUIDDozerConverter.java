@@ -1,7 +1,8 @@
 package gov.nci.ppe.data.dozer;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dozer.DozerConverter;
+
+import com.github.dozermapper.core.DozerConverter;
 
 import gov.nci.ppe.data.entity.User;
 

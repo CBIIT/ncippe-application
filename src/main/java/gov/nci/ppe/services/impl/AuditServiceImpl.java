@@ -18,8 +18,6 @@ public class AuditServiceImpl implements AuditService {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * @param eventDetails
-	 * @param eventDetailType
 	 */
 	@Override
 	public void logAuditEvent(String eventDetails, String eventDetailType) {

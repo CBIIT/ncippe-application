@@ -6,9 +6,12 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import gov.nci.ppe.data.entity.FileMetadata;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This class hides all the fields from Participant object and display only the
@@ -18,8 +21,11 @@ import gov.nci.ppe.data.entity.FileMetadata;
  * @version 1.0
  * @since 2019-08-26
  */
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ParticipantDTO extends UserDTO {
 
+	@EqualsAndHashCode.Include
 	private String patientId;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
@@ -37,26 +43,14 @@ public class ParticipantDTO extends UserDTO {
 	@JsonView(JsonViews.ParticipantDetailView.class)
 	private List<FileMetadata> otherDocuments = null;
 
+	@JsonProperty("isActiveBiobankParticipant")
 	private boolean isActiveBiobankParticipant;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
 	private List<QuestionAnswerDTO> questionAnswers = null;
 
-	public String getPatientId() {
-		return patientId;
-	}
+	private String dateOfBirth;
 
-	public void setPatientId(String patientID) {
-		this.patientId = patientID;
-	}
-
-	public CrcDTO getCrc() {
-		return crc;
-	}
-
-	public void setCrc(CrcDTO crc) {
-		this.crc = crc;
-	}
 
 	@Override
 	public String toString() {
@@ -66,69 +60,4 @@ public class ParticipantDTO extends UserDTO {
 		return retValue.toString();
 	}
 
-	public Set<ProviderDTO> getProviders() {
-		return providers;
-	}
-
-	public void setProviders(Set<ProviderDTO> providers) {
-		this.providers = providers;
-	}
-
-	public List<FileDTO> getReports() {
-		return reports;
-	}
-
-	public void setReports(List<FileDTO> reports) {
-		this.reports = reports;
-	}
-
-	public boolean isHasNewReports() {
-		return hasNewReports;
-	}
-
-	public void setHasNewReports(boolean hasNewReports) {
-		this.hasNewReports = hasNewReports;
-	}
-
-	/**
-	 * @return the otherDocuments
-	 */
-	public List<FileMetadata> getOtherDocuments() {
-		return otherDocuments;
-	}
-
-	/**
-	 * @param otherDocuments the otherDocuments to set
-	 */
-	public void setOtherDocuments(List<FileMetadata> otherDocuments) {
-		this.otherDocuments = otherDocuments;
-	}
-
-	/**
-	 * @return the isActiveBiobankParticipant
-	 */
-	public boolean getIsActiveBiobankParticipant() {
-		return isActiveBiobankParticipant;
-	}
-
-	/**
-	 * @param isActiveBiobankParticipant the isActiveBiobankParticipant to set
-	 */
-	public void setIsActiveBiobankParticipant(boolean isActiveBiobankParticipant) {
-		this.isActiveBiobankParticipant = isActiveBiobankParticipant;
-	}
-
-	/**
-	 * @return the questionAnswers
-	 */
-	public List<QuestionAnswerDTO> getQuestionAnswers() {
-		return questionAnswers;
-	}
-
-	/**
-	 * @param questionAnswers the questionAnswers to set
-	 */
-	public void setQuestionAnswers(List<QuestionAnswerDTO> questionAnswers) {
-		this.questionAnswers = questionAnswers;
-	}
 }

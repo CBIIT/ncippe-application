@@ -1,5 +1,7 @@
 package gov.nci.ppe.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -46,4 +48,14 @@ public interface FileService {
 	 * @return The updated record
 	 */
 	public FileMetadata markReportAsViewed(FileMetadata fileMetadata, User user);
+
+	/**
+	 * Fetch files uploaded during a given time period
+	 * 
+	 * @param fileType  - Type of file
+	 * @param startTime - start of the period
+	 * @param endTime   - end of the period
+	 * @return List of FileMetadata objects
+	 */
+	public List<FileMetadata> getFilesUploadedBetween(Code fileType, LocalDateTime startTime, LocalDateTime endTime);
 }

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import gov.nci.ppe.data.entity.PortalNotification;
+import gov.nci.ppe.data.entity.User;
 
 /**
  * @author PublicisSapient
@@ -20,6 +21,8 @@ public interface NotificationService {
 	 * 
 	 * @param messageFrom -
 	 * @param subject     - Subject/Title for the notification
+	 * @param subject     - Subject/Title for the notification
+	 * @param message     - Message describing the notification
 	 * @param message     - Message describing the notification
 	 * @param userId      - user Id
 	 * @param userName    - First Name of the user to whom this notification is
@@ -27,7 +30,8 @@ public interface NotificationService {
 	 * @param patientName - Participant's first name.
 	 * @return An Optional object of {PortalNotification} class
 	 */
-	public Optional<PortalNotification> addNotification(String messageFrom, String subject, String message, Long userId,
+	public Optional<PortalNotification> addNotification(String messageFrom, String subjectEnglish,
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId,
 			String userName, String patientName, String patientId);
 
 	/**
@@ -57,10 +61,58 @@ public interface NotificationService {
 	/**
 	 * Update all notifications for a particular user by marking them as {READ}
 	 * 
-	 * @param notificationsForUpdate
+	 * @param user - User whose notifications are to be marked as read
 	 * @return List of {PortalNotification} Objects
 	 */
 	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
-			List<PortalNotification> notificationsForUpdate);
+			User user);
+	/**
+	 * Method to add notify Patient when their CRC is replaced
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyPatientWhenCRCIsReplaced(Long userId);
+
+	/**
+	 * Method to notify CRC when a patient is assigned to them
+	 * 
+	 * @param patientFullName - Full name of the patient
+	 * @param userId          - Id of the recipient for whom the notification
+	 *                        message is intended
+	 * @param patientId       - Patient ID of the patient.
+	 */
+	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId);
+
+	/**
+	 * Method to add notify Patient when their Provider is replaced
+	 * @param userId - Id of the recipient for whom the notification message is intended
+	 */
+	public void notifyPatientWhenProviderIsReplaced(Long userId);
+
+	/**
+	 * Method to notify CRC when a patient is assigned to them
+	 * 
+	 * @param patientFullName - Full name of the patient
+	 * @param userId          - Id of the recipient for whom the notification
+	 *                        message is intended
+	 * @param patientId       - Patient ID of the patient.
+	 */
+	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId);
+
+	/**
+	 * Method to remind Patient that they have an unread biomarker report
+	 * 
+	 * @param userId - UserId of the patient.
+	 */
+	public void notifyPatientReminderToReadBiomarkerReport(Long userId);
+
+	/**
+	 * Method to remind CRC/Provider that they have an unread biomarker report for
+	 * one of their patients.
+	 * 
+	 * @param patientFullName - Full Name of the patient.
+	 * @param userId          - Provider/CRC User Id
+	 * @param patientId       - Patient ID of the patient.
+	 */
+	public void notifyProviderCRCReminderToReadBiomarkerReport(String patientFullName, Long userId, String patientId);
 
 }
