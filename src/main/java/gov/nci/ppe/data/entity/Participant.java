@@ -1,5 +1,6 @@
 package gov.nci.ppe.data.entity;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,9 @@ import javax.persistence.Transient;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Where;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 /**
  * @author PublicisSapient
  * @version 1.0
@@ -26,12 +30,15 @@ import org.hibernate.annotations.Where;
  */
 @Entity
 @DiscriminatorValue("1")
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class Participant extends User {
 
 	@Column(name = "UserId")
 	private Long participantId;
 
-	@Column(name = "PatientID", nullable = false, length = 32)
+	@EqualsAndHashCode.Include
+	@Column(name = "PatientID", nullable = false, length = 20)
 	private String patientId;
 
 	@ManyToMany
@@ -40,12 +47,12 @@ public class Participant extends User {
 	private Set<Provider> providers = new HashSet<>();
 
 	@OneToMany(mappedBy = "participant")
-	@Where(clause = "FileType = 8")
+	@Where(clause = "FileType = 102")
 	@OrderBy("DateUploaded DESC")
 	private List<FileMetadata> otherDocuments = new ArrayList<>();
 
 	@OneToMany(mappedBy = "participant")
-	@Where(clause = "FileType = 7")
+	@Where(clause = "FileType = 101")
 	@OrderBy("DateUploaded DESC")
 	List<FileMetadata> reports;
 
@@ -61,55 +68,10 @@ public class Participant extends User {
 
 	@OneToMany(mappedBy = "participantForQA")
 	@OrderBy("DateAnswered DESC, QuestionOrder ASC")
-	List<QuestionAnswer> questionAnswers;
+	private List<QuestionAnswer> questionAnswers;
 
-	public Long getParticipantId() {
-		return participantId;
-	}
-
-	public void setParticipantId(Long participantId) {
-		this.participantId = participantId;
-	}
-
-	public Set<Provider> getProviders() {
-		return providers;
-	}
-
-	public void setProviders(Set<Provider> providers) {
-		this.providers = providers;
-	}
-
-	public List<FileMetadata> getReports() {
-		return reports;
-	}
-
-	public void setReports(List<FileMetadata> reports) {
-		this.reports = reports;
-	}
-
-	public CRC getCRC() {
-		return crc;
-	}
-
-	public void setCRC(CRC crc) {
-		this.crc = crc;
-	}
-
-	public boolean isHasNewReports() {
-		return hasNewReports;
-	}
-
-	public void setHasNewReports(boolean hasNewReports) {
-		this.hasNewReports = hasNewReports;
-	}
-
-	public String getPatientId() {
-		return patientId;
-	}
-
-	public void setPatientId(String patientID) {
-		this.patientId = patientID;
-	}
+	@Column(name = "PatientDOB")
+	private LocalDate dateOfBirth;
 
 	@Override
 	public String toString() {
@@ -122,46 +84,9 @@ public class Participant extends User {
 		return retValue.toString();
 	}
 
-	/**
-	 * @return the otherDocuments
-	 */
-	public List<FileMetadata> getOtherDocuments() {
-		return otherDocuments;
-	}
 
-	/**
-	 * @param otherDocuments the otherDocuments to set
-	 */
-	public void setOtherDocuments(List<FileMetadata> otherDocuments) {
-		this.otherDocuments = otherDocuments;
-	}
 
-	/**
-	 * @return the isActiveBiobankParticipant
-	 */
-	public boolean getIsActiveBiobankParticipant() {
-		return isActiveBiobankParticipant;
-	}
 
-	/**
-	 * @param isActiveBiobankParticipant the isActiveBiobankParticipant to set
-	 */
-	public void setIsActiveBiobankParticipant(boolean isActiveBiobankParticipant) {
-		this.isActiveBiobankParticipant = isActiveBiobankParticipant;
-	}
 
-	/**
-	 * @return the questionAnswers
-	 */
-	public List<QuestionAnswer> getQuestionAnswers() {
-		return questionAnswers;
-	}
-
-	/**
-	 * @param questionAnswers the questionAnswers to set
-	 */
-	public void setQuestionAnswers(List<QuestionAnswer> questionAnswers) {
-		this.questionAnswers = questionAnswers;
-	}
 
 }

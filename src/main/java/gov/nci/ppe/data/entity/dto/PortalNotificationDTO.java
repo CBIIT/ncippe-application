@@ -2,57 +2,12 @@ package gov.nci.ppe.data.entity.dto;
 
 import java.sql.Timestamp;
 
+import lombok.Data;
+
+@Data
 public class PortalNotificationDTO {
-	public String getMessage() {
-		return message;
-	}
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public Timestamp getDateGenerated() {
-		return dateGenerated;
-	}
-
-	public void setGeneratedDate(Timestamp dateGenerated) {
-		this.dateGenerated = dateGenerated;
-	}
-
-	public Long getUserId() {
-		return userId;
-	}
-
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
-
-	public int getViewedByUser() {
-		return viewedByUser;
-	}
-
-	public void setViewedByUser(int viewedByUser) {
-		this.viewedByUser = viewedByUser;
-	}
-
-
-	public String getMessageFrom() {
-		return messageFrom;
-	}
-
-	public void setMessageFrom(String messageFrom) {
-		this.messageFrom = messageFrom;
-	}
-
-	public String getSubject() {
-		return subject;
-	}
-
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
-
-	private String message;
+	private Message message = new Message();
 	
 	private Timestamp dateGenerated;
 	
@@ -62,6 +17,18 @@ public class PortalNotificationDTO {
 	
 	private String messageFrom;
 	
-	private String subject;
+	private Subject subject = new Subject();
+
+	@Data
+	private class Message {
+		private String en;
+		private String es;
+	}
+
+	@Data
+	private class Subject {
+		private String en;
+		private String es;
+	}
 
 }

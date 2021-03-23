@@ -9,48 +9,16 @@ package gov.nci.ppe.data.entity.dto;
 
 import org.apache.commons.lang3.StringUtils;
 
+import lombok.Data;
+
+@Data
 public class QuestionAnswerDTO {
 	
 	private String questionOrder;
 	private String question;
 	private String answer;
-	/**
-	 * @return the orderNumber
-	 */
-	public String getQuestionOrder() {
-		return questionOrder;
-	}
-	/**
-	 * @param orderNumber the orderNumber to set
-	 */
-	public void setQuestionOrder(String questionOrder) {
-		this.questionOrder = questionOrder;
-	}
-	/**
-	 * @return the question
-	 */
-	public String getQuestion() {
-		return question;
-	}
-	/**
-	 * @param question the question to set
-	 */
-	public void setQuestion(String question) {
-		this.question = question;
-	}
-	/**
-	 * @return the answer
-	 */
-	public String getAnswer() {
-		return answer;
-	}
-	/**
-	 * @param answer the answer to set
-	 */
-	public void setAnswer(String answer) {
-		this.answer = answer;
-	}
 	
+	@Override
 	public String toString() {
 		StringBuilder retValue = new StringBuilder("{");
 		return retValue.append(StringUtils.CR).append("orderNumber = ").append(questionOrder)

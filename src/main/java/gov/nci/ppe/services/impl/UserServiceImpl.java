@@ -1,7 +1,7 @@
 package gov.nci.ppe.services.impl;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,15 +21,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import gov.nci.ppe.configurations.EmailServiceConfig;
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
+import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
@@ -46,9 +47,9 @@ import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
+import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
-import gov.nci.ppe.util.TimeUtil;
 
 /**
  * This is a Service class that orchestrates all the calls to entities and
@@ -61,7 +62,7 @@ import gov.nci.ppe.util.TimeUtil;
 @Component
 public class UserServiceImpl implements UserService {
 
-	protected Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
+	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
 
@@ -77,19 +78,14 @@ public class UserServiceImpl implements UserService {
 
 	private CRCRepository crcRepository;
 
-	@Autowired
-	public EmailLogService emailService;
+	private EmailLogService emailService;
 
-	@Autowired
-	private EmailServiceConfig emailServiceConfig;
-
-	@Autowired
 	private NotificationServiceConfig notificationServiceConfig;
 
-	@Autowired
 	private NotificationService notificationService;
 
-	@Autowired
+	private FileService fileService;
+
 	private AuditService auditService;
 
 	private ObjectMapper mapper = new ObjectMapper();
@@ -100,7 +96,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
 			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository,
-			CRCRepository crcRepository) {
+			CRCRepository crcRepository, EmailLogService emailService,
+			NotificationServiceConfig notificationServiceConfig, NotificationService notificationService,
+			FileService fileService, AuditService auditService) {
 		super();
 		this.userRepository = userRepo;
 		this.codeRepository = codeRepo;
@@ -109,6 +107,11 @@ public class UserServiceImpl implements UserService {
 		this.roleRepository = roleRepository;
 		this.providerRepository = providerRepository;
 		this.crcRepository = crcRepository;
+		this.emailService = emailService;
+		this.notificationServiceConfig = notificationServiceConfig;
+		this.notificationService = notificationService;
+		this.fileService = fileService;
+		this.auditService = auditService;
 	}
 
 	/**
@@ -129,19 +132,23 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber) {
+	public Optional<User> updateUserDetails(String userGuid, Boolean userEmailNotification, String phoneNumber,
+			LanguageOption preferredLang, String requestingUserUUID) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userGuid);
-
+		Optional<User> requesterOptional = userRepository.findByUserUUID(requestingUserUUID);
 		/* Check if the user is present in the system */
-		if (!userOptional.isPresent()) {
+		if (userOptional.isEmpty() || requesterOptional.isEmpty()) {
 			return userOptional;
 		}
 
 		User user = userOptional.get();
 		user.setAllowEmailNotification(userEmailNotification);
 		user.setPhoneNumber(phoneNumber);
-		user.setLastRevisedUser(user.getUserId());
-		user.setLastRevisedDate(TimeUtil.now());
+		if (preferredLang != null) {
+			user.setPreferredLanguage(preferredLang);
+		}
+		user.setLastRevisedUser(requesterOptional.get().getUserId());
+		user.setLastRevisedDate(LocalDateTime.now());
 		User updateUser = userRepository.save(user);
 
 		return Optional.of(updateUser);
@@ -189,29 +196,17 @@ public class UserServiceImpl implements UserService {
 			if (StringUtils.isBlank(user.getUserUUID())) {
 				// Fill in the user's UUID and save.
 				user.setUserUUID(userUUID);
-				Timestamp currentTime = TimeUtil.now();
+				LocalDateTime currentTime = LocalDateTime.now();
 				user.setDateActivated(currentTime);
 				user.setLastRevisedDate(currentTime);
 				user.setLastRevisedUser(user.getUserId());
 				user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
 				user = userRepository.save(user);
 				optionalUser = Optional.of(user);
+			} else if (user.getPortalAccountStatus().getCodeName()
+					.equals(PortalAccountStatus.ACCT_TERMINATED_AT_PPE.name())) {
+				optionalUser = Optional.empty();
 			}
-		}
-		return optionalUser;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> updateEmail(String userUUID, String userEmail) {
-		Optional<User> optionalUser = userRepository.findByUserUUID(userUUID);
-		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
-			user.setEmail(userEmail);
-			user = userRepository.save(user);
-			optionalUser = Optional.of(user);
 		}
 		return optionalUser;
 	}
@@ -231,10 +226,10 @@ public class UserServiceImpl implements UserService {
 			Set<Participant> associatedPatients = null;
 			User user = optionalUser.get();
 			if (null != user.getRole()) {
-				if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_CRC.getRoleName())) {
+				if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PPE_CRC.name())) {
 					associatedPatients = ((CRC) user).getPatients();
 
-				} else if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PROVIDER.getRoleName())) {
+				} else if (user.getRole().getRoleName().equalsIgnoreCase(PPERole.ROLE_PPE_PROVIDER.name())) {
 					associatedPatients = ((Provider) user).getPatients();
 				}
 			}
@@ -266,7 +261,7 @@ public class UserServiceImpl implements UserService {
 		user.setPortalAccountStatus(portalAccountStatusCode);
 		user.setLastRevisedUser(user.getUserId());
 		user.setAllowEmailNotification(false);
-		user.setLastRevisedDate(TimeUtil.now());
+		user.setLastRevisedDate(LocalDateTime.now());
 		User updateUser = userRepository.save(user);
 		return Optional.of(updateUser);
 	}
@@ -276,66 +271,15 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> withdrawParticipationFromBiobankProgram(Participant patient, List<QuestionAnswer> qsAnsList) {
-		Timestamp qsAnsInsertionTime = TimeUtil.now();
+		LocalDateTime qsAnsInsertionTime = LocalDateTime.now();
 		qsAnsList.forEach(qs -> {
 			qs.setDateAnswered(qsAnsInsertionTime);
 		});
 		qsAnsRepo.saveAll(qsAnsList);
 		patient.setLastRevisedDate(qsAnsInsertionTime);
-		patient.setIsActiveBiobankParticipant(false);
+		patient.setActiveBiobankParticipant(false);
 		patient.setDateDeactivated(qsAnsInsertionTime);
 		return Optional.of(userRepository.save(patient));
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Optional<User> authorizeUser(String email, String uuid) {
-		boolean userUpdatedFlag = false;
-		Timestamp updatedTime = TimeUtil.now();
-		Optional<User> userOptional = findByUuid(uuid);
-		if (userOptional.isEmpty()) {
-			// No uuid match. Could be a first time user. Search by email.
-			userOptional = findByEmail(email);
-			if (!userOptional.isPresent() || StringUtils.isNotBlank(userOptional.get().getUserUUID())) {
-
-				return Optional.empty();
-			}
-		}
-
-		User user = userOptional.get();
-
-		// Update the email id if they don't match
-		if (!StringUtils.equalsIgnoreCase(email, user.getEmail())) {
-			user.setEmail(email);
-			userUpdatedFlag = true;
-		}
-
-		// activate the user if they are not already done
-		if (StringUtils.isAllBlank(user.getUserUUID())) {
-			user.setUserUUID(uuid);
-			user.setPortalAccountStatus(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()));
-			user.setDateActivated(updatedTime);
-			userUpdatedFlag = true;
-		}
-
-		// Update the record in the database if there are any changes
-		if (userUpdatedFlag) {
-			user.setLastRevisedDate(updatedTime);
-			user.setLastRevisedUser(user.getUserId());
-			Optional<User> updatedUserOptional = updateUser(user);
-			user = updatedUserOptional.get();
-		}
-
-		return Optional.of(user);
-
-	}
-
-	@Override
-	public String decryptLoginGovToken(String idToken) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
@@ -374,48 +318,58 @@ public class UserServiceImpl implements UserService {
 		Participant withdrawnPatient = (Participant) userOptional.get();
 		StringBuilder questionAnswers = new StringBuilder();
 		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
-			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ").append(qs.getAnswer())
-					.append("<br/>");
+			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
+					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
-			if (withdrawnPatient.getCRC().getAllowEmailNotification()) {
-				sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(), withdrawnPatient.getLastName(),
-						withdrawnPatient.getCRC().getFirstName(), withdrawnPatient.getCRC().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId());
+			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
+
+				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
+						withdrawnPatient.getLastName(),
+						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
+						questionAnswers.toString(), withdrawnPatient.getPatientId(),
+						withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawsSelfSubject()
-						.concat(StringUtils.CR) + LocalDate.now();
-				notificationTitle = StringUtils.replace(notificationTitle, "%{FullName}",
+				String notificationTitleEnglish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectEnglish();
+				notificationTitleEnglish = StringUtils.replace(notificationTitleEnglish, "%{FullName}",
+						withdrawnPatient.getFullName());
+				String notificationTitleSpanish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectSpanish();
+				notificationTitleSpanish = StringUtils.replace(notificationTitleSpanish, "%{FullName}",
 						withdrawnPatient.getFullName());
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
-						notificationTitle, notificationServiceConfig.getParticipantWithdrawsSelfMessage(),
-						withdrawnPatient.getCRC().getCrcId(), withdrawnPatient.getFirstName(),
+						notificationTitleEnglish, notificationTitleSpanish,
+						notificationServiceConfig.getParticipantWithdrawsSelfMessageEnglish(),
+						notificationServiceConfig.getParticipantWithdrawsSelfMessageSpanish(),
+						withdrawnPatient.getCrc().getUserId(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getFirstName(), withdrawnPatient.getPatientId());
 
 			}
 		} else {
-			if (withdrawnPatient.getAllowEmailNotification()) {
-				sendEmailToParticipantAfterCRCWithdrawsPatient(withdrawnPatient.getCRC().getFirstName(),
-						withdrawnPatient.getCRC().getLastName(), withdrawnPatient.getFirstName(),
-						withdrawnPatient.getEmail(), questionAnswers.toString());
+			if (withdrawnPatient.isAllowEmailNotification()) {
+				emailService.sendEmailToPatientAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getFirstName(),
+						withdrawnPatient.getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitle = notificationServiceConfig.getParticipantWithdrawnByCRCSubject()
-						.concat(StringUtils.CR) + LocalDate.now();
+
 				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
-						notificationTitle, notificationServiceConfig.getParticipantWithdrawnByCRCMessage(),
-						withdrawnPatient.getUserId(), withdrawnPatient.getCRC().getFirstName(),
-						withdrawnPatient.getCRC().getLastName(), withdrawnPatient.getPatientId());
+						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectEnglish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectSpanish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCMessageEnglish(),
+						notificationServiceConfig.getParticipantWithdrawnByCRCMessageSpanish(),
+						withdrawnPatient.getUserId(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
 			}
 		}
-		return Optional.of(userOptional.get());
+		return Optional.of(withdrawnPatient);
 	}
 
 	/**
@@ -431,93 +385,27 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updateUser(User user) {
-		user.setLastRevisedDate(TimeUtil.now());
+		user.setLastRevisedDate(LocalDateTime.now());
 		return Optional.of(userRepository.save(user));
-	}
-
-	/**
-	 * Method to send out email to CRC when an active participant withdraws self
-	 * from the PPE Program
-	 * 
-	 * @param firstName       - Patient's First Name
-	 * @param lastName        - Patient's Last Name
-	 * @param salutationName  - Email Subscriber's first name
-	 * @param emailId         - Email Subscriber's email id
-	 * @param questionAnswers - Survey question and answers taken by the participant
-	 * @param patientId       - Unique Id of the Patient
-	 * @return - Success or Failure of the email process
-	 */
-	private String sendEmailToCRCAfterParticipantWithdraws(String firstName, String lastName, String salutationName,
-			String emailId, String questionAnswers, String patientId) {
-
-		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}",
-				"%{PatientId}" };
-		String updatedTextBody = StringUtils.replaceEach(
-				emailServiceConfig.getEmailHtmlBodyForCRCWhenPatientWithdraws(), replaceThisString, replaceStringWith);
-
-		/* Replace the variables in the Subject Line */
-		String replaceSubjectStringWith[] = { firstName, lastName };
-		String replaceThisStringForSubject[] = { "%{FirstName}", "%{LastName}" };
-		String subject = StringUtils.replaceEach(emailServiceConfig.getEmailSubjectForCRCWhenPatientWithdraws(),
-				replaceThisStringForSubject, replaceSubjectStringWith);
-
-		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(), subject,
-				updatedTextBody, updatedTextBody);
-	}
-
-	/**
-	 * Method to send out email to Patient when a CRC withdraws that participant
-	 * from the PPE Program
-	 * 
-	 * @param firstName       - CRC's first name
-	 * @param lastName        - CRC's last name
-	 * @param salutationName  - Email Subscriber's first name
-	 * @param emailId         - Email Subscriber's email id
-	 * @param questionAnswers - Survey question and answers taken by the CRC on
-	 *                        behalf of the participant
-	 * @return - Success or Failure of the email process
-	 */
-	private String sendEmailToParticipantAfterCRCWithdrawsPatient(String firstName, String lastName,
-			String salutationName, String emailId, String questionAnswers) {
-
-		/* Replace the variables in the EmailBody */
-		String replaceStringWith[] = { firstName, lastName, salutationName, questionAnswers };
-		String replaceThisString[] = { "%{FirstName}", "%{LastName}", "%{SalutationFirstName}", "%{questionAnswer}" };
-		String updatedTextBody = StringUtils.replaceEach(
-				emailServiceConfig.getEmailTextBodyForPatientWhenCRCWithdraws(), replaceThisString, replaceStringWith);
-
-		return emailService.sendEmailNotification(emailId, emailServiceConfig.getSenderEmailAddress(),
-				emailServiceConfig.getEmailSubjectForPatientWhenCRCWithdraws(), updatedTextBody, updatedTextBody);
 	}
 
 	/*
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Optional<User> invitePatientToPortal(String patientId, String uuid, String patientEmail,
-			String patientFirstName, String patientLastName) throws JsonProcessingException {
+	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
 			return participantOptional;
 		}
 
 		Participant participant = (Participant) participantOptional.get();
-		if (StringUtils.isNotBlank(patientFirstName)) {
-			participant.setFirstName(patientFirstName);
-		}
-		if (StringUtils.isNotBlank(patientLastName)) {
-			participant.setLastName(patientLastName);
-		}
-		if (StringUtils.isNotBlank(patientEmail)) {
-			participant.setEmail(patientEmail);
-		}
+
 		/* Get the UserId for CRC */
 		Optional<User> crcOptional = findByUuid(uuid);
 		if (crcOptional.isPresent()) {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
-			participant.setLastRevisedDate(TimeUtil.now());
+			participant.setLastRevisedDate(LocalDateTime.now());
 		}
 
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
@@ -525,24 +413,21 @@ public class UserServiceImpl implements UserService {
 
 		participantOptional = Optional.of(userRepository.save(participant));
 
-		raiseInvitedParticipationAuditEvent(patientId, uuid, patientEmail, patientFirstName, patientLastName);
+		raiseInvitedParticipationAuditEvent(patientId, uuid, participant.getEmail(), participant.getFirstName(),
+				participant.getLastName());
 
 		// Send Notification to Patient & Providers
-		emailService.sendEmailToInvitePatient(patientEmail, patientFirstName);
+		emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName(),
+				participant.getPreferredLanguage());
 		if (participant.getProviders() != null) {
 			for (Provider provider : participant.getProviders()) {
-				if (provider.getAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
-					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName());
-					String message = StringUtils.replace(
-							notificationServiceConfig.getPatientReceivesInvitationMessage(), "%{FullName}",
-							participant.getFullName());
-					message = StringUtils.replace(message, "%{PatientID}", participant.getPatientId());
-					notificationService.addNotification(notificationServiceConfig.getPatientReceivesInvitationFrom(),
-							notificationServiceConfig.getPatientReceivesInvitationTitle().concat(StringUtils.CR)
-									+ LocalDate.now(),
-							message, provider.getUserId(), provider.getFirstName(), participant.getFullName(),
-							patientId);
+				if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
+					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
+							provider.getPreferredLanguage());
 				}
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
+						provider.getUserId(), participant.getPatientId());
+
 			}
 		}
 
@@ -556,30 +441,34 @@ public class UserServiceImpl implements UserService {
 	public Optional<User> insertNewPatientDetailsFromOpen(Participant newPatient) {
 		newPatient.setFirstName(StringUtils.EMPTY);
 		newPatient.setLastName(StringUtils.EMPTY);
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_PARTICIPANT.getRoleName());
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_PARTICIPANT.name());
 		newPatient.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_PARTICIPANT.name());
 		newPatient.setUserType(userType);
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_NEW.name());
 		newPatient.setPortalAccountStatus(portalAccountStatusCode);
 		newPatient.setAllowEmailNotification(true);
-		newPatient.setIsActiveBiobankParticipant(true);
-		newPatient.setDateCreated(TimeUtil.now());
-		newPatient.setLastRevisedDate(TimeUtil.now());
+		newPatient.setActiveBiobankParticipant(true);
+		newPatient.setDateCreated(LocalDateTime.now());
+		newPatient.setLastRevisedDate(LocalDateTime.now());
 		Optional<User> patientOptional = Optional.of(userRepository.save(newPatient));
-		if (null != newPatient.getCRC()) {
+		CRC crc = newPatient.getCrc();
+		if (null != crc) {
 
 			// Send System notification to CRC when a new patient is inserted into PPE from
 			// OPEN
 			notificationService.addNotification(notificationServiceConfig.getPatientAddedFromOpenFrom(),
-					notificationServiceConfig.getPatientAddedFromOpenTitle().concat(StringUtils.SPACE)
-							.concat(StringUtils.LF).concat(LocalDate.now().toString()),
-					notificationServiceConfig.getPatientAddedFromOpenMessage(), newPatient.getCRC().getUserId(),
+					notificationServiceConfig.getPatientAddedFromOpenSubjectEnglish(),
+					notificationServiceConfig.getPatientAddedFromOpenSubjectSpanish(),
+					notificationServiceConfig.getPatientAddedFromOpenMessageEnglish(),
+					notificationServiceConfig.getPatientAddedFromOpenMessageSpanish(), crc.getUserId(),
 					StringUtils.EMPTY, StringUtils.EMPTY, newPatient.getPatientId());
 
 			// Send Email notification to CRC when a new patient is inserted into PPE from
 			// OPEN
-			emailService.sendEmailToCRCOnNewPatient(newPatient.getCRC().getEmail(), newPatient.getCRC().getFirstName());
+			if (crc.isAllowEmailNotification() && StringUtils.isNotBlank(crc.getEmail())) {
+				emailService.sendEmailToCRCOnNewPatient(crc.getEmail(), crc.getFirstName(), crc.getPreferredLanguage());
+			}
 
 		}
 		return patientOptional;
@@ -590,8 +479,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> insertNewProviderDetailsFromOpen(Provider provider) {
-		Timestamp currentTimestamp = TimeUtil.now();
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_PROVIDER.getRoleName());
+		LocalDateTime currentTimestamp = LocalDateTime.now();
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_PROVIDER.name());
 		provider.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_PROVIDER.name());
 		provider.setUserType(userType);
@@ -603,7 +492,8 @@ public class UserServiceImpl implements UserService {
 		Optional<User> providerOptional = Optional.of(userRepository.save(provider));
 
 		// Send Email Notification to Providers
-		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName());
+		emailService.sendEmailToInviteNonPatients(provider.getEmail(), provider.getFirstName(),
+				provider.getPreferredLanguage());
 		return providerOptional;
 	}
 
@@ -620,8 +510,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> insertNewCRCDetailsFromOpen(CRC crc) {
-		Timestamp currentTimestamp = TimeUtil.now();
-		Role role = roleRepository.findByRoleName(PPERole.ROLE_CRC.getRoleName());
+		LocalDateTime currentTimestamp = LocalDateTime.now();
+		Role role = roleRepository.findByRoleName(PPERole.ROLE_PPE_CRC.name());
 		crc.setRole(role);
 		Code userType = codeRepository.findByCodeName(UserType.PPE_CRC.name());
 		crc.setUserType(userType);
@@ -633,7 +523,7 @@ public class UserServiceImpl implements UserService {
 		Optional<User> providerOptional = Optional.of(userRepository.save(crc));
 
 		// Send Email Notification to CRCs
-		emailService.sendEmailToInviteNonPatients(crc.getEmail(), crc.getFirstName());
+		emailService.sendEmailToInviteNonPatients(crc.getEmail(), crc.getFirstName(), crc.getPreferredLanguage());
 		return providerOptional;
 	}
 
@@ -698,6 +588,7 @@ public class UserServiceImpl implements UserService {
 					crc.setLastName(patientData.getCraLastName());
 					crc.setPhoneNumber(formatPhoneNumber(patientData.getCraPhone()));
 					crc.setEmail(patientData.getCraEmail());
+					crc.setPreferredLanguage(LanguageOption.ENGLISH);
 					crc = (CRC) insertNewCRCDetailsFromOpen(crc).get();
 					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()),
 							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
@@ -710,12 +601,15 @@ public class UserServiceImpl implements UserService {
 			if (patientOptional.isEmpty()) {
 				Participant newPatient = new Participant();
 				newPatient.setPatientId(patientData.getPatientId());
+				newPatient.setDateOfBirth(patientData.getDateOfBirth());
+				newPatient.setPreferredLanguage(LanguageOption.ENGLISH);
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
 				if (null != crc) {
-					newPatient.setCRC(crc);
+					newPatient.setCrc(crc);
 				}
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
+
 				newUsersList.add(patientOptional.get());
 				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(),
 						AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
@@ -736,18 +630,18 @@ public class UserServiceImpl implements UserService {
 					providerUpdatedFlag = true;
 				}
 
-				CRC existingCRC = patient.getCRC();
+				CRC existingCRC = patient.getCrc();
 
 				// Adding a new CRC to a patient
 				if (null == existingCRC && null != crc) {
-					patient.setCRC(crc);
+					patient.setCrc(crc);
 					crcUpdatedFlag = true;
 				}
 				// Updating CRC for a patient
 				if (null != crc && null != existingCRC) {
 					// Check if the CRC remains unchanged.
 					if (existingCRC.getOpenCtepID() != crc.getOpenCtepID()) {
-						patient.setCRC(crc);
+						patient.setCrc(crc);
 						crcUpdatedFlag = true;
 					}
 				}
@@ -755,11 +649,47 @@ public class UserServiceImpl implements UserService {
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
 				if (providerUpdatedFlag) {
+					Set<Long> providerOpenId = mapOFProviders.get("NewProviders");
+					providerOpenId.forEach(providerCtepId -> {
+						Optional<Provider> providerOptional = findProviderByCtepId(providerCtepId);
+						if (providerOptional.isPresent()) {
+							Provider newProvider = providerOptional.get();
+							notificationService.notifyProviderWhenPatientIsAdded(patient.getFullName(),
+									newProvider.getUserId(), patient.getPatientId());
+
+							if (newProvider.isAllowEmailNotification()) {
+								emailService.sendEmailToProviderOnPatientInvitation(newProvider.getEmail(),
+										newProvider.getFirstName(), newProvider.getPreferredLanguage());
+							}
+
+						}
+					});
+					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+						emailService.sendEmailToPatientWhenProviderChanges(patient.getEmail(), patient.getFirstName(),
+								patient.getPatientId(), patient.getPreferredLanguage());
+					}
+					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
 							mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
+					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
+						emailService.sendEmailToPatientWhenCRCChanges(patient.getEmail(), patient.getFirstName(),
+								patient.getPatientId(), patient.getPreferredLanguage());
+					}
+					// Notify the patient in the system
+					notificationService.notifyPatientWhenCRCIsReplaced(patient.getUserId());
+
+					if (null != crc) {
+						// Notify the CRC in the system
+						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
+								patient.getPatientId());
+						if (crc.isAllowEmailNotification()) {
+							emailService.sendEmailToCRCWhenPatientIsAdded(crc.getEmail(), crc.getFirstName(),
+									crc.getPreferredLanguage());
+						}
+					}
 					final Long crcOpentCtepId = crc.getOpenCtepID();
 					if (null != existingCRC) {
 						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {
@@ -809,7 +739,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient) {
-		existingPatient.setLastRevisedDate(TimeUtil.now());
+		existingPatient.setLastRevisedDate(LocalDateTime.now());
 		return Optional.of(userRepository.save(existingPatient));
 	}
 
@@ -848,6 +778,7 @@ public class UserServiceImpl implements UserService {
 		provider.setLastName(lastName);
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
+		provider.setPreferredLanguage(LanguageOption.ENGLISH);
 		logger.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
 		return provider;
 	}
@@ -944,4 +875,61 @@ public class UserServiceImpl implements UserService {
 		});
 		return providerIds;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void generateUnreadReportReminderNotification(int daysUnread) {
+		LocalDate today = LocalDate.now();
+
+		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
+		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
+
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
+				+ " and "
+				+ endOfPeriod.toString());
+		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
+				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
+				endOfPeriod);
+		uploadedFiles.stream().forEach(file -> sendOverdueNotification(file));
+
+	}
+
+	private void sendOverdueNotification(FileMetadata fileMetadata) {
+
+		logger.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+				+ fileMetadata.getDateUploaded());
+		Participant patient = fileMetadata.getParticipant();
+		CRC assocCRC = patient.getCrc();
+		Set<Provider> associatedProviders = patient.getProviders();
+
+		// Unread notification and email to patient.
+		if (!fileMetadata.hasViewed(patient.getUserUUID())) {
+			if (patient.isAllowEmailNotification()) {
+				emailService.sendEmailToParticipantReminderUnreadReport(patient.getEmail(), patient.getFirstName(),
+						patient.getPreferredLanguage());
+				notificationService.notifyPatientReminderToReadBiomarkerReport(patient.getUserId());
+			}
+		}
+
+		if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
+			if (assocCRC.isAllowEmailNotification()) {
+				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
+						assocCRC.getEmail(), patient.getFullName(), assocCRC.getPreferredLanguage());
+				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
+						assocCRC.getUserId(), patient.getPatientId());
+			}
+		}
+
+		for (Provider provider : associatedProviders) {
+			if (!fileMetadata.hasViewed(provider.getUserUUID())) {
+				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(provider.getFirstName(),
+						provider.getEmail(), patient.getFullName(), provider.getPreferredLanguage());
+				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
+						provider.getUserId(), patient.getPatientId());
+			}
+		}
+	}
+
 }

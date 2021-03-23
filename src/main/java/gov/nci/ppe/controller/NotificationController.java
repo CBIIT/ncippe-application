@@ -1,29 +1,33 @@
 package gov.nci.ppe.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gov.nci.ppe.data.entity.Participant;
+import gov.nci.ppe.constants.CommonConstants;
+import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.data.entity.PortalNotification;
-import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
 import io.swagger.annotations.ApiOperation;
@@ -40,58 +44,24 @@ import io.swagger.annotations.ApiParam;
 @RestController
 public class NotificationController {
 
+	private static final Logger logger = LogManager.getLogger(NotificationController.class);
+
 	@Autowired
 	private NotificationService notificationService;
 
 	@Autowired
-	public UserService userService;
+	private MessageSource messageSource;
+
+	@Autowired
+	private UserService userService;
+
+	private ObjectMapper mapper = new ObjectMapper();
 
 	public NotificationController() {
+		mapper.registerSubtypes(PortalNotificationDTO.class);
 	}
 
-	/**
-	 * This method supports insertion of a new notification for a particular user
-	 * 
-	 * @param userGUID - User GUID
-	 * @param message  - Notification message
-	 * @return HTTP OK if the notification message is inserted else
-	 */
-	@ApiOperation(value = "Creates a new notification for a particular user")
-	@PostMapping(value = "/api/v1/user/{userGUID}/notification")
 
-	public ResponseEntity<String> addNotificationForUser(
-			@ApiParam(value = "Unique ID of the User to be notified", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "Notification Message", required = true) @RequestParam(value = "message", required = true) String message,
-			@ApiParam(value = "Source of the Notification", required = true) @RequestParam(value = "from", required = true) String from,
-			@ApiParam(value = "Notification Subject", required = true) @RequestParam(value = "subject", required = true) String subject) {
-
-		Optional<User> userOptional = userService.findByUuid(userGUID);
-		List<PortalNotification> notificationList = new ArrayList<>();
-		if (userOptional.isPresent()) {
-			Participant patient = (Participant) userOptional.get();
-
-			Map<Long, String> userDetailMap = new HashMap<Long, String>();
-			Set<Provider> providers = patient.getProviders();
-			userDetailMap.put(patient.getUserId(), patient.getFirstName());
-			providers.forEach(provider -> {
-				userDetailMap.put(provider.getUserId(), provider.getFirstName());
-			});
-
-			userDetailMap.forEach((userId, userName) -> {
-				Optional<PortalNotification> notificationOptional = notificationService.addNotification(from, subject,
-						message, userId, userName, patient.getFirstName(), patient.getPatientId());
-				if (notificationOptional.isPresent()) {
-					notificationList.add(notificationOptional.get());
-				}
-			});
-
-			String notificationInJsonFormat = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
-					.toJson(notificationList);
-			return ResponseEntity.status(HttpStatus.CREATED).body(notificationInJsonFormat);
-		}
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-				.body("Could not create the record. Check the userGUID");
-	}
 
 	/**
 	 * Retrieves all notifications for the specified User
@@ -102,8 +72,21 @@ public class NotificationController {
 	 */
 	@ApiOperation(value = "Retrieves all notifications for the specified User")
 	@GetMapping(value = "/api/v1/user/{userGUID}/notifications")
-	public ResponseEntity<String> getAllNotificationsForUser(
-			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID) {
+	public ResponseEntity<String> getAllNotificationsForUser(HttpServletRequest request,
+			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
+			Locale locale) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<User> userOptional = userService.findByUuid(userGUID);
 
@@ -111,14 +94,25 @@ public class NotificationController {
 			List<PortalNotification> notificationList = notificationService
 					.getAllNotificationsForUserByUserId(userOptional.get().getUserId());
 			if (CollectionUtils.isNotEmpty(notificationList)) {
-				String notificationInJsonFormat = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-						.setPrettyPrinting().disableHtmlEscaping().create().toJson(notificationList);
-				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+
+				String notificationInJsonFormat;
+				try {
+					notificationInJsonFormat = mapper.writeValueAsString(notificationList);
+					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+				} catch (JsonProcessingException e) {
+					logger.catching(e);
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
+							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
+				}
+				
+				
 			}
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No notifications found for "
-					+ userOptional.get().getFirstName() + " " + userOptional.get().getLastName());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND_FOR_USER,
+							new Object[] { userOptional.get().getFullName() }, locale));
 		}
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User is not present");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
 
 	/**
@@ -128,23 +122,42 @@ public class NotificationController {
 	 * @param userGUID       - Unique ID of the User whose notification is to be
 	 *                       retrieved
 	 * @param notificationId - Unique ID of the Notification to retrieve
-	 * @return the Notifcation object
+	 * @return the Notification object
 	 */
 	@ApiOperation(value = "Retrieve the notification for the given user with the specified notification id")
 	@GetMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}")
-	public ResponseEntity<String> getNotificationForNotificationId(
+	public ResponseEntity<String> getNotificationForNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notification is to be retrieved", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId) {
+			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
+			Locale locale) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<PortalNotification> notificationOptional = notificationService
 				.getNotificationByNotificationId(Long.valueOf(notificationId));
 		if (notificationOptional.isPresent()) {
 
-			String notificationInJsonFormat = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-					.setPrettyPrinting().disableHtmlEscaping().create().toJson(notificationOptional.get());
-			return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+			try {
+				String notificationInJsonFormat = mapper.writeValueAsString(notificationOptional.get());
+				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+			} catch (JsonProcessingException e) {
+				logger.catching(e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
+						.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
+			}
 		}
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("notificationInJsonFormat");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders).body(messageSource
+				.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { notificationId }, locale));
 	}
 
 	/**
@@ -152,35 +165,59 @@ public class NotificationController {
 	 * 
 	 * @param userGUID - Unique ID of the User whose notifications are to be marked
 	 *                 as read
+	 * @param locale
 	 * @return List of User Notifications with Read indicator set
 	 */
 	@ApiOperation(value = "Mark all notifications as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
-	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(
-			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID) {
+	@PostMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
+	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(HttpServletRequest request,
+			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
+			Locale locale) {
+
+		HttpHeaders httpHeaders = createHeader();
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
 
 		Optional<User> userOptional = userService.findByUuid(userGUID);
 
 		if (userOptional.isPresent()) {
-			List<PortalNotification> notificationList = notificationService
-					.getAllNotificationsForUserByUserId(userOptional.get().getUserId());
-
-			notificationList.forEach(notification -> {
-				notification.setViewedByUser(1);
-			});
 
 			List<PortalNotification> updatedNotificationList = notificationService
-					.updateAllNotificationsForUserAsReadByUserGUID(notificationList);
+					.updateAllNotificationsForUserAsReadByUserGUID(userOptional.get());
 
 			if (CollectionUtils.isNotEmpty(updatedNotificationList)) {
-				String notificationInJsonFormat = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-						.setPrettyPrinting().disableHtmlEscaping().create().toJson(updatedNotificationList);
-				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+				String notificationInJsonFormat;
+				try {
+					notificationInJsonFormat = mapper.writeValueAsString(updatedNotificationList);
+					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+				} catch (JsonProcessingException e) {
+					logger.catching(e);
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
+							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
+				}
 			}
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No notifications found for "
-					+ userOptional.get().getFirstName() + " " + userOptional.get().getLastName());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND_FOR_USER,
+							new Object[] { userOptional.get().getFullName() }, locale));
 		}
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User is not present");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+	}
+
+
+
+	private HttpHeaders createHeader() {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
+		httpHeaders.set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+		return httpHeaders;
 	}
 
 	/**
@@ -189,13 +226,28 @@ public class NotificationController {
 	 * @param userGUID       - Unique ID of the User whose notifications are to be
 	 *                       marked as read
 	 * @param notificationId - Unique ID of the Notification to be marked as read
+	 * @param locale
 	 * @return
 	 */
 	@ApiOperation(value = "Mark an individual notification as read for a given user")
-	@PutMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
-	public ResponseEntity<String> updateNotificationAsReadByNotificationId(
+	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
+	public ResponseEntity<String> updateNotificationAsReadByNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId) {
+			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId,
+			Locale locale) {
+
+		HttpHeaders httpHeaders = createHeader();
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		// An user can request notifications only for self.
+		if (!userGUID.equals(requestingUserUUID)) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+
+					HttpStatus.UNAUTHORIZED);
+		}
+
 		Optional<PortalNotification> notifyOptional = notificationService
 				.getNotificationByNotificationId(Long.valueOf(notificationId));
 
@@ -205,14 +257,22 @@ public class NotificationController {
 			notificationObjectForUpdate.setViewedByUser(1);
 			notifyOptional = notificationService.updateNotificationAsReadByNotificationId(notificationObjectForUpdate);
 			if (notifyOptional.get().getViewedByUser() == 1) {
-				String notificationInJsonFormat = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-						.setPrettyPrinting().disableHtmlEscaping().create().toJson(notifyOptional.get());
-				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+				try {
+					String notificationInJsonFormat = mapper.writeValueAsString(notifyOptional.get());
+					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
+				} catch (JsonProcessingException e) {
+					logger.catching(e);
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
+							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
+				}
 			}
 
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Notification not found for " + notificationId);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders).body(messageSource
+					.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { notificationId }, locale));
 		}
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User " + userGUID + " is not present");
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
+
 
 }

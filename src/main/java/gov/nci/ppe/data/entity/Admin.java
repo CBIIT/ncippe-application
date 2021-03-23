@@ -1,8 +1,10 @@
 package gov.nci.ppe.data.entity;
 
-import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author PublicisSapient
@@ -11,17 +13,8 @@ import javax.persistence.Entity;
  */
 @Entity
 @DiscriminatorValue("3")
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class Admin extends User {
-
-	@Column(name="UserId")
-	private Long adminId;
-
-	public Long getAdminId() {
-		return adminId;
-	}
-
-	public void setAdminId(Long adminId) {
-		this.adminId = adminId;
-	}
 	
 }

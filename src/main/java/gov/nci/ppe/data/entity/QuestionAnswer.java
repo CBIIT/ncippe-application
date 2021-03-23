@@ -6,7 +6,7 @@ package gov.nci.ppe.data.entity;
  * @since 2019-09-29
  */
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,6 +22,9 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import lombok.Data;
+
+@Data
 @Entity
 @Table(name = "QuestionAnswer")
 public class QuestionAnswer {
@@ -49,103 +52,6 @@ public class QuestionAnswer {
 	private Participant participantForQA;
 
 	@Column(name = "DateAnswered", nullable = false)
-	private Timestamp dateAnswered;
+	private LocalDateTime dateAnswered;
 
-	/**
-	 * @return the questionAnswerId
-	 */
-	public Long getQuestionAnswerId() {
-		return questionAnswerId;
-	}
-
-	/**
-	 * @param QuestionAnswerId the QuestionAnswerId to set
-	 */
-	public void setQuestionAnswerId(Long questionAnswerId) {
-		this.questionAnswerId = questionAnswerId;
-	}
-
-	/**
-	 * @return the questionCategory
-	 */
-	public Code getQuestionCategory() {
-		return questionCategory;
-	}
-
-	/**
-	 * @param questionCategory the questionCategory to set
-	 */
-	public void setQuestionCategory(Code questionCategory) {
-		this.questionCategory = questionCategory;
-	}
-
-	/**
-	 * @return the question
-	 */
-	public String getQuestion() {
-		return question;
-	}
-
-	/**
-	 * @param question the question to set
-	 */
-	public void setQuestion(String question) {
-		this.question = question;
-	}
-
-	/**
-	 * @return the answer
-	 */
-	public String getAnswer() {
-		return answer;
-	}
-
-	/**
-	 * @param answer the answer to set
-	 */
-	public void setAnswer(String answer) {
-		this.answer = answer;
-	}
-
-	/**
-	 * @return the participantForQA
-	 */
-	public Participant getParticipantForQA() {
-		return participantForQA;
-	}
-
-	/**
-	 * @param participantForQA the participantForQA to set
-	 */
-	public void setParticipantForQA(Participant participantForQA) {
-		this.participantForQA = participantForQA;
-	}
-
-	/**
-	 * @return the dateAnswered
-	 */
-	public Timestamp getDateAnswered() {
-		return dateAnswered;
-	}
-
-	/**
-	 * @param dateAnswered the dateAnswered to set
-	 */
-	public void setDateAnswered(Timestamp dateAnswered) {
-		this.dateAnswered = dateAnswered;
-	}
-
-	/**
-	 * @return the questionOrder
-	 */
-	public Long getQuestionOrder() {
-		return questionOrder;
-	}
-
-	/**
-	 * @param questionOrder the questionOrder to set
-	 */
-	public void setQuestionOrder(Long questionOrder) {
-		this.questionOrder = questionOrder;
-	}
 }

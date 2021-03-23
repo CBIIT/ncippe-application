@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import lombok.Getter;
+
 /**
  * This is a configuration class that fetches all the required values from
  * NotificationService.properties in the classpath.
@@ -12,206 +14,223 @@ import org.springframework.context.annotation.PropertySource;
  * @version 1.0
  * @since 2019-08-15
  */
-
+@Getter
 @Configuration
 @PropertySource("classpath:NotificationService.properties")
 public class NotificationServiceConfig {
 
 	/* Notify participant when biomarker report is uploaded */
-	@Value("${notify.participant.biomarker.report.upload}")
-	private String uploadTestReportNotificationMessage;
-
 	@Value("${notify.participant.biomarker.report.upload.from}")
 	private String uploadTestReportNotificationMessageFrom;
 
-	@Value("${notify.participant.biomarker.report.upload.title}")
-	private String uploadTestReportNotificationMessageSubject;
+	@Value("${notify.participant.biomarker.report.upload.subject.en}")
+	private String uploadTestReportNotificationMessageSubjectEnglish;
+
+	@Value("${notify.participant.biomarker.report.upload.subject.es}")
+	private String uploadTestReportNotificationMessageSubjectSpanish;
+
+	@Value("${notify.participant.biomarker.report.upload.message.en}")
+	private String uploadTestReportNotificationMessageEnglish;
+
+	@Value("${notify.participant.biomarker.report.upload.message.es}")
+	private String uploadTestReportNotificationMessageSpanish;
 
 	/*
 	 * Notify CRC and Providers when biomarker report is uploaded for a participant
 	 */
-	@Value("${notify.crc.provider.biomarker.report.upload}")
-	private String notifyCRCProvidersBiomarkerReportUploadMessage;
+	@Value("${notify.crc.provider.biomarker.report.upload.message.en}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageEnglish;
+
+	@Value("${notify.crc.provider.biomarker.report.upload.message.es}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageSpanish;
 
 	@Value("${notify.crc.provider.biomarker.report.upload.from}")
 	private String notifyCRCProvidersBiomarkerReportUploadMessageFrom;
 
-	@Value("${notify.crc.provider.biomarker.report.upload.title}")
-	private String notifyCRCProvidersBiomarkerReportUploadMessageSubject;
+	@Value("${notify.crc.provider.biomarker.report.upload.subject.en}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageSubjectEnglish;
+
+	@Value("${notify.crc.provider.biomarker.report.upload.subject.es}")
+	private String notifyCRCProvidersBiomarkerReportUploadMessageSubjectSpanish;
 
 	/* Notify participant when eConsent form is uploaded */
-	@Value("${eConsent.form.uploaded.notification.message}")
-	private String uploadEConsentFormNotificationMessage;
+	@Value("${eConsent.form.uploaded.notification.message.en}")
+	private String uploadEConsentFormNotificationMessageEnglish;
+
+	@Value("${eConsent.form.uploaded.notification.message.es}")
+	private String uploadEConsentFormNotificationMessageSpanish;
 
 	@Value("${eConsent.form.uploaded.notification.from}")
 	private String uploadEConsentFormNotificationFrom;
 
-	@Value("${eConsent.form.uploaded.notification.title}")
-	private String uploadEConsentFormNotificationSubject;
+	@Value("${eConsent.form.uploaded.notification.subject.en}")
+	private String uploadEConsentFormNotificationSubjectEnglish;
 
-	@Value("${participant.withdraws.program.title}")
-	private String participantWithdrawsSelfSubject;
+	@Value("${eConsent.form.uploaded.notification.subject.es}")
+	private String uploadEConsentFormNotificationSubjectSpanish;
 
-	@Value("${participant.withdraws.program.message}")
-	private String participantWithdrawsSelfMessage;
+	/*
+	 * Notification properties for a CRC when Patient withdraws self from the
+	 * program
+	 */
+	@Value("${participant.withdraws.program.subject.en}")
+	private String participantWithdrawsSelfSubjectEnglish;
+
+	@Value("${participant.withdraws.program.subject.es}")
+	private String participantWithdrawsSelfSubjectSpanish;
+
+	@Value("${participant.withdraws.program.message.en}")
+	private String participantWithdrawsSelfMessageEnglish;
+
+	@Value("${participant.withdraws.program.message.es}")
+	private String participantWithdrawsSelfMessageSpanish;
 
 	@Value("${participant.withdraws.program.from}")
 	private String participantWithdrawsSelfFrom;
 
-	@Value("${crc.withdraws.participant.program.title}")
-	private String participantWithdrawnByCRCSubject;
+	/*
+	 * Notification properties for a Patient when CRC withdraws a Patient from the
+	 * program
+	 */
+	@Value("${crc.withdraws.participant.program.subject.en}")
+	private String participantWithdrawnByCRCSubjectEnglish;
+
+	@Value("${crc.withdraws.participant.program.subject.es}")
+	private String participantWithdrawnByCRCSubjectSpanish;
 
 	@Value("${crc.withdraws.participant.program.from}")
 	private String participantWithdrawnByCRCFrom;
 
-	@Value("${crc.withdraws.participant.program.message}")
-	private String participantWithdrawnByCRCMessage;
+	@Value("${crc.withdraws.participant.program.message.en}")
+	private String participantWithdrawnByCRCMessageEnglish;
 
-	@Value("${patient.receives.invitation.title}")
+	@Value("${crc.withdraws.participant.program.message.es}")
+	private String participantWithdrawnByCRCMessageSpanish;
+
+	@Value("${patient.receives.invitation.subject.en}")
 	private String patientReceivesInvitationTitle;
 
+	/* Notification properties for a provider when a CRC invites to Portal */
 	@Value("${patient.receives.invitation.from}")
 	private String patientReceivesInvitationFrom;
 
-	@Value("${patient.receives.invitation.message}")
-	private String patientReceivesInvitationMessage;
+	@Value("${patient.receives.invitation.message.en}")
+	private String patientReceivesInvitationMessageEnglish;
 
-	@Value("${patient.added.from.open.title}")
-	private String patientAddedFromOpenTitle;
+	@Value("${patient.receives.invitation.message.es}")
+	private String patientReceivesInvitationMessageSpanish;
+
+	/* Notify CRC when a new patient record from OPEN is inserted into PPE DB */
+	@Value("${patient.added.from.open.subject.en}")
+	private String patientAddedFromOpenSubjectEnglish;
+
+	@Value("${patient.added.from.open.subject.es}")
+	private String patientAddedFromOpenSubjectSpanish;
 
 	@Value("${patient.added.from.open.from}")
 	private String patientAddedFromOpenFrom;
 
-	@Value("${patient.added.from.open.message}")
-	private String patientAddedFromOpenMessage;
+	@Value("${patient.added.from.open.message.en}")
+	private String patientAddedFromOpenMessageEnglish;
 
-	public String getUploadTestReportNotificationMessage() {
-		return uploadTestReportNotificationMessage;
-	}
+	@Value("${patient.added.from.open.message.es}")
+	private String patientAddedFromOpenMessageSpanish;
+	
+	// Properties for notifying patients when Providers are replaced
+	@Value("${provider.change.for.patient.subject.en}")
+	private String notifyPatientWhenProvidersAreReplacedSubjectEnglish;
 
-	public String getUploadTestReportNotificationMessageFrom() {
-		return uploadTestReportNotificationMessageFrom;
-	}
+	@Value("${provider.change.for.patient.subject.es}")
+	private String notifyPatientWhenProvidersAreReplacedSubjectSpanish;
+	
+	@Value("${provider.change.for.patient.from}")
+	private String notifyPatientWhenProvidersAreReplacedFrom;
+	
+	@Value("${provider.change.for.patient.message.en}")
+	private String notifyPatientWhenProvidersAreReplacedMessageEnglish;
 
-	public String getUploadTestReportNotificationMessageSubject() {
-		return uploadTestReportNotificationMessageSubject;
-	}
+	@Value("${provider.change.for.patient.message.es}")
+	private String notifyPatientWhenProvidersAreReplacedMessageSpanish;
+	
+	// Properties for notifying patients when CRC is replaced
+	@Value("${crc.change.for.patient.subject.en}")
+	private String notifyPatientWhenCRCIsReplacedSubjectEnglish;
+	
+	@Value("${crc.change.for.patient.subject.es}")
+	private String notifyPatientWhenCRCIsReplacedSubjectSpanish;
 
-	/**
-	 * @return the uploadEConsentFormNotificationMessage
-	 */
-	public String getUploadEConsentFormNotificationMessage() {
-		return uploadEConsentFormNotificationMessage;
-	}
+	@Value("${crc.change.for.patient.from}")
+	private String notifyPatientWhenCRCIsReplacedFrom;
+	
+	@Value("${crc.change.for.patient.message.en}")
+	private String notifyPatientWhenCRCIsReplacedMessageEnglish;
 
-	/**
-	 * @return the uploadEConsentFormNotificationFrom
-	 */
-	public String getUploadEConsentFormNotificationFrom() {
-		return uploadEConsentFormNotificationFrom;
-	}
+	@Value("${crc.change.for.patient.message.es}")
+	private String notifyPatientWhenCRCIsReplacedMessageSpanish;
+	
+	// Properties for notifying Providers when a patient is added
+	@Value("${notify.provider.when.patient.added.subject.en}")
+	private String notifyProviderWhenPatientIsAddedSubjectEnglish;
 
-	/**
-	 * @return the uploadEConsentFormNotificationSubject
-	 */
-	public String getUploadEConsentFormNotificationSubject() {
-		return uploadEConsentFormNotificationSubject;
-	}
+	@Value("${notify.provider.when.patient.added.subject.es}")
+	private String notifyProviderWhenPatientIsAddedSubjectSpanish;
+	
+	@Value("${notify.provider.when.patient.added.from}")
+	private String notifyProviderWhenPatientIsAddedFrom;
+	
+	@Value("${notify.provider.when.patient.added.message.en}")
+	private String notifyProviderWhenPatientIsAddedMessageEnglish;
 
-	/**
-	 * @return the participantWithdrawsSelfSubject
-	 */
-	public String getParticipantWithdrawsSelfSubject() {
-		return participantWithdrawsSelfSubject;
-	}
+	@Value("${notify.provider.when.patient.added.message.es}")
+	private String notifyProviderWhenPatientIsAddedMessageSpanish;
+	
+	// Properties for notifying CRC when a patient is added	
+	@Value("${notify.crc.when.patient.added.subject.en}")
+	private String notifyCRCWhenPatientIsAddedSubjectEnglish;
 
-	/**
-	 * @return the participantWithdrawsSelfMessage
-	 */
-	public String getParticipantWithdrawsSelfMessage() {
-		return participantWithdrawsSelfMessage;
-	}
+	@Value("${notify.crc.when.patient.added.subject.es}")
+	private String notifyCRCWhenPatientIsAddedSubjectSpanish;
+	
+	@Value("${notify.crc.when.patient.added.from}")
+	private String notifyCRCWhenPatientIsAddedFrom;
+	
+	@Value("${notify.crc.when.patient.added.message.en}")
+	private String notifyCRCWhenPatientIsAddedMessageEnglish;
 
-	/**
-	 * @return the participantWithdrawsSelfFrom
-	 */
-	public String getParticipantWithdrawsSelfFrom() {
-		return participantWithdrawsSelfFrom;
-	}
+	@Value("${notify.crc.when.patient.added.message.es}")
+	private String notifyCRCWhenPatientIsAddedMessageSpanish;
+	
+	// Properties for reminding patient of unread biomarker report
+	@Value("${reminder.unread.report.patient.from}")
+	private String remindPatientUnreadReportFrom;
 
-	/**
-	 * @return the participantWithdrawnByCRCSubject
-	 */
-	public String getParticipantWithdrawnByCRCSubject() {
-		return participantWithdrawnByCRCSubject;
-	}
+	@Value("${reminder.unread.report.patient.subject.en}")
+	private String remindPatientUnreadReportSubjectEnglish;
 
-	/**
-	 * @return the participantWithdrawnByCRCMessage
-	 */
-	public String getParticipantWithdrawnByCRCMessage() {
-		return participantWithdrawnByCRCMessage;
-	}
+	@Value("${reminder.unread.report.patient.subject.es}")
+	private String remindPatientUnreadReportSubjectSpanish;
 
-	/**
-	 * @return the participantWithdrawnByCRCFrom
-	 */
-	public String getParticipantWithdrawnByCRCFrom() {
-		return participantWithdrawnByCRCFrom;
-	}
+	@Value("${reminder.unread.report.patient.message.en}")
+	private String remindPatientUnreadReportMessageEnglish;
+	
+	@Value("${reminder.unread.report.patient.message.es}")
+	private String remindPatientUnreadReportMessageSpanish;
 
-	public String getPatientReceivesInvitationTitle() {
-		return patientReceivesInvitationTitle;
-	}
+// Remind CRC/Provider of unread biomarker report
 
-	public String getPatientReceivesInvitationFrom() {
-		return patientReceivesInvitationFrom;
-	}
+	@Value("${reminder.unread.report.crc.provider.from}")
+	private String remindCRCProviderUnreadReportFrom;
 
-	public String getPatientReceivesInvitationMessage() {
-		return patientReceivesInvitationMessage;
-	}
+	@Value("${reminder.unread.report.crc.provider.subject.en}")
+	private String remindCRCProviderUnreadReportSubjectEnglish;
 
-	/**
-	 * @return the patientAddedFromOpenTitle
-	 */
-	public String getPatientAddedFromOpenTitle() {
-		return patientAddedFromOpenTitle;
-	}
+	@Value("${reminder.unread.report.crc.provider.subject.es}")
+	private String remindCRCProviderUnreadReportSubjectSpanish;
 
-	/**
-	 * @return the patientAddedFromOpenFrom
-	 */
-	public String getPatientAddedFromOpenFrom() {
-		return patientAddedFromOpenFrom;
-	}
+	@Value("${reminder.unread.report.crc.provider.message.en}")
+	private String remindCRCProviderUnreadReportMessageEnglish;
 
-	/**
-	 * @return the patientAddedFromOpenMessage
-	 */
-	public String getPatientAddedFromOpenMessage() {
-		return patientAddedFromOpenMessage;
-	}
-
-	/**
-	 * @return the notifyCRCProvidersBiomarkerReportUploadMessage
-	 */
-	public String getNotifyCRCProvidersBiomarkerReportUploadMessage() {
-		return notifyCRCProvidersBiomarkerReportUploadMessage;
-	}
-
-	/**
-	 * @return the notifyCRCProvidersBiomarkerReportUploadMessageFrom
-	 */
-	public String getNotifyCRCProvidersBiomarkerReportUploadMessageFrom() {
-		return notifyCRCProvidersBiomarkerReportUploadMessageFrom;
-	}
-
-	/**
-	 * @return the notifyCRCProvidersBiomarkerReportUploadMessageSubject
-	 */
-	public String getNotifyCRCProvidersBiomarkerReportUploadMessageSubject() {
-		return notifyCRCProvidersBiomarkerReportUploadMessageSubject;
-	}
+	@Value("${reminder.unread.report.crc.provider.message.es}")
+	private String remindCRCProviderUnreadReportMessageSpanish;
 
 }

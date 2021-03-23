@@ -5,7 +5,12 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This class hides all the fields from USER object and display only the
@@ -16,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonView;
  * @since 2019-07-22
  */
 
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class UserDTO {
 
 	private String firstName;
@@ -24,6 +31,7 @@ public class UserDTO {
 
 	private String email;
 
+	@EqualsAndHashCode.Include
 	private String uuid;
 
 	private String phoneNumber;
@@ -40,6 +48,9 @@ public class UserDTO {
 
 	private Timestamp dateDeactivated;
 
+	@JsonProperty("lang")
+	private LanguageOption preferredLanguage;
+
 	@JsonView({ JsonViews.CrcDetailView.class, JsonViews.ProviderDetailView.class,
 			JsonViews.ParticipantDetailView.class })
 	private List<PortalNotificationDTO> notifications = null;
@@ -49,94 +60,9 @@ public class UserDTO {
 	public UserDTO() {
 	}
 
-	public String getFirstName() {
-		return firstName;
-	}
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
 
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String userUUID) {
-		this.uuid = userUUID;
-	}
-
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
-
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
-
-	public boolean getAllowEmailNotification() {
-		return allowEmailNotification;
-	}
-
-	public void setAllowEmailNotification(boolean allowEmailNotification) {
-		this.allowEmailNotification = allowEmailNotification;
-	}
-
-	public String getUserType() {
-		return userType;
-	}
-
-	public void setUserType(String userType) {
-		this.userType = userType;
-	}
-
-	public String getRoleName() {
-		return roleName;
-	}
-
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
-	}
-
-	public Timestamp getDateCreated() {
-		return dateCreated;
-	}
-
-	public void setDateCreated(Timestamp dateCreated) {
-		this.dateCreated = dateCreated;
-	}
-
-	public Timestamp getDateActivated() {
-		return dateActivated;
-	}
-
-	public void setDateActivated(Timestamp dateActivated) {
-		this.dateActivated = dateActivated;
-	}
-
-	public List<PortalNotificationDTO> getNotifications() {
-		return notifications;
-	}
-
-	public void setNotifications(List<PortalNotificationDTO> notifications) {
-		this.notifications = notifications;
-	}
-
+	@Override
 	public String toString() {
 		StringBuilder retValue = new StringBuilder();
 		retValue.append(StringUtils.CR).append(",").append(StringUtils.CR).append(" First Name : ").append(firstName)
@@ -146,25 +72,5 @@ public class UserDTO {
 		return retValue.toString();
 	}
 
-	/**
-	 * @return the portalAccountStatus
-	 */
-	public String getPortalAccountStatus() {
-		return portalAccountStatus;
-	}
 
-	/**
-	 * @param portalAccountStatus the portalAccountStatus to set
-	 */
-	public void setPortalAccountStatus(String portalAccountStatus) {
-		this.portalAccountStatus = portalAccountStatus;
-	}
-
-	public Timestamp getDateDeactivated() {
-		return dateDeactivated;
-	}
-
-	public void setDateDeactivated(Timestamp dateDeactivated) {
-		this.dateDeactivated = dateDeactivated;
-	}
 }

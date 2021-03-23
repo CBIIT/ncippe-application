@@ -1,6 +1,7 @@
 package gov.nci.ppe.services.impl;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class FileServiceImpl implements FileService {
 		fileMetadata.setUploadedBy(uploadedBy);
 		fileMetadata.setFileGUID(UUID.randomUUID().toString());
 		fileMetadata.setParticipant(patient);
-		fileMetadata.setDateUploaded(new Timestamp(System.currentTimeMillis()));
+		fileMetadata.setDateUploaded(LocalDateTime.now());
 		fileMetadata.setSearchKey(searchKey);
 		fileMetadataRepo.save(fileMetadata);
 	}
@@ -50,7 +51,7 @@ public class FileServiceImpl implements FileService {
      */	
 	@Override
 	public Optional<FileMetadata> getFileByFileGUID(String fileGUID) {
-		return fileMetadataRepo.findFileByGUID(fileGUID);
+		return fileMetadataRepo.findByFileGUID(fileGUID);
 	}
 
 	/**
@@ -63,5 +64,15 @@ public class FileServiceImpl implements FileService {
 		}
 		return fileMetadataRepo.save(fileMetadata);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<FileMetadata> getFilesUploadedBetween(Code fileType, LocalDateTime startTime, LocalDateTime endTime) {
+
+		return fileMetadataRepo.findByFileTypeAndDateUploadedBetween(fileType, startTime, endTime);
+	}
+
 
 }
