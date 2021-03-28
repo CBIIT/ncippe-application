@@ -9,19 +9,23 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
+import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
 import gov.nci.ppe.services.NotificationService;
 
 /**
+ * Implementation class for {@link NotificationService}
+ * 
  * @author PublicisSapient
  * @version 1.0
  * @since 2019-08-20
  */
-@Component
+@Service
 public class NotificationServiceImpl implements NotificationService {
 
 	private static final Logger logger = LogManager.getLogger(NotificationService.class);
@@ -208,6 +212,15 @@ public class NotificationServiceImpl implements NotificationService {
 				notificationSrvConfig.getRemindCRCProviderUnreadReportMessageSpanish(), userId, null, patientFullName,
 				patientId);
 
+	}
+
+	/*
+	* {@inheritDoc}
+	*/
+	@Override
+	public int sendGroupNotifications(PortalNotification notification, List<PPEUserType> recipientGroups) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }
