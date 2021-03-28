@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 
@@ -20,11 +21,11 @@ public interface NotificationService {
 	 * Insert a notification into the {PortalNotification} table.
 	 * 
 	 * @param messageFrom -
-	 * @param subject     - Subject/Title for the notification
-	 * @param subject     - Subject/Title for the notification
-	 * @param message     - Message describing the notification
-	 * @param message     - Message describing the notification
-	 * @param userId      - user Id
+	 * @param subjectEnglish     - Subject/Title for the notification in English
+	 * @param subjectSpanish     - Subject/Title for the notification in Spanish
+	 * @param messageEnglish     - Message describing the notification in English
+	 * @param messageSpanish     - Message describing the notification in Spanish
+	 * @param userId      - user Id 
 	 * @param userName    - First Name of the user to whom this notification is
 	 *                    addressed
 	 * @param patientName - Participant's first name.
@@ -115,4 +116,11 @@ public interface NotificationService {
 	 */
 	public void notifyProviderCRCReminderToReadBiomarkerReport(String patientFullName, Long userId, String patientId);
 
+	/**
+	 * Send Bulk notification to users by user type
+	 * @param notification - Portal Notification to generate
+	 * @param recipientGroups - List of user types to be generated
+	 * @return - number of users notified
+	 */
+	public int sendGroupNotifications(PortalNotification notification, List<PPEUserType> recipientGroups);
 }

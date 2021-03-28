@@ -10,6 +10,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,11 +29,16 @@ import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.entity.dto.NotificationSendRequestDto;
 import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import com.github.dozermapper.core.Mapper;
 
 /**
  * Controller class for User related actions.
@@ -41,27 +48,33 @@ import io.swagger.annotations.ApiParam;
  * @since 2019-08-20
  */
 
+@Api
 @RestController
 public class NotificationController {
 
 	private static final Logger logger = LogManager.getLogger(NotificationController.class);
 
-	@Autowired
 	private NotificationService notificationService;
 
-	@Autowired
 	private MessageSource messageSource;
 
-	@Autowired
 	private UserService userService;
 
-	private ObjectMapper mapper = new ObjectMapper();
+	private ObjectMapper mapper;
 
-	public NotificationController() {
-		mapper.registerSubtypes(PortalNotificationDTO.class);
+	
+	private Mapper dozerBeanMapper;
+
+	@Autowired
+	public NotificationController(NotificationService notificationService, MessageSource messageSource,
+			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper) {
+		this.mapper = new ObjectMapper();
+		this.mapper.registerSubtypes(PortalNotificationDTO.class);
+		this.notificationService = notificationService;
+		this.messageSource = messageSource;
+		this.userService = userService;
+		this.dozerBeanMapper = dozerBeanMapper;
 	}
-
-
 
 	/**
 	 * Retrieves all notifications for the specified User
@@ -70,7 +83,10 @@ public class NotificationController {
 	 *                 retrieved
 	 * @return List of notification objects
 	 */
-	@ApiOperation(value = "Retrieves all notifications for the specified User")
+	@ApiOperation(value = "Retrieves all notifications for the specified User", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiResponses(value = {
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_OK, message = "All available User notifications fetched"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not authorized to view messages for other users") })
 	@GetMapping(value = "/api/v1/user/{userGUID}/notifications")
 	public ResponseEntity<String> getAllNotificationsForUser(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
@@ -104,8 +120,7 @@ public class NotificationController {
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
 							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
 				}
-				
-				
+
 			}
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND_FOR_USER,
@@ -211,8 +226,6 @@ public class NotificationController {
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
 
-
-
 	private HttpHeaders createHeader() {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
@@ -230,6 +243,7 @@ public class NotificationController {
 	 * @return
 	 */
 	@ApiOperation(value = "Mark an individual notification as read for a given user")
+
 	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
 	public ResponseEntity<String> updateNotificationAsReadByNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
@@ -274,5 +288,23 @@ public class NotificationController {
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 	}
 
+	/**
+	 * Rest endpoint to send a Portal Notification to recipients
+	 * 
+	 * @param request - the HTTP Request
+	 * @param message - The Notification to send
+	 * @return
+	 */
+	@ApiOperation(value = "Send message to all users of specified type(s)")
+	@ApiResponses(value = {
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_CREATED, message = "Message succesfully sent"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not Authorized to send messages") })
+	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
+			MediaType.TEXT_HTML_VALUE })
+	public ResponseEntity<String> sendNotification(HttpServletRequest request,
+			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody NotificationSendRequestDto message) {
+		return null;
+	}
 
 }

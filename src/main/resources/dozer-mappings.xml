@@ -119,4 +119,24 @@
 			<b>gpsCoordinates</b>
 		</field>
 	</mapping>	
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.dto.NotificationSendRequestDto</class-a>
+		<class-b>gov.nci.ppe.data.entity.PortalNotification</class-b>
+		<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+		<field>
+			<a>subjectEnglish</a>
+			<b>subject.en</b>
+		</field>
+		<field>
+			<a>subjectSpanish</a>
+			<b>subject.es</b>
+		</field>
+	</mapping>
 </mappings>
