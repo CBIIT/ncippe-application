@@ -51,4 +51,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 */
 	Optional<User> findByEmailAndPortalAccountStatusIn(String email, List<Code> accountStatusCodeList);
 
+	/**
+	 * Returns the list of {@link User} entities matching the specified User Type
+	 * @param userTypeList - List of user types to fetch users for
+	 * @return the list of Users
+	 */
+	List<User> findByUserTypeIn(List<Code> userTypeList);
 }

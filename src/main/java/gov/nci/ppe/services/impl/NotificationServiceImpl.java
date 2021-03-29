@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.PPEUserType;
+import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
@@ -41,8 +42,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public Optional<PortalNotification> addNotification(String from, String subjectEnglish, String subjectSpanish,
-			String messageEnglish, String messageSpanish, Long userId,
-			String userName, String patientName, String patientId) {
+			String messageEnglish, String messageSpanish, Long userId, String userName, String patientName,
+			String patientId) {
 
 		/*
 		 * The notification message has placeholders which needs to be replaced at
@@ -115,8 +116,8 @@ public class NotificationServiceImpl implements NotificationService {
 		String replaceStringWith[] = { patientFullName, patientId };
 		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
 		String updatedMessageEnglish = StringUtils.replaceEach(
-				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(),
-				replaceThisString, replaceStringWith);
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(), replaceThisString,
+				replaceStringWith);
 		String updatedMessageSpanish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageSpanish(), replaceThisString,
 				replaceStringWith);
@@ -215,12 +216,16 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	/*
-	* {@inheritDoc}
-	*/
+	 * {@inheritDoc}
+	 */
 	@Override
-	public int sendGroupNotifications(PortalNotification notification, List<PPEUserType> recipientGroups) {
-		// TODO Auto-generated method stub
-		return 0;
+	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from) {
+
+		recipientGroups.stream()
+				.forEach(user -> addNotificationToAccount(from, notification.getSubjectEnglish(),
+						notification.getSubjectSpanish(), notification.getMessageEnglish(),
+						notification.getMessageSpanish(), user.getUserId()));
+
 	}
 
 }

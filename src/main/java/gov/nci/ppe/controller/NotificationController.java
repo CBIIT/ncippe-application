@@ -15,6 +15,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
+import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.entity.dto.NotificationSendRequestDto;
@@ -298,13 +300,24 @@ public class NotificationController {
 	@ApiOperation(value = "Send message to all users of specified type(s)")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_CREATED, message = "Message succesfully sent"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not Authorized to send messages") })
 	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.TEXT_HTML_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
-			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody NotificationSendRequestDto message) {
-		return null;
+			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody NotificationSendRequestDto message,
+			Locale locale) {
+				HttpHeaders httpHeaders = createHeader();
+
+				String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+				Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
+			if (requesterOpt.isEmpty()) {
+				return new ResponseEntity<String>(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders, HttpStatus.NOT_FOUND
+				);
+			}
+			User requester = requesterOpt.get();
+			if (requester.getRole().equals(PPERole.))
 	}
 
 }

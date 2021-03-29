@@ -19,7 +19,7 @@ import lombok.Data;
 @Entity
 @Table(name = "PortalNotification")
 @JsonIgnoreProperties("userNotification")
-public class PortalNotification {
+public class PortalNotification implements Cloneable{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,4 +53,5 @@ public class PortalNotification {
 	@Column(name = "SubjectSpanish", nullable = true, length = 255)
 	private String subjectSpanish;
 
+	
 }
