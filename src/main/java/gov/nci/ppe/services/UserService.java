@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Participant;
@@ -235,4 +236,11 @@ public interface UserService {
 	 *                   notification
 	 */
 	public void generateUnreadReportReminderNotification(int daysUnread);
+
+	/**
+	 * Get all active users of the specified user types
+	 * @param userTypes - List of {@link PPEUserType}
+	 * @return the list of users
+	 */
+	public List<User> getUsersOfType(List<PPEUserType> userTypes);
 }

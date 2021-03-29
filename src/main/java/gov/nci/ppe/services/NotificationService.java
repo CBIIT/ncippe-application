@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 
@@ -119,8 +118,8 @@ public interface NotificationService {
 	/**
 	 * Send Bulk notification to users by user type
 	 * @param notification - Portal Notification to generate
-	 * @param recipientGroups - List of user types to be generated
-	 * @return - number of users notified
+	 * @param recipientGroups - List of users to be notified
+	 * @param from - UUID of User sending the notification
 	 */
-	public int sendGroupNotifications(PortalNotification notification, List<PPEUserType> recipientGroups);
+	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from);
 }

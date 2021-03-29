@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
+import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -59,7 +62,7 @@ import gov.nci.ppe.services.UserService;
  * @version 1.0
  * @since 2019-07-22
  */
-@Component
+@Service
 public class UserServiceImpl implements UserService {
 
 	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
@@ -240,11 +243,11 @@ public class UserServiceImpl implements UserService {
 		return optionalUser;
 	}
 
-	private List<Code> convertToCode(List<String> accountStatusList) {
-		List<Code> accountStatusCodeList = codeRepository.findByCodeNameIn(accountStatusList);
+	private List<Code> convertToCode(List<String> codeNameList) {
+		List<Code> codeList = codeRepository.findByCodeNameIn(codeNameList);
 		List<Long> accountStatusCodeIdList = new ArrayList<Long>();
-		accountStatusCodeList.forEach(code -> accountStatusCodeIdList.add(code.getCodeId()));
-		return accountStatusCodeList;
+		codeList.forEach(code -> accountStatusCodeIdList.add(code.getCodeId()));
+		return codeList;
 	}
 
 	/**
@@ -930,6 +933,15 @@ public class UserServiceImpl implements UserService {
 						provider.getUserId(), patient.getPatientId());
 			}
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<User> getUsersOfType(List<PPEUserType> userTypes) {
+		List<Code> userTypeCodeList = convertToCode( userTypes.stream().map(userType -> userType.name()).collect(Collectors.toList()));
+		return userRepository.findByUserTypeIn(userTypeCodeList);
 	}
 
 }
