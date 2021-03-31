@@ -8,12 +8,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
-import gov.nci.ppe.constants.PPEUserType;
-import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
@@ -29,14 +26,17 @@ import gov.nci.ppe.services.NotificationService;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-	private static final Logger logger = LogManager.getLogger(NotificationService.class);
+	private static final Logger logger = LogManager.getLogger(NotificationServiceImpl.class);
 
-	@Autowired
 	private PortalNotificationRepository notificationRepo;
-
-	@Autowired
+	
 	private NotificationServiceConfig notificationSrvConfig;
 
+	@Autowired
+	public NotificationServiceImpl(PortalNotificationRepository notificationRepo, NotificationServiceConfig notificationSrvConfig) {
+		this.notificationRepo = notificationRepo;
+		this.notificationSrvConfig = notificationSrvConfig;
+	}
 	/**
 	 * {@inheritDoc}
 	 */

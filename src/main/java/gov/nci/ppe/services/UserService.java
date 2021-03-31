@@ -3,12 +3,10 @@ package gov.nci.ppe.services;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
@@ -21,7 +19,6 @@ import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
  * @version 1.0
  * @since 2019-07-22
  */
-@Component
 public interface UserService {
 
 	/**

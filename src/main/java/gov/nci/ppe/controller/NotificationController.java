@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -15,7 +16,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +64,6 @@ public class NotificationController {
 
 	private ObjectMapper mapper;
 
-	
 	private Mapper dozerBeanMapper;
 
 	@Autowired
@@ -306,18 +305,33 @@ public class NotificationController {
 	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
 			MediaType.TEXT_HTML_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
-			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody NotificationSendRequestDto message,
+			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @Valid @RequestBody NotificationSendRequestDto message,
 			Locale locale) {
-				HttpHeaders httpHeaders = createHeader();
+		HttpHeaders httpHeaders = createHeader();
 
-				String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-				Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
-			if (requesterOpt.isEmpty()) {
-				return new ResponseEntity<String>(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders, HttpStatus.NOT_FOUND
-				);
-			}
-			User requester = requesterOpt.get();
-			if (requester.getRole().equals(PPERole.))
+		// Obtain the User record from the database to check if they are registered
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
+		if (requesterOpt.isEmpty()) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale), httpHeaders,
+					HttpStatus.NOT_FOUND);
+		}
+
+		// Verify that they are authorized to send messages
+		User requester = requesterOpt.get();
+		if (!PPERole.ROLE_PPE_MESSAGER.name().equals(requester.getRole().getRoleName())) {
+			logger.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
+					requester.getRole());
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.FORBIDDEN);
+		}
+		PortalNotification messageToSend = dozerBeanMapper.map(message, PortalNotification.class);
+		List<User> recipientGroups = userService.getUsersOfType(message.getAudiences());
+		notificationService.sendGroupNotifications(messageToSend, recipientGroups, requestingUserUUID);
+		return new ResponseEntity<String>(HttpStatus.CREATED);
+
 	}
 
 }

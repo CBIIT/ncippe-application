@@ -120,8 +120,8 @@
 		</field>
 	</mapping>	
 	<mapping>
-		<class-a>gov.nci.ppe.data.entity.dto.NotificationSendRequestDto</class-a>
-		<class-b>gov.nci.ppe.data.entity.PortalNotification</class-b>
+		<class-a>gov.nci.ppe.data.entity.PortalNotification</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NotificationSendRequestDto</class-b>
 		<field>
 			<a>messageEnglish</a>
 			<b>message.en</b>
