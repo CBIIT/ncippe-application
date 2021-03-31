@@ -16,7 +16,7 @@ import gov.nci.ppe.data.repository.FileMetadataRepository;
 import gov.nci.ppe.services.FileService;
 
 /**
- * This is a service class that handles all task related to file upload and marking files as viewed.
+ * Implementation of {@link FileService}
  * @author PublicisSapient
  * @version 1.0 
  * @since   2019-08-15
