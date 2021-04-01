@@ -1,5 +1,7 @@
 package gov.nci.ppe.data.entity.dozer;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import com.github.dozermapper.core.DozerBeanMapperBuilder;
 import com.github.dozermapper.core.Mapper;
 
@@ -26,7 +28,7 @@ public class NotificationSendRequestDtoToPortalNotificationMappingTest {
     public void testNotificationSendRequestDtoToPortalNotification() {
         NotificationSendRequestDto source = new NotificationSendRequestDto();
         
-        Mapper mapper = DozerBeanMapperBuilder.create().withMappingFiles("src/main/resources/dozer-mappings.xml").build();
+        Mapper mapper = DozerBeanMapperBuilder.create().withMappingFiles("dozer-mappings.xml").build();
         
         PortalNotification dest = mapper.map(source, PortalNotification.class);
         assertNotNull(dest);
