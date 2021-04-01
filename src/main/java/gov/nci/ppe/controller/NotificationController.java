@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -311,6 +312,7 @@ public class NotificationController {
 
 		// Obtain the User record from the database to check if they are registered
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
 		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
 		if (requesterOpt.isEmpty()) {
 			return new ResponseEntity<String>(
