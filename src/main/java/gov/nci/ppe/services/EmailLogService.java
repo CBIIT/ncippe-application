@@ -1,7 +1,5 @@
 package gov.nci.ppe.services;
 
-import org.springframework.stereotype.Component;
-
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.Participant;
 
@@ -10,7 +8,6 @@ import gov.nci.ppe.data.entity.Participant;
  * @version 1.0
  * @since 2019-08-13
  */
-@Component
 public interface EmailLogService {
 
 	/**

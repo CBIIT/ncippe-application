@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
+import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
 
 /**
@@ -32,10 +34,13 @@ public class NotificationServiceImpl implements NotificationService {
 	
 	private NotificationServiceConfig notificationSrvConfig;
 
+	private EmailLogService emailService;
+
 	@Autowired
-	public NotificationServiceImpl(PortalNotificationRepository notificationRepo, NotificationServiceConfig notificationSrvConfig) {
+	public NotificationServiceImpl(PortalNotificationRepository notificationRepo, NotificationServiceConfig notificationSrvConfig, EmailLogService emailService) {
 		this.notificationRepo = notificationRepo;
 		this.notificationSrvConfig = notificationSrvConfig;
+		this.emailService = emailService;
 	}
 	/**
 	 * {@inheritDoc}
@@ -222,10 +227,30 @@ public class NotificationServiceImpl implements NotificationService {
 	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from) {
 
 		recipientGroups.stream()
-				.forEach(user -> addNotificationToAccount(from, notification.getSubjectEnglish(),
+				.forEach(user -> { addNotificationToAccount(from, notification.getSubjectEnglish(),
 						notification.getSubjectSpanish(), notification.getMessageEnglish(),
-						notification.getMessageSpanish(), user.getUserId()));
+						notification.getMessageSpanish(), user.getUserId()); 
+						sendEmail(notification, user);
+				}); 
 
 	}
 
+	/**
+	 * Sends out email to the recipient
+	 * @param notification - details of the email content
+	 * @param recipient - User to send email to
+	 */
+	private void sendEmail(PortalNotification notification, User recipient) {
+		if(recipient.isAllowEmailNotification()) {
+			String message, subject;
+			if(LanguageOption.ENGLISH.getLanguage().equals( recipient.getPreferredLanguage()) {
+				message = notification.getMessageEnglish();
+				subject = notification.getSubjectEnglish();
+			} else {
+				message = notification.getMessageSpanish();
+				subject = notification.getSubjectSpanish();
+			}
+			emailService.sendEmailNotification(recipient.getEmail(), null, subject, message);
+		}
+	}
 }

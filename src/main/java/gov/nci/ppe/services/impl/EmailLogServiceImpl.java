@@ -8,6 +8,15 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+import com.amazonaws.services.simpleemail.model.Body;
+import com.amazonaws.services.simpleemail.model.Content;
+import com.amazonaws.services.simpleemail.model.Destination;
+import com.amazonaws.services.simpleemail.model.Message;
+import com.amazonaws.services.simpleemail.model.SendEmailRequest;
+import com.amazonaws.services.simpleemail.model.SendEmailResult;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,16 +27,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
-
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
-import com.amazonaws.services.simpleemail.model.Body;
-import com.amazonaws.services.simpleemail.model.Content;
-import com.amazonaws.services.simpleemail.model.Destination;
-import com.amazonaws.services.simpleemail.model.Message;
-import com.amazonaws.services.simpleemail.model.SendEmailRequest;
-import com.amazonaws.services.simpleemail.model.SendEmailResult;
+import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
@@ -42,19 +42,18 @@ import gov.nci.ppe.services.EmailLogService;
  * @version 1.0
  * @since 2019-08-13
  */
-@Component
+@Service
 @ConfigurationProperties("email")
 public class EmailLogServiceImpl implements EmailLogService {
 
+	private static final String FAILED_TO_SEND_EMAIL = " : Failed to Send email ";
+
 	private String charSet = "UTF-8";
 
-	@Autowired
 	private EmailLogRepository emailLogRepository;
 
-	@Autowired
 	private JavaMailSender nihMailSender;
 
-	@Autowired
 	private MessageSource messageSource;
 
 	@Value("${email.hostname}")
@@ -80,8 +79,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 	public EmailLogServiceImpl() {
 	}
 
-	public EmailLogServiceImpl(EmailLogRepository emailLogRepository) {
+	@Autowired
+	public EmailLogServiceImpl(EmailLogRepository emailLogRepository, JavaMailSender nihMailSender, MessageSource messageSource) {
 		this.emailLogRepository = emailLogRepository;
+		this.nihMailSender = nihMailSender;
+		this.messageSource = messageSource;
 	}
 
 	/**
@@ -104,6 +106,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 	 */
 	@Override
 	public String sendEmailNotification(String recipientEmail, String senderEmail, String subject, String htmlBody) {
+		if (StringUtils.isBlank(recipientEmail)) {
+			recipientEmail = senderEmailAddress;
+		}
 		String emailStatus = sendEmail(recipientEmail, subject, htmlBody, true);
 		if (emailStatus.contains(CommonConstants.SUCCESS)) {
 			logEmailStatus(recipientEmail, subject, htmlBody);
@@ -198,7 +203,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 				return StringUtils.join(CommonConstants.SUCCESS, " : Email sent successfully!", result.getMessageId());
 			} catch (Exception ex) {
-				logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), ex);
+				logger.error(StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL), ex);
 				return StringUtils.join(CommonConstants.ERROR, " : Error sending email. Error Message : ",
 						ex.getMessage());
 			}
@@ -215,8 +220,8 @@ public class EmailLogServiceImpl implements EmailLogService {
 				logger.info("Send email Re: {} to recipient {}", subject, recipientEmail);
 				return CommonConstants.SUCCESS;
 			} catch (MailException | MessagingException e) {
-				logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), e);
-				return StringUtils.join(CommonConstants.ERROR, " : Failed to Send email ", e.getMessage());
+				logger.error(StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL), e);
+				return StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL, e.getMessage());
 			}
 		}
 	}
