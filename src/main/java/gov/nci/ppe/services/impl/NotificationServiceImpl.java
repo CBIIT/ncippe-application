@@ -242,8 +242,9 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	private void sendEmail(PortalNotification notification, User recipient) {
 		if(recipient.isAllowEmailNotification()) {
-			String message, subject;
-			if(LanguageOption.ENGLISH.getLanguage().equals( recipient.getPreferredLanguage()) {
+			String message;
+			String subject;
+			if(LanguageOption.ENGLISH.equals( recipient.getPreferredLanguage())) {
 				message = notification.getMessageEnglish();
 				subject = notification.getSubjectEnglish();
 			} else {
