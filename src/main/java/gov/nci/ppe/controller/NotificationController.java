@@ -84,7 +84,7 @@ public class NotificationController {
 	 *                 retrieved
 	 * @return List of notification objects
 	 */
-	@ApiOperation(value = "Retrieves all notifications for the specified User", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Retrieves all notifications for the specified User", produces = MediaType.TEXT_PLAIN_VALUE)
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_OK, message = "All available User notifications fetched"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not authorized to view messages for other users") })
