@@ -1,12 +1,12 @@
 package gov.nci.ppe.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +24,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
@@ -305,6 +307,9 @@ public class NotificationController {
 	 * @param request - the HTTP Request
 	 * @param message - The Notification to send
 	 * @return
+	 * @throws IOException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
 	 */
 	@ApiOperation(value = "Send message to all users of specified type(s)")
 	@ApiResponses(value = {
@@ -313,10 +318,10 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not Authorized to send messages") })
 	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
-			MediaType.APPLICATION_JSON_VALUE })
+			MediaType.TEXT_HTML_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
-			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @Valid @RequestBody NotificationSendRequestDto message,
-			Locale locale) {
+			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody String message,
+			Locale locale) throws JsonParseException, JsonMappingException, IOException {
 		HttpHeaders httpHeaders = createHeader();
 
 		// Obtain the User record from the database to check if they are registered
@@ -338,8 +343,10 @@ public class NotificationController {
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.FORBIDDEN);
 		}
-		PortalNotification messageToSend = dozerBeanMapper.map(message, PortalNotification.class);
-		List<User> recipientGroups = userService.getUsersOfType(message.getAudiences());
+
+		NotificationSendRequestDto notficationRequest = mapper.readValue(message, NotificationSendRequestDto.class);
+		PortalNotification messageToSend = dozerBeanMapper.map(notficationRequest, PortalNotification.class);
+		List<User> recipientGroups = userService.getUsersOfType(notficationRequest.getAudiences());
 		notificationService.sendGroupNotifications(messageToSend, recipientGroups, requestingUserUUID);
 		return new ResponseEntity<String>(HttpStatus.CREATED);
 
