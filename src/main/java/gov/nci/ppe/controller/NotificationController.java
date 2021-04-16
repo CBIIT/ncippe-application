@@ -3,6 +3,7 @@ package gov.nci.ppe.controller;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
@@ -40,7 +42,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import com.github.dozermapper.core.Mapper;
 
 /**
  * Controller class for User related actions.
@@ -84,11 +85,11 @@ public class NotificationController {
 	 *                 retrieved
 	 * @return List of notification objects
 	 */
-	@ApiOperation(value = "Retrieves all notifications for the specified User", produces = MediaType.TEXT_PLAIN_VALUE)
+	@ApiOperation(value = "Retrieves all notifications for the specified User")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_OK, message = "All available User notifications fetched"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not authorized to view messages for other users") })
-	@GetMapping(value = "/api/v1/user/{userGUID}/notifications")
+	@GetMapping(value = "/api/v1/user/{userGUID}/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getAllNotificationsForUser(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
 			Locale locale) {
@@ -114,7 +115,10 @@ public class NotificationController {
 
 				String notificationInJsonFormat;
 				try {
-					notificationInJsonFormat = mapper.writeValueAsString(notificationList);
+					List<PortalNotificationDTO> notificationDTOs = notificationList.stream()
+							.map(src -> this.dozerBeanMapper.map(src, PortalNotificationDTO.class))
+							.collect(Collectors.toList());
+					notificationInJsonFormat = mapper.writeValueAsString(notificationDTOs);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
 					logger.catching(e);
@@ -141,7 +145,7 @@ public class NotificationController {
 	 * @return the Notification object
 	 */
 	@ApiOperation(value = "Retrieve the notification for the given user with the specified notification id")
-	@GetMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}")
+	@GetMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getNotificationForNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notification is to be retrieved", required = true) @PathVariable String userGUID,
 			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
@@ -164,7 +168,9 @@ public class NotificationController {
 		if (notificationOptional.isPresent()) {
 
 			try {
-				String notificationInJsonFormat = mapper.writeValueAsString(notificationOptional.get());
+				PortalNotificationDTO notificationDTO = this.dozerBeanMapper.map(notificationOptional.get(),
+						PortalNotificationDTO.class);
+				String notificationInJsonFormat = mapper.writeValueAsString(notificationDTO);
 				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 			} catch (JsonProcessingException e) {
 				logger.catching(e);
@@ -211,7 +217,10 @@ public class NotificationController {
 			if (CollectionUtils.isNotEmpty(updatedNotificationList)) {
 				String notificationInJsonFormat;
 				try {
-					notificationInJsonFormat = mapper.writeValueAsString(updatedNotificationList);
+					List<PortalNotificationDTO> notificationDTOs = updatedNotificationList.stream()
+							.map(src -> this.dozerBeanMapper.map(src, PortalNotificationDTO.class))
+							.collect(Collectors.toList());
+					notificationInJsonFormat = mapper.writeValueAsString(notificationDTOs);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
 					logger.catching(e);
@@ -244,7 +253,6 @@ public class NotificationController {
 	 * @return
 	 */
 	@ApiOperation(value = "Mark an individual notification as read for a given user")
-
 	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
 	public ResponseEntity<String> updateNotificationAsReadByNotificationId(HttpServletRequest request,
 			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
@@ -273,7 +281,9 @@ public class NotificationController {
 			notifyOptional = notificationService.updateNotificationAsReadByNotificationId(notificationObjectForUpdate);
 			if (notifyOptional.get().getViewedByUser() == 1) {
 				try {
-					String notificationInJsonFormat = mapper.writeValueAsString(notifyOptional.get());
+					PortalNotificationDTO notificationDTO = this.dozerBeanMapper.map(notifyOptional.get(),
+							PortalNotificationDTO.class);
+					String notificationInJsonFormat = mapper.writeValueAsString(notificationDTO);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
 					logger.catching(e);
@@ -302,8 +312,7 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not Authorized to send messages") })
-	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.APPLICATION_JSON_VALUE }, produces = {
-			MediaType.TEXT_HTML_VALUE })
+	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.TEXT_PLAIN_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
 			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @Valid @RequestBody NotificationSendRequestDto message,
 			Locale locale) {

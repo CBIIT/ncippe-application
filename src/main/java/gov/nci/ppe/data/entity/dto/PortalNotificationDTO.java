@@ -22,13 +22,13 @@ public class PortalNotificationDTO {
 	private Subject subject = new Subject();
 
 	@Data
-	private class Message {
+    public class Message {
 		private String en;
 		private String es;
 	}
 
 	@Data
-	private class Subject {
+	public class Subject {
 		private String en;
 		private String es;
 	}
