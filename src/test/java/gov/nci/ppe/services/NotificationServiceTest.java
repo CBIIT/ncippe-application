@@ -47,11 +47,15 @@ public class NotificationServiceTest {
 	@Mock
 	private EmailLogService mockEmailService;
 
+	@Mock
+	private AuditService mockAuditService;
+
 	private NotificationServiceImpl classUnderTest;
 
 	@BeforeEach
 	public void init() {
-		classUnderTest = new NotificationServiceImpl(mockNotificationRepo, mockNotificationSrvConfig, mockEmailService);
+		classUnderTest = new NotificationServiceImpl(mockNotificationRepo, mockNotificationSrvConfig, mockEmailService,
+				mockAuditService);
 	}
 
 	@Test
