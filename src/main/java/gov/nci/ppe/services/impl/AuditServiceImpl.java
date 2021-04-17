@@ -22,10 +22,10 @@ public class AuditServiceImpl implements AuditService {
 	@Override
 	public void logAuditEvent(String eventDetails, String eventDetailType) {
 
-		PutEventsRequestEntry request_entry = new PutEventsRequestEntry().withDetail(eventDetails)
+		PutEventsRequestEntry requestEntry = new PutEventsRequestEntry().withDetail(eventDetails)
 				.withDetailType(eventDetailType).withSource("aws-sdk-java-cloudwatch-example");
 
-		PutEventsRequest request = new PutEventsRequest().withEntries(request_entry);
+		PutEventsRequest request = new PutEventsRequest().withEntries(requestEntry);
 
 		PutEventsResult response = cloudWatchEventClient.putEvents(request);
 

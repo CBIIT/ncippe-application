@@ -28,15 +28,18 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
+import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.entity.dto.NotificationSendRequestDto;
 import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
+import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
 import io.swagger.annotations.Api;
@@ -69,15 +72,18 @@ public class NotificationController {
 
 	private Mapper dozerBeanMapper;
 
+	private AuditService auditService;
+
 	@Autowired
 	public NotificationController(NotificationService notificationService, MessageSource messageSource,
-			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper) {
+			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper, AuditService auditService) {
 		this.mapper = new ObjectMapper();
 		this.mapper.registerSubtypes(PortalNotificationDTO.class);
 		this.notificationService = notificationService;
 		this.messageSource = messageSource;
 		this.userService = userService;
 		this.dozerBeanMapper = dozerBeanMapper;
+		this.auditService = auditService;
 	}
 
 	/**
@@ -344,10 +350,15 @@ public class NotificationController {
 					HttpStatus.FORBIDDEN);
 		}
 
-		NotificationSendRequestDto notficationRequest = mapper.readValue(message, NotificationSendRequestDto.class);
-		PortalNotification messageToSend = dozerBeanMapper.map(notficationRequest, PortalNotification.class);
-		List<User> recipientGroups = userService.getUsersOfType(notficationRequest.getAudiences());
+		NotificationSendRequestDto notificationRequest = mapper.readValue(message, NotificationSendRequestDto.class);
+		PortalNotification messageToSend = dozerBeanMapper.map(notificationRequest, PortalNotification.class);
+		List<User> recipientGroups = userService.getUsersOfType(notificationRequest.getAudiences());
 		notificationService.sendGroupNotifications(messageToSend, recipientGroups, requestingUserUUID);
+		ObjectNode auditDetailsNode = mapper.createObjectNode();
+		auditDetailsNode.put("requester", requestingUserUUID);
+		auditDetailsNode.put("notification", mapper.writeValueAsString(notificationRequest));
+		auditService.logAuditEvent(mapper.writeValueAsString(auditDetailsNode),
+				AuditEventType.PPE_SEND_GROUP_NOTIFICATION.name());
 		return new ResponseEntity<String>(HttpStatus.CREATED);
 
 	}
