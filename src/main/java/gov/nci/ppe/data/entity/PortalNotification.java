@@ -53,5 +53,6 @@ public class PortalNotification {
 	@Column(name = "SubjectSpanish", nullable = true, length = 255)
 	private String subjectSpanish;
 
-	
+	@Column(name = "GroupNotificationId", nullable = true, length = 36)
+	private String groupNotificationId;
 }
