@@ -16,6 +16,7 @@ import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
+import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
 
@@ -29,6 +30,10 @@ import gov.nci.ppe.services.NotificationService;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
+	private static final String PATIENT_FULL_NAME_PLACEHOLDER = "%{PatientFullName}";
+
+	private static final String PATIENT_ID_PLACEHOLDER = "%{PatientId}";
+
 	private static final Logger logger = LogManager.getLogger(NotificationServiceImpl.class);
 
 	private PortalNotificationRepository notificationRepo;
@@ -39,7 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Autowired
 	public NotificationServiceImpl(PortalNotificationRepository notificationRepo,
-			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService) {
+			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService, AuditService auditService) {
 		this.notificationRepo = notificationRepo;
 		this.notificationSrvConfig = notificationSrvConfig;
 		this.emailService = emailService;
@@ -58,7 +63,7 @@ public class NotificationServiceImpl implements NotificationService {
 		 * runtime
 		 */
 		String replaceStringWith[] = { userName, patientName, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
+		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(messageEnglish, replaceThisString, replaceStringWith);
 		String updatedSubjectEnglish = StringUtils.replaceEach(subjectEnglish, replaceThisString, replaceStringWith);
 		String updatedMessageSpanish = StringUtils.replaceEach(messageSpanish, replaceThisString, replaceStringWith);
@@ -122,7 +127,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
 		String replaceStringWith[] = { patientFullName, patientId };
-		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
+		String replaceThisString[] = { PATIENT_FULL_NAME_PLACEHOLDER, PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(), replaceThisString,
 				replaceStringWith);
@@ -153,7 +158,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
 		String replaceStringWith[] = { patientFullName, patientId };
-		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
+		String replaceThisString[] = { PATIENT_FULL_NAME_PLACEHOLDER, PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessageEnglish(), replaceThisString,
 				replaceStringWith);
@@ -239,6 +244,7 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from) {
 		UUID groupNotificationId = UUID.randomUUID();
+		logger.info("Send Group Notification to {} users from {}", recipientGroups.size(), from);
 		recipientGroups.stream().forEach(user -> {
 			addNotificationToAccount(from, notification.getSubjectEnglish(), notification.getSubjectSpanish(),
 					notification.getMessageEnglish(), notification.getMessageSpanish(), user.getUserId(),
