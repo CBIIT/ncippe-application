@@ -3,6 +3,7 @@ package gov.nci.ppe.services.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -31,17 +32,19 @@ public class NotificationServiceImpl implements NotificationService {
 	private static final Logger logger = LogManager.getLogger(NotificationServiceImpl.class);
 
 	private PortalNotificationRepository notificationRepo;
-	
+
 	private NotificationServiceConfig notificationSrvConfig;
 
 	private EmailLogService emailService;
 
 	@Autowired
-	public NotificationServiceImpl(PortalNotificationRepository notificationRepo, NotificationServiceConfig notificationSrvConfig, EmailLogService emailService) {
+	public NotificationServiceImpl(PortalNotificationRepository notificationRepo,
+			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService) {
 		this.notificationRepo = notificationRepo;
 		this.notificationSrvConfig = notificationSrvConfig;
 		this.emailService = emailService;
 	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -185,7 +188,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 * @return The saved notification
 	 */
 	private Optional<PortalNotification> addNotificationToAccount(String from, String subjectEnglish,
-			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId) {
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId,
+			UUID groupNotificationId) {
 		PortalNotification notificationObj = new PortalNotification();
 		notificationObj.setMessageFrom(from);
 		notificationObj.setSubjectEnglish(subjectEnglish);
@@ -195,8 +199,17 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationObj.setUserId(userId);
 		notificationObj.setDateGenerated(LocalDateTime.now());
 		notificationObj.setViewedByUser(0);
+		if (groupNotificationId != null) {
+			notificationObj.setGroupNotificationId(groupNotificationId.toString());
+		}
 		notificationObj = notificationRepo.save(notificationObj);
 		return Optional.of(notificationObj);
+	}
+
+	private Optional<PortalNotification> addNotificationToAccount(String from, String subjectEnglish,
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId) {
+		return addNotificationToAccount(from, subjectEnglish, subjectSpanish, messageEnglish, messageSpanish, userId,
+				null);
 	}
 
 	@Override
@@ -225,26 +238,27 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from) {
-
-		recipientGroups.stream()
-				.forEach(user -> { addNotificationToAccount(from, notification.getSubjectEnglish(),
-						notification.getSubjectSpanish(), notification.getMessageEnglish(),
-						notification.getMessageSpanish(), user.getUserId()); 
-						sendEmail(notification, user);
-				}); 
+		UUID groupNotificationId = UUID.randomUUID();
+		recipientGroups.stream().forEach(user -> {
+			addNotificationToAccount(from, notification.getSubjectEnglish(), notification.getSubjectSpanish(),
+					notification.getMessageEnglish(), notification.getMessageSpanish(), user.getUserId(),
+					groupNotificationId);
+			sendEmail(notification, user);
+		});
 
 	}
 
 	/**
 	 * Sends out email to the recipient
+	 * 
 	 * @param notification - details of the email content
-	 * @param recipient - User to send email to
+	 * @param recipient    - User to send email to
 	 */
 	private void sendEmail(PortalNotification notification, User recipient) {
-		if(recipient.isAllowEmailNotification()) {
+		if (recipient.isAllowEmailNotification()) {
 			String message;
 			String subject;
-			if(LanguageOption.ENGLISH.equals( recipient.getPreferredLanguage())) {
+			if (LanguageOption.ENGLISH.equals(recipient.getPreferredLanguage())) {
 				message = notification.getMessageEnglish();
 				subject = notification.getSubjectEnglish();
 			} else {
