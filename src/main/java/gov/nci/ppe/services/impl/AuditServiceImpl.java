@@ -11,6 +11,16 @@ import com.amazonaws.services.cloudwatchevents.model.PutEventsResult;
 import gov.nci.ppe.services.AuditService;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of {@link AuditService}
+ * 
+ * @author PublicisSapient
+ * 
+ * @version 2.3
+ *
+ * @since Feb 12, 2020
+ *
+ */
 @Service
 @Slf4j
 public class AuditServiceImpl implements AuditService {

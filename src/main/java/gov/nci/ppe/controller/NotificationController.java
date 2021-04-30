@@ -364,6 +364,13 @@ public class NotificationController {
 
 	}
 
+	/**
+	 * Rest endpoint to get all group notifications sent out
+	 * 
+	 * @param request
+	 * @param locale
+	 * @return
+	 */
 	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),

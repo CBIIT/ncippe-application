@@ -17,6 +17,8 @@ import javax.persistence.Table;
 import lombok.Data;
 
 /**
+ * Entity representing a group notification request
+ * 
  * @author PublicisSapient
  * @version 1.0
  * @since 2021-04-28
@@ -25,18 +27,18 @@ import lombok.Data;
 @Entity
 @Table(name = "GroupNotificationRequest")
 public class GroupNotificationRequest {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long requestId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long requestId;
 
-    @ManyToOne(targetEntity = User.class)
-    @JoinColumn(name = "RequesterId", insertable = false, updatable = false)
-    private User requester;
+	@ManyToOne(targetEntity = User.class)
+	@JoinColumn(name = "RequesterId", insertable = false, updatable = false)
+	private User requester;
 
-    @Column(name = "RequestDateTime", nullable = false)
-    private LocalDateTime timeOfRequest;
+	@Column(name = "RequestDateTime", nullable = false)
+	private LocalDateTime timeOfRequest;
 
-    @ManyToMany(targetEntity = Role.class)
-    @JoinTable(name = "GroupNotificationRecipientRole", joinColumns = @JoinColumn(name = "RequestId"), inverseJoinColumns = @JoinColumn(name = "RoleId"))
-    private Set<Role> recipientRoles;
+	@ManyToMany(targetEntity = Role.class)
+	@JoinTable(name = "GroupNotificationRecipientRole", joinColumns = @JoinColumn(name = "RequestId"), inverseJoinColumns = @JoinColumn(name = "RoleId"))
+	private Set<Role> recipientRoles;
 }
