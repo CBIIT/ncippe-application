@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -391,6 +392,10 @@ public class NotificationController {
 					HttpStatus.FORBIDDEN);
 		}
 
-		
+		// make request to service
+
+		// map result to DTO
+
+		return new ResponseEntity<>(StringUtils.EMPTY, httpHeaders, HttpStatus.OK);
 	}
 }
