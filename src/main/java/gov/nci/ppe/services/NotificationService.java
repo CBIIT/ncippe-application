@@ -19,20 +19,20 @@ public interface NotificationService {
 	/**
 	 * Insert a notification into the {PortalNotification} table.
 	 * 
-	 * @param messageFrom -
-	 * @param subjectEnglish     - Subject/Title for the notification in English
-	 * @param subjectSpanish     - Subject/Title for the notification in Spanish
-	 * @param messageEnglish     - Message describing the notification in English
-	 * @param messageSpanish     - Message describing the notification in Spanish
-	 * @param userId      - user Id 
-	 * @param userName    - First Name of the user to whom this notification is
-	 *                    addressed
-	 * @param patientName - Participant's first name.
+	 * @param messageFrom    -
+	 * @param subjectEnglish - Subject/Title for the notification in English
+	 * @param subjectSpanish - Subject/Title for the notification in Spanish
+	 * @param messageEnglish - Message describing the notification in English
+	 * @param messageSpanish - Message describing the notification in Spanish
+	 * @param userId         - user Id
+	 * @param userName       - First Name of the user to whom this notification is
+	 *                       addressed
+	 * @param patientName    - Participant's first name.
 	 * @return An Optional object of {PortalNotification} class
 	 */
 	public Optional<PortalNotification> addNotification(String messageFrom, String subjectEnglish,
-			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId,
-			String userName, String patientName, String patientId);
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId, String userName,
+			String patientName, String patientId);
 
 	/**
 	 * Fetch all the notification present in the table for a user
@@ -64,11 +64,13 @@ public interface NotificationService {
 	 * @param user - User whose notifications are to be marked as read
 	 * @return List of {PortalNotification} Objects
 	 */
-	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(
-			User user);
+	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(User user);
+
 	/**
 	 * Method to add notify Patient when their CRC is replaced
-	 * @param userId - Id of the recipient for whom the notification message is intended
+	 * 
+	 * @param userId - Id of the recipient for whom the notification message is
+	 *               intended
 	 */
 	public void notifyPatientWhenCRCIsReplaced(Long userId);
 
@@ -84,7 +86,9 @@ public interface NotificationService {
 
 	/**
 	 * Method to add notify Patient when their Provider is replaced
-	 * @param userId - Id of the recipient for whom the notification message is intended
+	 * 
+	 * @param userId - Id of the recipient for whom the notification message is
+	 *               intended
 	 */
 	public void notifyPatientWhenProviderIsReplaced(Long userId);
 
@@ -117,9 +121,11 @@ public interface NotificationService {
 
 	/**
 	 * Send Bulk notification to users by user type
-	 * @param notification - Portal Notification to generate
+	 * 
+	 * @param notification    - Portal Notification to generate
 	 * @param recipientGroups - List of users to be notified
-	 * @param from - UUID of User sending the notification
+	 * @param from            - UUID of User sending the notification
 	 */
 	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from);
+
 }
