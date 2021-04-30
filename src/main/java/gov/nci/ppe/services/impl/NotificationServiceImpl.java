@@ -205,7 +205,8 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationObj.setDateGenerated(LocalDateTime.now());
 		notificationObj.setViewedByUser(0);
 		if (groupNotificationId != null) {
-			notificationObj.setGroupNotificationId(groupNotificationId.toString());
+			// TODO replace with ref to request object
+			// notificationObj.setGroupNotificationId(groupNotificationId.toString());
 		}
 		notificationObj = notificationRepo.save(notificationObj);
 		return Optional.of(notificationObj);

@@ -4,17 +4,19 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.User;
 
 /**
+ * Repository Interface for methods related to {@link User}
  * 
  * @author PublicisSapient
- * @version 1.0
+ * @version 2.3
  * @since 2019-07-22
  */
-
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	/**
@@ -53,6 +55,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	/**
 	 * Returns the list of {@link User} entities matching the specified User Type
+	 * 
 	 * @param userTypeList - List of user types to fetch users for
 	 * @return the list of Users
 	 */

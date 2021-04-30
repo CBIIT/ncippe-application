@@ -5,6 +5,16 @@ import java.sql.Timestamp;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
+/**
+ * DTO representing a Portal Notification object
+ * 
+ * @author PublicisSapient
+ * 
+ * @version 1.0
+ *
+ * @since Mar 14, 2020
+ *
+ */
 @ApiModel(description = "Portal Notification")
 @Data
 public class PortalNotificationDTO {
@@ -22,7 +32,7 @@ public class PortalNotificationDTO {
 	private Subject subject = new Subject();
 
 	@Data
-    public class Message {
+	public class Message {
 		private String en;
 		private String es;
 	}

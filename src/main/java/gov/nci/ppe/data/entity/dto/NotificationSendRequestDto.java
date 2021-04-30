@@ -12,11 +12,11 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
- * DTO for a request to send messages
+ * DTO for a request to send Group Notifications
  * 
  * @author PublicisSapient
  * 
- * @version 2.0
+ * @version 2.3
  *
  * @since Mar 24, 2021
  *
@@ -36,5 +36,5 @@ public class NotificationSendRequestDto {
 
 	@NotNull(message = ErrorConstants.MISSING_MESSAGE)
 	@ApiModelProperty(value = "Body of the Message")
-	private Message message;
+	private MessageBody message;
 }

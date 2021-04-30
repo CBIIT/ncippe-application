@@ -6,6 +6,17 @@ import gov.nci.ppe.constants.ErrorConstants;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+/**
+ * DTO representing the Subject of a notifcation including SPanish and English
+ * versions
+ * 
+ * @author PublicisSapient
+ * 
+ * @version 2.3
+ *
+ * @since Apr 30, 2021
+ *
+ */
 @Data
 public class Subject {
 	@NotBlank(message = ErrorConstants.MISSING_ENGLISH_SUBJECT)
