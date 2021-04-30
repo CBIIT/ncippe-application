@@ -2,7 +2,6 @@ package gov.nci.ppe.data.entity.dto;
 
 import java.util.List;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -38,26 +37,4 @@ public class NotificationSendRequestDto {
 	@NotNull(message = ErrorConstants.MISSING_MESSAGE)
 	@ApiModelProperty(value = "Body of the Message")
 	private Message message;
-
-	@Data
-	private class Message {
-		@NotBlank(message = ErrorConstants.MISSING_ENGLISH_MESSAGE)
-		@ApiModelProperty(value = "Message Body in english")
-		private String en;
-
-		@NotBlank(message = ErrorConstants.MISSING_SPANISH_MESSAGE)
-		@ApiModelProperty(value = "Message Body in Spanish")
-		private String es;
-	}
-
-	@Data
-	private class Subject {
-		@NotBlank(message = ErrorConstants.MISSING_ENGLISH_SUBJECT)
-		@ApiModelProperty(value = "Message Subject in english")
-		private String en;
-
-		@NotBlank(message = ErrorConstants.MISSING_SPANISH_SUBJECT)
-		@ApiModelProperty(value = "Message Subject in Spanish")
-		private String es;
-	}
 }

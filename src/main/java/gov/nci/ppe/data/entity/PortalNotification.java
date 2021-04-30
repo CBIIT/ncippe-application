@@ -53,6 +53,7 @@ public class PortalNotification {
 	@Column(name = "SubjectSpanish", nullable = true, length = 255)
 	private String subjectSpanish;
 
-	@Column(name = "GroupNotificationId", nullable = true, length = 36)
-	private String groupNotificationId;
+	@ManyToOne(targetEntity = GroupNotificationRequest.class)
+	@JoinColumn(name = "GroupNotificationRequestId", nullable = true)
+	private Long groupNotificationRequestId;
 }

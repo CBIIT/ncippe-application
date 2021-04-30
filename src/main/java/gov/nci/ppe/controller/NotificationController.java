@@ -322,7 +322,7 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_CREATED, message = "Message succesfully sent"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not Authorized to send messages") })
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
 	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
 			MediaType.TEXT_HTML_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
@@ -363,4 +363,34 @@ public class NotificationController {
 
 	}
 
+	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
+	@ApiResponses(value = {
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
+			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
+	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, Locale locale) {
+		HttpHeaders httpHeaders = createHeader();
+
+		// Obtain the User record from the database to check if they are registered
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
+		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
+		if (requesterOpt.isEmpty()) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale), httpHeaders,
+					HttpStatus.NOT_FOUND);
+		}
+
+		// Verify that they are authorized to send messages
+		User requester = requesterOpt.get();
+		if (!PPERole.ROLE_PPE_MESSENGER.name().equals(requester.getRole().getRoleName())) {
+			logger.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
+					requester.getRole());
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.FORBIDDEN);
+		}
+
+		
+	}
 }

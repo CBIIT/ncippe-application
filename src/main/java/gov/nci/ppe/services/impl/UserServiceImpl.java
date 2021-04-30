@@ -64,6 +64,8 @@ import gov.nci.ppe.services.UserService;
 @Service
 public class UserServiceImpl implements UserService {
 
+	private static final String NEW_PROVIDERS = "NewProviders";
+
 	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
@@ -327,10 +329,9 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(),
-						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getCrc().getPreferredLanguage());
+						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -427,8 +428,8 @@ public class UserServiceImpl implements UserService {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
 							provider.getPreferredLanguage());
 				}
-				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
-						provider.getUserId(), participant.getPatientId());
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
+						participant.getPatientId());
 
 			}
 		}
@@ -651,7 +652,7 @@ public class UserServiceImpl implements UserService {
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
 				if (providerUpdatedFlag) {
-					Set<Long> providerOpenId = mapOFProviders.get("NewProviders");
+					Set<Long> providerOpenId = mapOFProviders.get(NEW_PROVIDERS);
 					providerOpenId.forEach(providerCtepId -> {
 						Optional<Provider> providerOptional = findProviderByCtepId(providerCtepId);
 						if (providerOptional.isPresent()) {
@@ -672,7 +673,7 @@ public class UserServiceImpl implements UserService {
 					}
 					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
-							mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
+							mapOFProviders.get("ExistingProviders"), mapOFProviders.get(NEW_PROVIDERS),
 							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
 				}
 				if (crcUpdatedFlag) {
@@ -859,7 +860,7 @@ public class UserServiceImpl implements UserService {
 		}
 		result.removeAll(newDataSet);
 		Map<String, Set<Long>> mapOfPrviders = new HashMap<>();
-		mapOfPrviders.put("NewProviders", newDataSet);
+		mapOfPrviders.put(NEW_PROVIDERS, newDataSet);
 		mapOfPrviders.put("ExistingProviders", result);
 		return mapOfPrviders;
 	}
@@ -888,8 +889,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
-				+ " and "
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
 				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
@@ -939,7 +939,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public List<User> getUsersOfType(List<PPEUserType> userTypes) {
-		List<Code> userTypeCodeList = convertToCode( userTypes.stream().map(userType -> userType.name()).collect(Collectors.toList()));
+		List<Code> userTypeCodeList = convertToCode(
+				userTypes.stream().map(userType -> userType.name()).collect(Collectors.toList()));
 		return userRepository.findByUserTypeIn(userTypeCodeList);
 	}
 
