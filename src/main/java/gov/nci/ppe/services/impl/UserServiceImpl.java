@@ -90,9 +90,6 @@ public class UserServiceImpl implements UserService {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	public UserServiceImpl() {
-	}
-
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
 			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository,
@@ -325,10 +322,9 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(),
-						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getCrc().getPreferredLanguage());
+						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -425,8 +421,8 @@ public class UserServiceImpl implements UserService {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
 							provider.getPreferredLanguage());
 				}
-				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
-						provider.getUserId(), participant.getPatientId());
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
+						participant.getPatientId());
 
 			}
 		}
@@ -886,8 +882,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
-				+ " and "
+		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
 				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,

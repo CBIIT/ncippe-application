@@ -3,6 +3,7 @@ package gov.nci.ppe.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -122,7 +123,7 @@ public class PatientReportController {
 			/* Only take the filename and not the extension */
 			folderWithFileName.append("/")
 					.append(file.getOriginalFilename().substring(0, file.getOriginalFilename().indexOf(".")));
-			try {
+			try (InputStream inputStream = file.getInputStream();) {
 				/* Get patient details */
 				Optional<User> patientOptional = userService.findActiveParticipantByPatientId(patientId);
 				Participant patient = (Participant) patientOptional.get();
@@ -131,7 +132,7 @@ public class PatientReportController {
 				Optional<User> adminOptional = userService.findByUuid(req.getHeader(CommonConstants.HEADER_UUID));
 				User adminUser = adminOptional.get();
 
-				amazonS3Service.putObjectOnS3(file.getInputStream(), folderWithFileName.toString(), file.getSize(),
+				amazonS3Service.putObjectOnS3(inputStream, folderWithFileName.toString(), file.getSize(),
 						file.getContentType(), CannedAccessControlList.BucketOwnerFullControl, patient, adminUser,
 						file.getOriginalFilename(), uploadedFileType);
 				return ResponseEntity.status(HttpStatus.OK)
@@ -145,9 +146,8 @@ public class PatientReportController {
 			}
 		} else {
 			logger.error(" The file upload process failed as the file you are uploading is empty.");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(messageSource.getMessage(HttpResponseConstants.UPLOADED_FILE_EMPTY,
-							new Object[] { file.getOriginalFilename() }, locale));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageSource.getMessage(
+					HttpResponseConstants.UPLOADED_FILE_EMPTY, new Object[] { file.getOriginalFilename() }, locale));
 		}
 	}
 
@@ -223,9 +223,7 @@ public class PatientReportController {
 	@PostMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
 			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
-			HttpServletRequest req,
-			Locale locale)
-			throws JsonProcessingException {
+			HttpServletRequest req, Locale locale) throws JsonProcessingException {
 
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);
 		if (rptOptional.isEmpty()) {

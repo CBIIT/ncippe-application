@@ -68,26 +68,29 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 	private AmazonS3 amazonS3Client;
 
-	@Autowired
 	private EmailLogService emailLogService;
 
-	@Autowired
 	private FileService reportService;
 
-	@Autowired
 	private NotificationService notificationService;
 
-	@Autowired
 	private CodeService codeService;
 
-	@Autowired
 	private NotificationServiceConfig notificationServiceConfig;
 
 	@Value("${patient.report.bucket.name}")
 	private String applicationDataBucket;
 
-	public AmazonS3ServiceImpl() {
+	@Autowired
+	public AmazonS3ServiceImpl(EmailLogService emailLogService, FileService reportService,
+			NotificationService notificationService, CodeService codeService,
+			NotificationServiceConfig notificationServiceConfig) {
 		amazonS3Client = AmazonS3ClientBuilder.defaultClient();
+		this.emailLogService = emailLogService;
+		this.reportService = reportService;
+		this.notificationService = notificationService;
+		this.codeService = codeService;
+		this.notificationServiceConfig = notificationServiceConfig;
 	}
 
 	@Override
@@ -151,9 +154,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			long contentLength, String contentType, CannedAccessControlList accessControl) throws ApiException {
 		logger.trace("Entering putObjectOnS3 for application with bucket: {} and  destinationKey: {}", bucketName,
 				s3DestinationFolderKey);
-		SdkBufferedInputStream sdkBufferedInputStream = null;
-		try {
-			sdkBufferedInputStream = new SdkBufferedInputStream(inputStream);
+		try (SdkBufferedInputStream sdkBufferedInputStream = new SdkBufferedInputStream(inputStream);) {
 			ObjectMetadata metadata = new ObjectMetadata();
 			if (StringUtils.isNotBlank(contentType)) {
 				metadata.setContentType(contentType);
@@ -167,9 +168,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 					sdkClientException);
 			throw new ApiException(
 					"Exception occured while calling putObjectOnS3 for destination: " + s3DestinationFolderKey);
+		} catch (IOException e) {
+			logger.error("Exception occured while closing sdkBufferedInputStream", e);
+			throw new ApiException("Exception occured while closing sdkBufferedInputStream");
 		} finally {
 			IOUtils.closeQuietly(inputStream);
-			IOUtils.closeQuietly(sdkBufferedInputStream);
 		}
 		logger.trace("Exiting putObjectOnS3 for application with bucket: {} and  destinationKey: {}", bucketName,
 				s3DestinationFolderKey);
@@ -290,7 +293,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 				&& admin.isAllowEmailNotification()) {
 			String emailStatus = emailLogService.sendEmailToAdminAfterFileUpload(patient, admin.getEmail(),
 					admin.getPreferredLanguage(), originalFileName);
-			logger.info("Action of sending email was " + emailStatus);
+			logger.info("Action of sending email was {} ", emailStatus);
 		}
 
 		String fileSource = "Mocha";
@@ -299,12 +302,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		URL newUrl = getResourceUrl(applicationDataBucket, s3DestinationFolderKey);
 		try {
 			String publicUrlForFileOnS3 = java.net.URLDecoder.decode(newUrl.toString(), StandardCharsets.UTF_8.name());
-			Code _code = getCodeforFileType(uploadedFileType);
+			Code fileTypeCode = getCodeforFileType(uploadedFileType);
 			if (FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(uploadedFileType)) {
 				fileSource = "CRC";
 			}
 			logFileMetadata(publicUrlForFileOnS3, s3DestinationFolderKey, originalFileName, fileSource,
-					admin.getUserId(), patient, _code);
+					admin.getUserId(), patient, fileTypeCode);
 			addNotificationForParticipant(patient, uploadedFileType);
 			if (FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType().equalsIgnoreCase(uploadedFileType)) {
 				addNotificationForCRCAndProviders(patient, uploadedFileType);
@@ -320,13 +323,13 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 *                    accessed
 	 * @param description - a brief description about the report
 	 * @param reportName  - name of the report
-	 * @param Source      - name of the entity that provided the report
+	 * @param source      - name of the entity that provided the report
 	 * @param uploadedBy  - user who uploaded the report
 	 * @param patient     - userid of the patient
 	 */
-	private void logFileMetadata(String url, String searchKey, String reportName, String Source, Long uploadedBy,
-			Participant patient, Code _code) {
-		reportService.logFileMetadata(url, searchKey, reportName, Source, uploadedBy, patient, _code);
+	private void logFileMetadata(String url, String searchKey, String reportName, String source, Long uploadedBy,
+			Participant patient, Code fileTypeCode) {
+		reportService.logFileMetadata(url, searchKey, reportName, source, uploadedBy, patient, fileTypeCode);
 	}
 
 	/**
@@ -334,10 +337,10 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * 
 	 * @param patient - Participant object
 	 */
-	private void addNotificationForParticipant(Participant patient, String UploadedFileType) {
+	private void addNotificationForParticipant(Participant patient, String uploadedFileType) {
 
-		if (StringUtils.isNotBlank(UploadedFileType)
-				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(UploadedFileType)) {
+		if (StringUtils.isNotBlank(uploadedFileType)
+				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(uploadedFileType)) {
 
 			notificationService.addNotification(notificationServiceConfig.getUploadEConsentFormNotificationFrom(),
 					notificationServiceConfig.getUploadEConsentFormNotificationSubjectEnglish(),
@@ -372,7 +375,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName(),
 					patient.getPreferredLanguage());
 		} else {
-			if (patient.isAllowEmailNotification()) {
+			// Special case to allow reports to be uploaded without email being set for
+			// patients
+			if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName(),
 						patient.getPreferredLanguage());
 			}
@@ -418,7 +423,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * @return
 	 */
 	private Map<Long, String> getUserIdAndFirstName(Participant patient, String uploadedFileType, Boolean patientFlag) {
-		Map<Long, String> userDetailMap = new HashMap<Long, String>();
+		Map<Long, String> userDetailMap = new HashMap<>();
 		if (patientFlag) {
 			userDetailMap.put(patient.getUserId(), patient.getFirstName());
 		}

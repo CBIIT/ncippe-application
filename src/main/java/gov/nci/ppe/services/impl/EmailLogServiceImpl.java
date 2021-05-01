@@ -8,18 +8,6 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.MessageSource;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
-
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.simpleemail.model.Body;
@@ -29,6 +17,16 @@ import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 import com.amazonaws.services.simpleemail.model.SendEmailResult;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.MessageSource;
+import org.springframework.mail.MailException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
 import gov.nci.ppe.constants.EmailConstants;
@@ -36,25 +34,26 @@ import gov.nci.ppe.data.entity.EmailLog;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.repository.EmailLogRepository;
 import gov.nci.ppe.services.EmailLogService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author PublicisSapient
  * @version 1.0
  * @since 2019-08-13
  */
-@Component
+@Service
+@Slf4j
 @ConfigurationProperties("email")
 public class EmailLogServiceImpl implements EmailLogService {
 
+	private static final String FAILED_TO_SEND_EMAIL = " : Failed to Send email ";
+
 	private String charSet = "UTF-8";
 
-	@Autowired
 	private EmailLogRepository emailLogRepository;
 
-	@Autowired
 	private JavaMailSender nihMailSender;
 
-	@Autowired
 	private MessageSource messageSource;
 
 	@Value("${email.hostname}")
@@ -75,9 +74,12 @@ public class EmailLogServiceImpl implements EmailLogService {
 	@Value("${email.forward.restricted.emails.to}")
 	private String defaultEmailAddress;
 
-	private static final Logger logger = LogManager.getLogger(EmailLogServiceImpl.class);
-
-	public EmailLogServiceImpl() {
+	@Autowired
+	public EmailLogServiceImpl(EmailLogRepository emailLogRepository, JavaMailSender nihMailSender,
+			MessageSource messageSource) {
+		this.emailLogRepository = emailLogRepository;
+		this.nihMailSender = nihMailSender;
+		this.messageSource = messageSource;
 	}
 
 	public EmailLogServiceImpl(EmailLogRepository emailLogRepository) {
@@ -173,9 +175,9 @@ public class EmailLogServiceImpl implements EmailLogService {
 		if (restrictOutgoingEmailDomain) {
 			// Check if the recipient Email is part of the allowed email
 			String domain = recipientEmail.split("@")[1];
-			logger.info("Checking if allowed to send email to " + domain);
+			log.info("Checking if allowed to send email to {} ", domain);
 			if (!allowedEmailDomains.contains(domain)) {
-				logger.info("Replacing recipient email address " + recipientEmail + " with " + defaultEmailAddress);
+				log.info("Replacing recipient email address {}  with {}", recipientEmail, defaultEmailAddress);
 				recipientEmail = defaultEmailAddress;
 			}
 		}
@@ -198,7 +200,7 @@ public class EmailLogServiceImpl implements EmailLogService {
 
 				return StringUtils.join(CommonConstants.SUCCESS, " : Email sent successfully!", result.getMessageId());
 			} catch (Exception ex) {
-				logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), ex);
+				log.error(StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL), ex);
 				return StringUtils.join(CommonConstants.ERROR, " : Error sending email. Error Message : ",
 						ex.getMessage());
 			}
@@ -212,11 +214,11 @@ public class EmailLogServiceImpl implements EmailLogService {
 				htmlMailHelper.setSubject(subject);
 				htmlMailHelper.setText(messageBody, true);
 				nihMailSender.send(message);
-				logger.info("Send email Re: {} to recipient {}", subject, recipientEmail);
+				log.info("Send email Re: {} to recipient {}", subject, recipientEmail);
 				return CommonConstants.SUCCESS;
 			} catch (MailException | MessagingException e) {
-				logger.error(StringUtils.join(CommonConstants.ERROR, " : Failed to Send email "), e);
-				return StringUtils.join(CommonConstants.ERROR, " : Failed to Send email ", e.getMessage());
+				log.error(StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL), e);
+				return StringUtils.join(CommonConstants.ERROR, FAILED_TO_SEND_EMAIL, e.getMessage());
 			}
 		}
 	}
