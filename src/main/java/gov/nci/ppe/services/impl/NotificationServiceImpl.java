@@ -37,8 +37,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public Optional<PortalNotification> addNotification(String from, String subjectEnglish, String subjectSpanish,
-			String messageEnglish, String messageSpanish, Long userId,
-			String userName, String patientName, String patientId) {
+			String messageEnglish, String messageSpanish, Long userId, String userName, String patientName,
+			String patientId) {
 
 		/*
 		 * The notification message has placeholders which needs to be replaced at
@@ -111,8 +111,8 @@ public class NotificationServiceImpl implements NotificationService {
 		String replaceStringWith[] = { patientFullName, patientId };
 		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
 		String updatedMessageEnglish = StringUtils.replaceEach(
-				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(),
-				replaceThisString, replaceStringWith);
+				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(), replaceThisString,
+				replaceStringWith);
 		String updatedMessageSpanish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageSpanish(), replaceThisString,
 				replaceStringWith);

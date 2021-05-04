@@ -9,8 +9,10 @@ import com.amazonaws.services.cloudwatchevents.model.PutEventsRequestEntry;
 import com.amazonaws.services.cloudwatchevents.model.PutEventsResult;
 
 import gov.nci.ppe.services.AuditService;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AuditServiceImpl implements AuditService {
 
 	private AmazonCloudWatchEvents cloudWatchEventClient = AmazonCloudWatchEventsClientBuilder.defaultClient();
@@ -29,6 +31,7 @@ public class AuditServiceImpl implements AuditService {
 
 		PutEventsResult response = cloudWatchEventClient.putEvents(request);
 
+		log.info("Created audit event {}", response.getSdkResponseMetadata().getRequestId());
 	}
 
 }
