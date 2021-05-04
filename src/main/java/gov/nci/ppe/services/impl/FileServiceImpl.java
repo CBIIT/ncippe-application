@@ -16,10 +16,12 @@ import gov.nci.ppe.data.repository.FileMetadataRepository;
 import gov.nci.ppe.services.FileService;
 
 /**
- * This is a service class that handles all task related to file upload and marking files as viewed.
+ * This is a service class that handles all task related to file upload and
+ * marking files as viewed.
+ * 
  * @author PublicisSapient
- * @version 1.0 
- * @since   2019-08-15
+ * @version 1.0
+ * @since 2019-08-15
  */
 @Service
 public class FileServiceImpl implements FileService {
@@ -27,14 +29,14 @@ public class FileServiceImpl implements FileService {
 	@Autowired
 	FileMetadataRepository fileMetadataRepo;
 
-    /**
-     * {@inheritDoc}
-     */	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void logFileMetadata(String S3Url, String searchKey, String fileName, String source, Long uploadedBy,
+	public void logFileMetadata(String s3Url, String searchKey, String fileName, String source, Long uploadedBy,
 			Participant patient, Code fileType) {
 		FileMetadata fileMetadata = new FileMetadata();
-		fileMetadata.setS3Url(S3Url);
+		fileMetadata.setS3Url(s3Url);
 		fileMetadata.setFileType(fileType);
 		fileMetadata.setFileName(fileName);
 		fileMetadata.setSource(source);
@@ -46,9 +48,9 @@ public class FileServiceImpl implements FileService {
 		fileMetadataRepo.save(fileMetadata);
 	}
 
-    /**
-     * {@inheritDoc}
-     */	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Optional<FileMetadata> getFileByFileGUID(String fileGUID) {
 		return fileMetadataRepo.findByFileGUID(fileGUID);
@@ -73,6 +75,5 @@ public class FileServiceImpl implements FileService {
 
 		return fileMetadataRepo.findByFileTypeAndDateUploadedBetween(fileType, startTime, endTime);
 	}
-
 
 }
