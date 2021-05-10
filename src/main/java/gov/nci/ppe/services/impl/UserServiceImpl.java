@@ -94,9 +94,6 @@ public class UserServiceImpl implements UserService {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	public UserServiceImpl() {
-	}
-
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
 			QuestionAnswerRepository qsAnsRepo, RoleRepository roleRepository, ProviderRepository providerRepository,

@@ -41,7 +41,7 @@ public class AuditServiceImpl implements AuditService {
 
 		PutEventsResult response = cloudWatchEventClient.putEvents(request);
 
-		log.info(response.toString());
+		log.info("Created audit event {}", response.getSdkResponseMetadata().getRequestId());
 	}
 
 }
