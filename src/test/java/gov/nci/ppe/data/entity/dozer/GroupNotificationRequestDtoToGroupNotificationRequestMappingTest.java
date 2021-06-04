@@ -14,7 +14,7 @@ import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.dto.GroupNotificationRequestDto;
 import gov.nci.ppe.data.entity.dto.MessageBody;
-import gov.nci.ppe.data.entity.dto.Subject;
+import gov.nci.ppe.data.entity.dto.SubjectDto;
 
 /**
  * Unit Test class for testing the dozer mapping between
@@ -37,7 +37,7 @@ public class GroupNotificationRequestDtoToGroupNotificationRequestMappingTest {
         messageBody.setEn("English Msg");
         messageBody.setEs("Spanish Msg");
         source.setMessage(messageBody);
-        Subject subject = new Subject();
+        SubjectDto subject = new SubjectDto();
         subject.setEn("English Subject");
         subject.setEs("Spanish Subject");
         source.setSubject(subject);

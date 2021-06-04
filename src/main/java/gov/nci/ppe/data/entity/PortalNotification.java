@@ -55,5 +55,5 @@ public class PortalNotification {
 
 	@ManyToOne(targetEntity = GroupNotificationRequest.class)
 	@JoinColumn(name = "GroupNotificationRequestId", nullable = true)
-	private Long groupNotificationRequestId;
+	private GroupNotificationRequest groupNotificationRequest;
 }

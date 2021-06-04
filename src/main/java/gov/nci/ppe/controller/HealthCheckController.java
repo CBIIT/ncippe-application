@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import gov.nci.ppe.constants.UrlConstants;
 import io.swagger.annotations.ApiOperation;
 
 /**
@@ -23,7 +24,7 @@ import io.swagger.annotations.ApiOperation;
 public class HealthCheckController {
 
 	@ApiOperation(value = "Healthcheck operation. Returns Healthy if server is working")
-	@GetMapping("/healthcheck")
+	@GetMapping(UrlConstants.URL_HEALTHCHECK)
 	public ResponseEntity<String> isHealthy() {
 		return ResponseEntity.ok("Healthy");
 	}
@@ -33,9 +34,9 @@ public class HealthCheckController {
 		StringBuilder headerString = new StringBuilder();
 		headers.forEach((key, value) -> {
 			headerString
-					.append(String.format("Header '%s' = %s\n", key, value.stream().collect(Collectors.joining("|"))));
+					.append(String.format("Header '%s' = %s%n", key, value.stream().collect(Collectors.joining("|"))));
 		});
 
-		return new ResponseEntity<String>(headerString.toString(), HttpStatus.OK);
+		return new ResponseEntity<>(headerString.toString(), HttpStatus.OK);
 	}
 }

@@ -32,7 +32,7 @@ public class NotificationSendRequestDto {
 
 	@NotNull(message = ErrorConstants.MISSING_SUBJECT)
 	@ApiModelProperty(value = "Subject of Message")
-	private Subject subject;
+	private SubjectDto subject;
 
 	@NotNull(message = ErrorConstants.MISSING_MESSAGE)
 	@ApiModelProperty(value = "Body of the Message")

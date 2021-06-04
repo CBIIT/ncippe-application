@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.dozermapper.core.Mapper;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -31,15 +30,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import gov.nci.ppe.constants.CommonConstants;
-import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
+import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.entity.dto.GroupNotificationRequestDto;
 import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
-import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
 import io.swagger.annotations.Api;
@@ -49,7 +47,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 /**
- * Controller class for User related actions.
+ * Controller class for Notification related actions.
  * 
  * @author PublicisSapient
  * @version 1.0
@@ -60,7 +58,7 @@ import io.swagger.annotations.ApiResponses;
 @RestController
 public class NotificationController {
 
-	private static final Logger logger = LogManager.getLogger(NotificationController.class);
+	private static final Logger log = LogManager.getLogger(NotificationController.class);
 
 	private NotificationService notificationService;
 
@@ -72,18 +70,15 @@ public class NotificationController {
 
 	private Mapper dozerBeanMapper;
 
-	private AuditService auditService;
-
 	@Autowired
 	public NotificationController(NotificationService notificationService, MessageSource messageSource,
-			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper, AuditService auditService) {
+			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper) {
 		this.mapper = new ObjectMapper();
 		this.mapper.registerSubtypes(PortalNotificationDTO.class);
 		this.notificationService = notificationService;
 		this.messageSource = messageSource;
 		this.userService = userService;
 		this.dozerBeanMapper = dozerBeanMapper;
-		this.auditService = auditService;
 	}
 
 	/**
@@ -108,7 +103,7 @@ public class NotificationController {
 
 		// An user can request notifications only for self.
 		if (!userGUID.equals(requestingUserUUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 
 					HttpStatus.UNAUTHORIZED);
@@ -129,7 +124,7 @@ public class NotificationController {
 					notificationInJsonFormat = mapper.writeValueAsString(notificationDTOs);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
-					logger.catching(e);
+					log.catching(e);
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
 							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
 				}
@@ -165,9 +160,8 @@ public class NotificationController {
 
 		// An user can request notifications only for self.
 		if (!userGUID.equals(requestingUserUUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
-
 					HttpStatus.UNAUTHORIZED);
 		}
 
@@ -181,7 +175,7 @@ public class NotificationController {
 				String notificationInJsonFormat = mapper.writeValueAsString(notificationDTO);
 				return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 			} catch (JsonProcessingException e) {
-				logger.catching(e);
+				log.catching(e);
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
 						.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
 			}
@@ -209,9 +203,8 @@ public class NotificationController {
 
 		// An user can request notifications only for self.
 		if (!userGUID.equals(requestingUserUUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
-
 					HttpStatus.UNAUTHORIZED);
 		}
 
@@ -231,7 +224,7 @@ public class NotificationController {
 					notificationInJsonFormat = mapper.writeValueAsString(notificationDTOs);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
-					logger.catching(e);
+					log.catching(e);
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
 							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
 				}
@@ -273,9 +266,8 @@ public class NotificationController {
 
 		// An user can request notifications only for self.
 		if (!userGUID.equals(requestingUserUUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
-
 					HttpStatus.UNAUTHORIZED);
 		}
 
@@ -294,7 +286,7 @@ public class NotificationController {
 					String notificationInJsonFormat = mapper.writeValueAsString(notificationDTO);
 					return ResponseEntity.status(HttpStatus.OK).body(notificationInJsonFormat);
 				} catch (JsonProcessingException e) {
-					logger.catching(e);
+					log.catching(e);
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(httpHeaders)
 							.body(messageSource.getMessage(HttpResponseConstants.INTERNAL_SERVER_ERROR, null, locale));
 				}
@@ -321,7 +313,7 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
-	@PostMapping(value = "/api/v1/notifications", consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
+	@PostMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
 			MediaType.TEXT_HTML_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
 			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody String message,
@@ -340,23 +332,21 @@ public class NotificationController {
 		// Verify that they are authorized to send messages
 		User requester = requesterOpt.get();
 		if (!PPERole.ROLE_PPE_MESSENGER.name().equals(requester.getRole().getRoleName())) {
-			logger.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
+			log.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
 					requester.getRole());
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.FORBIDDEN);
 		}
 
-		GroupNotificationRequestDto notificationRequest = mapper.readValue(message, GroupNotificationRequestDto.class);
-		GroupNotificationRequest messageToSend = dozerBeanMapper.map(notificationRequest,
+		GroupNotificationRequestDto notificationRequestDto = mapper.readValue(message,
+				GroupNotificationRequestDto.class);
+		notificationRequestDto.setRequester(requester);
+		GroupNotificationRequest messageToSend = dozerBeanMapper.map(notificationRequestDto,
 				GroupNotificationRequest.class);
-		List<User> recipientGroups = userService.getUsersOfType(notificationRequest.getAudiences());
-		notificationService.sendGroupNotifications(messageToSend, recipientGroups, requestingUserUUID);
-		ObjectNode auditDetailsNode = mapper.createObjectNode();
-		auditDetailsNode.put("requester", requestingUserUUID);
-		auditDetailsNode.put("notification", mapper.writeValueAsString(notificationRequest));
-		auditService.logAuditEvent(mapper.writeValueAsString(auditDetailsNode),
-				AuditEventType.PPE_SEND_GROUP_NOTIFICATION.name());
+
+		notificationService.sendGroupNotifications(messageToSend);
+
 		return new ResponseEntity<>(HttpStatus.CREATED);
 
 	}
@@ -388,7 +378,7 @@ public class NotificationController {
 		// Verify that they are authorized to send messages
 		User requester = requesterOpt.get();
 		if (!PPERole.ROLE_PPE_MESSENGER.name().equals(requester.getRole().getRoleName())) {
-			logger.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
+			log.error("User {} with role {} not authorized to send messsages ", requestingUserUUID,
 					requester.getRole());
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,

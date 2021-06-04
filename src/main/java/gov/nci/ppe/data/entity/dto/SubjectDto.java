@@ -18,7 +18,7 @@ import lombok.Data;
  *
  */
 @Data
-public class Subject {
+public class SubjectDto {
 	@NotBlank(message = ErrorConstants.MISSING_ENGLISH_SUBJECT)
 	@ApiModelProperty(value = "Message Subject in english")
 	private String en;
