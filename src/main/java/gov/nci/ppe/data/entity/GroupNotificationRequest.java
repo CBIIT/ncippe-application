@@ -32,7 +32,7 @@ public class GroupNotificationRequest {
 	private Long requestId;
 
 	@ManyToOne(targetEntity = User.class)
-	@JoinColumn(name = "RequesterId", insertable = false, updatable = false)
+	@JoinColumn(name = "RequesterId", updatable = false)
 	private User requester;
 
 	@Column(name = "RequestDateTime", nullable = false)
