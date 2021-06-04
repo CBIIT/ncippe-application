@@ -3,8 +3,11 @@ package gov.nci.ppe.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.springframework.stereotype.Component;
 
+import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
 
@@ -122,10 +125,9 @@ public interface NotificationService {
 	/**
 	 * Send Bulk notification to users by user type
 	 * 
-	 * @param notification    - Portal Notification to generate
-	 * @param recipientGroups - List of users to be notified
-	 * @param from            - UUID of User sending the notification
+	 * @param notification - Portal Notification to generate
+	 * @throws JsonProcessingException
 	 */
-	public void sendGroupNotifications(PortalNotification notification, List<User> recipientGroups, String from);
+	public void sendGroupNotifications(GroupNotificationRequest notification) throws JsonProcessingException;
 
 }

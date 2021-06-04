@@ -12,6 +12,7 @@ public final class ErrorConstants {
     public static final String MISSING_ENGLISH_MESSAGE = "English language notification message missing";
     public static final String MISSING_MESSAGE = "Missing Notification message";
     public static final String MISSING_SUBJECT = "Missing Notification subject";
+    public static final String MISSING_REQUEST = "Requester Missing";
 
     private ErrorConstants() {
     }

@@ -41,4 +41,17 @@ public class GroupNotificationRequest {
 	@ManyToMany(targetEntity = Role.class)
 	@JoinTable(name = "GroupNotificationRecipientRole", joinColumns = @JoinColumn(name = "RequestId"), inverseJoinColumns = @JoinColumn(name = "RoleId"))
 	private Set<Role> recipientRoles;
+
+	@Column(name = "MessageEnglish", nullable = false, length = 8192)
+	private String messageEnglish;
+
+	@Column(name = "MessageSpanish", nullable = false, length = 8192)
+	private String messageSpanish;
+
+	@Column(name = "SubjectEnglish", nullable = true, length = 255)
+	private String subjectEnglish;
+
+	@Column(name = "SubjectSpanish", nullable = true, length = 255)
+	private String subjectSpanish;
+
 }

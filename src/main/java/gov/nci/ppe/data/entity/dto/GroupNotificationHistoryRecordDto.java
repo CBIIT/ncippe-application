@@ -25,7 +25,7 @@ public class GroupNotificationHistoryRecordDto {
 	private List<PPEUserType> audiences;
 
 	@ApiModelProperty(value = "Subject of Message")
-	private Subject subject;
+	private SubjectDto subject;
 
 	@ApiModelProperty(value = "Body of the Message")
 	private MessageBody message;

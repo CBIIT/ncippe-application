@@ -7,8 +7,7 @@ import javax.validation.constraints.NotNull;
 
 import gov.nci.ppe.constants.ErrorConstants;
 import gov.nci.ppe.constants.PPERole;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import gov.nci.ppe.data.entity.User;
 import lombok.Data;
 
 /**
@@ -21,20 +20,18 @@ import lombok.Data;
  * @since Mar 24, 2021
  *
  */
-
-@ApiModel(value = "Details of Group Notification to be sent out")
 @Data
 public class GroupNotificationRequestDto {
 
+	@NotNull(message = ErrorConstants.MISSING_REQUEST)
+	private User requester;
+
 	@NotEmpty(message = ErrorConstants.MISSING_NOTIFICATION_AUDIENCES)
-	@ApiModelProperty(value = "List of roles")
 	private List<PPERole> audiences;
 
 	@NotNull(message = ErrorConstants.MISSING_SUBJECT)
-	@ApiModelProperty(value = "Subject of Message")
-	private Subject subject;
+	private SubjectDto subject;
 
 	@NotNull(message = ErrorConstants.MISSING_MESSAGE)
-	@ApiModelProperty(value = "Body of the Message")
 	private MessageBody message;
 }

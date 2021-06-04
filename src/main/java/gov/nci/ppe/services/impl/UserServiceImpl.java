@@ -12,15 +12,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
@@ -29,7 +28,6 @@ import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.UserType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
-import gov.nci.ppe.constants.PPEUserType;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
@@ -935,10 +933,9 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<User> getUsersOfType(List<PPEUserType> userTypes) {
-		List<Code> userTypeCodeList = convertToCode(
-				userTypes.stream().map(userType -> userType.name()).collect(Collectors.toList()));
-		return userRepository.findByUserTypeIn(userTypeCodeList);
+	public List<User> getUsersByRole(Set<Role> userRoles) {
+
+		return userRepository.findByRoleIn(userRoles);
 	}
 
 }
