@@ -24,10 +24,10 @@ import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.GroupNotificationRequestRepository;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
+import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
-import gov.nci.ppe.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -51,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	private EmailLogService emailService;
 
-	private UserService userService;
+	private UserRepository userRepository;
 
 	private AuditService auditService;
 
@@ -65,14 +65,14 @@ public class NotificationServiceImpl implements NotificationService {
 	public NotificationServiceImpl(PortalNotificationRepository notificationRepo,
 			GroupNotificationRequestRepository groupNotificationRequestRepository, RoleRepository roleRepository,
 			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService, AuditService auditService,
-			UserService userService) {
+			UserRepository userRepository) {
 		this.notificationRepo = notificationRepo;
 		this.groupNotificationRequestRepository = groupNotificationRequestRepository;
 		this.roleRepository = roleRepository;
 		this.notificationSrvConfig = notificationSrvConfig;
 		this.emailService = emailService;
 		this.auditService = auditService;
-		this.userService = userService;
+		this.userRepository = userRepository;
 		this.mapper = new ObjectMapper();
 	}
 
@@ -263,9 +263,10 @@ public class NotificationServiceImpl implements NotificationService {
 		Set<Role> targetRoles = groupNotification.getRecipientRoles().stream()
 				.map(role -> roleRepository.findByRoleName(role.getRoleName())).collect(Collectors.toSet());
 		groupNotification.setRecipientRoles(targetRoles);
+		groupNotification.setTimeOfRequest(LocalDateTime.now());
 		GroupNotificationRequest savedRequest = groupNotificationRequestRepository.save(groupNotification);
 		String from = groupNotification.getRequester().getUserUUID();
-		List<User> recipientGroups = userService.getUsersByRole(groupNotification.getRecipientRoles());
+		List<User> recipientGroups = userRepository.findByRoleIn(groupNotification.getRecipientRoles());
 		log.info("Send Group Notification to {} users from {}", recipientGroups.size(), from);
 		recipientGroups.stream().forEach(user -> {
 			addNotificationToAccount(from, groupNotification.getSubjectEnglish(), groupNotification.getSubjectSpanish(),

@@ -33,6 +33,7 @@ import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.GroupNotificationRequestRepository;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
+import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.impl.NotificationServiceImpl;
 
 @ActiveProfiles("unittest")
@@ -74,14 +75,14 @@ public class NotificationServiceTest {
 	private AuditService mockAuditService;
 
 	@Mock
-	private UserService mockUserService;
+	private UserRepository mockUserRepository;
 
 	private NotificationServiceImpl classUnderTest;
 
 	@BeforeEach
 	public void init() {
 		classUnderTest = new NotificationServiceImpl(mockNotificationRepo, mockGroupNotificationRequestRepository,
-				mockRoleRepository, mockNotificationSrvConfig, mockEmailService, mockAuditService, mockUserService);
+				mockRoleRepository, mockNotificationSrvConfig, mockEmailService, mockAuditService, mockUserRepository);
 	}
 
 	@Test
@@ -111,7 +112,7 @@ public class NotificationServiceTest {
 			when(mockRoleRepository.findByRoleName(roleProvider.getRoleName())).thenReturn(roleProvider);
 			when(mockGroupNotificationRequestRepository.save(any(GroupNotificationRequest.class)))
 					.thenReturn(notification);
-			when(mockUserService.getUsersByRole(roles)).thenReturn(recipientGroups);
+			when(mockUserRepository.findByRoleIn(roles)).thenReturn(recipientGroups);
 			when(mockNotificationRepo.save(any(PortalNotification.class))).thenAnswer(i -> i.getArguments()[0]);
 
 			classUnderTest.sendGroupNotifications(notification);

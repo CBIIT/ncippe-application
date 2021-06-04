@@ -341,10 +341,10 @@ public class NotificationController {
 
 		GroupNotificationRequestDto notificationRequestDto = mapper.readValue(message,
 				GroupNotificationRequestDto.class);
-		notificationRequestDto.setRequester(requester);
+
 		GroupNotificationRequest messageToSend = dozerBeanMapper.map(notificationRequestDto,
 				GroupNotificationRequest.class);
-
+		messageToSend.setRequester(requester);
 		notificationService.sendGroupNotifications(messageToSend);
 
 		return new ResponseEntity<>(HttpStatus.CREATED);
