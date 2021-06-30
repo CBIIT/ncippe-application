@@ -10,16 +10,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
@@ -241,7 +239,7 @@ public class UserServiceImpl implements UserService {
 
 	private List<Code> convertToCode(List<String> codeNameList) {
 		List<Code> codeList = codeRepository.findByCodeNameIn(codeNameList);
-		List<Long> accountStatusCodeIdList = new ArrayList<Long>();
+		List<Long> accountStatusCodeIdList = new ArrayList<>();
 		codeList.forEach(code -> accountStatusCodeIdList.add(code.getCodeId()));
 		return codeList;
 	}
@@ -540,7 +538,7 @@ public class UserServiceImpl implements UserService {
 		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
 		List<User> newUsersList = new ArrayList<>();
 		userEnrollmentData.forEach(patientData -> {
-			Set<Provider> providerSet = new HashSet<Provider>();
+			Set<Provider> providerSet = new HashSet<>();
 			/*
 			 * Verify if the provider for a particular patient is already in the system If
 			 * not insert the provider details and then associate it with them with the
@@ -618,7 +616,7 @@ public class UserServiceImpl implements UserService {
 				boolean crcUpdatedFlag = false;
 				Participant patient = (Participant) patientOptional.get();
 				Set<Provider> existingProviders = patient.getProviders();
-				Map<String, Set<Long>> mapOFProviders = new HashMap<String, Set<Long>>();
+				Map<String, Set<Long>> mapOFProviders = new HashMap<>();
 
 				if (!providerSet.isEmpty() || existingProviders.size() != providerSet.size()
 						|| !providerSet.containsAll(existingProviders)) {
@@ -754,7 +752,7 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		String formattedNumber = formattedPhoneNumber.toString().substring(0, 10);
-		log.log(Level.INFO, "Formatted Phone number is {}", formattedNumber);
+		log.info("Formatted Phone number is {}", formattedNumber);
 		return formattedNumber;
 	}
 
@@ -777,7 +775,7 @@ public class UserServiceImpl implements UserService {
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
 		provider.setPreferredLanguage(LanguageOption.ENGLISH);
-		log.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
+		log.info("Provider with Basic Details is {}", provider.toString());
 		return provider;
 	}
 
@@ -796,7 +794,7 @@ public class UserServiceImpl implements UserService {
 			auditDetailString = mapper.writeValueAsString(auditDetail);
 			auditService.logAuditEvent(auditDetailString, auditEvntType);
 		} catch (JsonProcessingException jsonProsException) {
-			log.log(Level.WARNING, jsonProsException.getMessage());
+			log.warn(jsonProsException.getMessage());
 		}
 	}
 
@@ -830,7 +828,7 @@ public class UserServiceImpl implements UserService {
 			auditDetailString = mapper.writeValueAsString(auditDetail);
 			auditService.logAuditEvent(auditDetailString, auditEvntType);
 		} catch (JsonProcessingException jsonProsException) {
-			log.log(Level.WARNING, jsonProsException.getMessage());
+			log.warn(jsonProsException.getMessage());
 		}
 	}
 
@@ -895,7 +893,7 @@ public class UserServiceImpl implements UserService {
 
 	private void sendOverdueNotification(FileMetadata fileMetadata) {
 
-		log.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+		log.debug("Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
 				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
 		CRC assocCRC = patient.getCrc();
