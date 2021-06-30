@@ -3,7 +3,7 @@ package gov.nci.ppe.data.entity.dto;
 import java.sql.Timestamp;
 import java.util.List;
 
-import gov.nci.ppe.constants.PPEUserType;
+import gov.nci.ppe.constants.PPERole;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +22,7 @@ import lombok.Data;
 @ApiModel(value = "Record of previous request to send Group Notification")
 public class GroupNotificationHistoryRecordDto {
 	@ApiModelProperty(value = "List of roles the message was sent to")
-	private List<PPEUserType> audiences;
+	private List<PPERole> audiences;
 
 	@ApiModelProperty(value = "Subject of Message")
 	private SubjectDto subject;
@@ -30,9 +30,8 @@ public class GroupNotificationHistoryRecordDto {
 	@ApiModelProperty(value = "Body of the Message")
 	private MessageBody message;
 
-	@ApiModelProperty(value = "Sender details")
-	private NotificationSenderDto sender;
-
 	@ApiModelProperty(value = "Request sent on")
 	private Timestamp dateSent;
+
+	private NotificationSenderDto messageFrom;
 }

@@ -165,4 +165,40 @@
 			<b>messageSpanish</b>
 		</field>
 	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.User</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NotificationSenderDto</class-b>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.GroupNotificationRequest</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.GroupNotificationHistoryRecordDto</class-b>
+		<field>
+			<a>recipientRoles</a>
+			<b>audiences</b>
+		</field>
+		<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+		<field>
+			<a>subjectEnglish</a>
+			<b>subject.en</b>
+		</field>
+		<field>
+			<a>subjectSpanish</a>
+			<b>subject.es</b>
+		</field>
+		<field>
+			<a>requester</a>
+			<b>messageFrom</b>
+		</field>
+		<field>
+			<a>timeofRequest</a>
+			<b>dateSent</b>
+		</field>
+	</mapping>
 </mappings>
