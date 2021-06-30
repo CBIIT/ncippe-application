@@ -3,9 +3,9 @@ package gov.nci.ppe.services;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.PortalNotification;
@@ -129,5 +129,14 @@ public interface NotificationService {
 	 * @throws JsonProcessingException
 	 */
 	public void sendGroupNotifications(GroupNotificationRequest notification) throws JsonProcessingException;
+
+	/**
+	 * Method to retrieve all Group Notification Requests submitted by the requester
+	 * 
+	 * @param requester User for whom the history is to be retrieved
+	 * 
+	 * @return
+	 */
+	public List<GroupNotificationRequest> getGroupNotificationRequests(User requester);
 
 }

@@ -1,7 +1,5 @@
 package gov.nci.ppe.data.entity.dto;
 
-import java.util.UUID;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,7 +19,7 @@ import lombok.Data;
 public class NotificationSenderDto {
 
 	@ApiModelProperty(value = "Sender UUID")
-	private UUID senderUUID;
+	private String userUUID;
 
 	@ApiModelProperty(value = "First name of sender")
 	private String firstName;

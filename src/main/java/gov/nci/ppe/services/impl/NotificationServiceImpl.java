@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
@@ -301,5 +301,14 @@ public class NotificationServiceImpl implements NotificationService {
 			}
 			emailService.sendEmailNotification(recipient.getEmail(), null, subject, message);
 		}
+	}
+
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<GroupNotificationRequest> getGroupNotificationRequests(User requester) {
+
+		return groupNotificationRequestRepository.findByRequester(requester);
 	}
 }

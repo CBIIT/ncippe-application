@@ -8,12 +8,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dozermapper.core.Mapper;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +24,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dozermapper.core.Mapper;
+
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
@@ -36,6 +35,7 @@ import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.PortalNotification;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.entity.dto.GroupNotificationHistoryRecordDto;
 import gov.nci.ppe.data.entity.dto.GroupNotificationRequestDto;
 import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
 import gov.nci.ppe.services.NotificationService;
@@ -314,7 +314,7 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
 	@PostMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
-			MediaType.TEXT_HTML_VALUE })
+			MediaType.TEXT_PLAIN_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
 			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody String message,
 			Locale locale) throws IOException {
@@ -352,18 +352,22 @@ public class NotificationController {
 	}
 
 	/**
-	 * Rest endpoint to get all group notifications sent out
+	 * GET endpoint to get all group notifications sent out
 	 * 
 	 * @param request
 	 * @param locale
 	 * @return
+	 * @throws JsonProcessingException
 	 */
+	@GetMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
+			MediaType.TEXT_HTML_VALUE })
 	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
-	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, Locale locale) {
+	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, Locale locale)
+			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
 
 		// Obtain the User record from the database to check if they are registered
@@ -386,9 +390,13 @@ public class NotificationController {
 		}
 
 		// make request to service
+		List<GroupNotificationRequest> requestHistory = notificationService.getGroupNotificationRequests(requester);
 
 		// map result to DTO
-
-		return new ResponseEntity<>(StringUtils.EMPTY, httpHeaders, HttpStatus.OK);
+		List<GroupNotificationHistoryRecordDto> requestHistoryDto = requestHistory.stream()
+				.map(reqHist -> dozerBeanMapper.map(reqHist, GroupNotificationHistoryRecordDto.class))
+				.collect(Collectors.toList());
+		String requestHistoryJson = mapper.writeValueAsString(requestHistoryDto);
+		return new ResponseEntity<>(requestHistoryJson, httpHeaders, HttpStatus.OK);
 	}
 }
