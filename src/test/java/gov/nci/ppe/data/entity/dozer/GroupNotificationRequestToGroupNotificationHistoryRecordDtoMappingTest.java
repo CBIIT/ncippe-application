@@ -3,6 +3,7 @@ package gov.nci.ppe.data.entity.dozer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,6 +62,7 @@ public class GroupNotificationRequestToGroupNotificationHistoryRecordDtoMappingT
 		source.setMessageSpanish(msgEs);
 		source.setSubjectEnglish(subjEn);
 		source.setSubjectSpanish(subjEs);
+		source.setTimeOfRequest(LocalDateTime.now());
 
 		Mapper mapper = DozerBeanMapperBuilder.create().withMappingFiles("dozer-mappings.xml").build();
 
@@ -76,5 +78,6 @@ public class GroupNotificationRequestToGroupNotificationHistoryRecordDtoMappingT
 		assertEquals(firstName, dest.getMessageFrom().getFirstName());
 		assertEquals(lastName, dest.getMessageFrom().getLastName());
 		assertEquals(userId.toString(), dest.getMessageFrom().getUserUUID());
+		assertNotNull(dest.getDateSent());
 	}
 }

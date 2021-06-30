@@ -50,6 +50,7 @@ import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is a Service class that orchestrates all the calls to entities and
@@ -60,11 +61,10 @@ import gov.nci.ppe.services.UserService;
  * @since 2019-07-22
  */
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
 	private static final String NEW_PROVIDERS = "NewProviders";
-
-	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
 	private UserRepository userRepository;
 
@@ -754,7 +754,7 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		String formattedNumber = formattedPhoneNumber.toString().substring(0, 10);
-		logger.log(Level.INFO, "Formatted Phone number is {}", formattedNumber);
+		log.log(Level.INFO, "Formatted Phone number is {}", formattedNumber);
 		return formattedNumber;
 	}
 
@@ -777,7 +777,7 @@ public class UserServiceImpl implements UserService {
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
 		provider.setPreferredLanguage(LanguageOption.ENGLISH);
-		logger.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
+		log.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
 		return provider;
 	}
 
@@ -796,7 +796,7 @@ public class UserServiceImpl implements UserService {
 			auditDetailString = mapper.writeValueAsString(auditDetail);
 			auditService.logAuditEvent(auditDetailString, auditEvntType);
 		} catch (JsonProcessingException jsonProsException) {
-			logger.log(Level.WARNING, jsonProsException.getMessage());
+			log.log(Level.WARNING, jsonProsException.getMessage());
 		}
 	}
 
@@ -830,7 +830,7 @@ public class UserServiceImpl implements UserService {
 			auditDetailString = mapper.writeValueAsString(auditDetail);
 			auditService.logAuditEvent(auditDetailString, auditEvntType);
 		} catch (JsonProcessingException jsonProsException) {
-			logger.log(Level.WARNING, jsonProsException.getMessage());
+			log.log(Level.WARNING, jsonProsException.getMessage());
 		}
 	}
 
@@ -884,7 +884,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
+		log.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
 				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
@@ -895,7 +895,7 @@ public class UserServiceImpl implements UserService {
 
 	private void sendOverdueNotification(FileMetadata fileMetadata) {
 
-		logger.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+		log.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
 				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
 		CRC assocCRC = patient.getCrc();
