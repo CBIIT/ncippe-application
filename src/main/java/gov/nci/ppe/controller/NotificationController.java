@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
@@ -75,6 +76,7 @@ public class NotificationController {
 			UserService userService, @Qualifier("dozerBean") Mapper dozerBeanMapper) {
 		this.mapper = new ObjectMapper();
 		this.mapper.registerSubtypes(PortalNotificationDTO.class);
+		this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		this.notificationService = notificationService;
 		this.messageSource = messageSource;
 		this.userService = userService;
