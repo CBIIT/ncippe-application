@@ -316,7 +316,7 @@ public class NotificationController {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
 	@PostMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
-			MediaType.TEXT_PLAIN_VALUE })
+			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
 			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody String message,
 			Locale locale) throws IOException {
@@ -362,7 +362,7 @@ public class NotificationController {
 	 * @throws JsonProcessingException
 	 */
 	@GetMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
-			MediaType.TEXT_HTML_VALUE })
+			MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
