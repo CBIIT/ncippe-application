@@ -371,6 +371,7 @@ public class NotificationController {
 	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		// Obtain the User record from the database to check if they are registered
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
