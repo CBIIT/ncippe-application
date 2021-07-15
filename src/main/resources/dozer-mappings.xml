@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mappings xmlns="http://dozermapper.github.io/schema/bean-mapping"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://dozermapper.github.io/schema/bean-mapping https://dozermapper.github.io/schema/bean-mapping.xsd">
+<mappings xmlns="http://dozermapper.github.io/schema/bean-mapping" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://dozermapper.github.io/schema/bean-mapping https://dozermapper.github.io/schema/bean-mapping.xsd">
 	<configuration>
 		<stop-on-errors>true</stop-on-errors>
 		<wildcard>true</wildcard>
 		<custom-converters>
 			<converter type="gov.nci.ppe.data.dozer.UserToUserUUIDDozerConverter">
-			    <class-a>gov.nci.ppe.data.entity.User</class-a>
-			    <class-b>java.lang.String</class-b>
+				<class-a>gov.nci.ppe.data.entity.User</class-a>
+				<class-b>java.lang.String</class-b>
 			</converter>
 			<converter type="gov.nci.ppe.data.dozer.LocalDateTimeToTimestampDozerConverter">
 				<class-a>java.time.LocalDateTime</class-a>
 				<class-b>java.sql.Timestamp</class-b>
+			</converter>
+			<converter type="gov.nci.ppe.data.dozer.PPERoleToRoleDozerConverter">
+				<class-a>gov.nci.ppe.constants.PPERole</class-a>
+				<class-b>gov.nci.ppe.data.entity.Role</class-b>
 			</converter>
 		</custom-converters>
 	</configuration>
@@ -43,7 +45,7 @@
 		<field>
 			<a is-accessible="true">crc</a>
 			<b is-accessible="true">crc</b>
-		</field>		
+		</field>
 		<field>
 			<a is-accessible="true">providers</a>
 			<b is-accessible="true">providers</b>
@@ -58,19 +60,19 @@
 			<a>dateOfBirth</a>
 			<b date-format="MM/dd/yyyy">dateOfBirth</b>
 		</field>
-	</mapping>	
+	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.Provider</class-a>
-		<class-b>gov.nci.ppe.data.entity.dto.ProviderDTO</class-b>	
+		<class-b>gov.nci.ppe.data.entity.dto.ProviderDTO</class-b>
 		<field>
 			<a is-accessible="true">patients</a>
 			<b is-accessible="true">patients</b>
 		</field>
-	</mapping>		
+	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.CRC</class-a>
-		<class-b>gov.nci.ppe.data.entity.dto.CrcDTO</class-b>	
-	</mapping>	
+		<class-b>gov.nci.ppe.data.entity.dto.CrcDTO</class-b>
+	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.FileMetadata</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.FileDTO</class-b>
@@ -81,7 +83,7 @@
 		<field>
 			<a is-accessible="true">fileType.codeName</a>
 			<b is-accessible="true">fileType</b>
-		</field>		
+		</field>
 	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.PortalNotification</class-a>
@@ -110,7 +112,7 @@
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.QuestionAnswer</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.QuestionAnswerDTO</class-b>
-	</mapping>	
+	</mapping>
 	<mapping>
 		<class-a>gov.nci.ppe.data.entity.NCORPSite</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.NCORPSiteDTO</class-b>
@@ -118,5 +120,85 @@
 			<a get-method="getGpsCoordinates">gpsCoordinates</a>
 			<b>gpsCoordinates</b>
 		</field>
-	</mapping>	
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.PortalNotification</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NotificationSendRequestDto</class-b>
+		<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+		<field>
+			<a>subjectEnglish</a>
+			<b>subject.en</b>
+		</field>
+		<field>
+			<a>subjectSpanish</a>
+			<b>subject.es</b>
+		</field>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.dto.GroupNotificationRequestDto</class-a>
+		<class-b>gov.nci.ppe.data.entity.GroupNotificationRequest</class-b>
+		<field>
+			<a>audiences</a>
+			<b>recipientRoles</b>
+		</field>
+		<field>
+			<a>subject.en</a>
+			<b>subjectEnglish</b>
+		</field>
+		<field>
+			<a>subject.es</a>
+			<b>subjectSpanish</b>
+		</field>
+		<field>
+			<a>message.en</a>
+			<b>messageEnglish</b>
+		</field>
+		<field>
+			<a>message.es</a>
+			<b>messageSpanish</b>
+		</field>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.User</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NotificationSenderDto</class-b>
+	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.GroupNotificationRequest</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.GroupNotificationHistoryRecordDto</class-b>
+		<field>
+			<a>recipientRoles</a>
+			<b>audiences</b>
+		</field>
+		<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+		<field>
+			<a>subjectEnglish</a>
+			<b>subject.en</b>
+		</field>
+		<field>
+			<a>subjectSpanish</a>
+			<b>subject.es</b>
+		</field>
+		<field>
+			<a>requester</a>
+			<b>messageFrom</b>
+		</field>
+		<field>
+			<a>timeofRequest</a>
+			<b>dateSent</b>
+		</field>
+	</mapping>
 </mappings>

@@ -193,15 +193,15 @@ public class PatientReportController {
 				participantReport = amazonS3Service.getFileFromS3(fileMetadata.getSearchKey(),
 						StringUtils.remove(fileMetadata.getFileName(), PatientReportConstants.FILE_EXTENSION_PDF),
 						PatientReportConstants.FILE_EXTENSION_PDF);
-				logger.debug("file is saved locally to " + participantReport.getPath());
+				logger.debug("file is saved locally to {}", participantReport.getPath());
 				httpHeaders.set("Content-Disposition", "attachment; filename=" + fileMetadata.getFileName());
 				resource = new InputStreamResource(new FileInputStream(participantReport));
 			} catch (ApiException apiEx) {
-				logger.error("Error Message : " + apiEx.getMessage());
+				logger.error("Error Message : {}", apiEx.getMessage());
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
 						messageSource.getMessage(HttpResponseConstants.FILE_DOWNLOAD_INTERNAL_ERROR, null, locale));
 			} catch (FileNotFoundException fileNotFndEx) {
-				logger.error("FILENOTFOUND Error Message : " + fileNotFndEx.getMessage());
+				logger.error("FILENOTFOUND Error Message : {}", fileNotFndEx.getMessage());
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource.getMessage(
 						HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
 			}

@@ -3,34 +3,78 @@ package gov.nci.ppe.services.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
+import gov.nci.ppe.constants.CommonConstants.AuditEventType;
+import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import gov.nci.ppe.data.entity.GroupNotificationRequest;
 import gov.nci.ppe.data.entity.PortalNotification;
+import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.data.repository.GroupNotificationRequestRepository;
 import gov.nci.ppe.data.repository.PortalNotificationRepository;
+import gov.nci.ppe.data.repository.RoleRepository;
+import gov.nci.ppe.data.repository.UserRepository;
+import gov.nci.ppe.services.AuditService;
+import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.NotificationService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
+ * Implementation class for {@link NotificationService}
+ * 
  * @author PublicisSapient
  * @version 1.0
  * @since 2019-08-20
  */
-@Component
+@Slf4j
+@Service
 public class NotificationServiceImpl implements NotificationService {
 
-	private static final Logger logger = LogManager.getLogger(NotificationService.class);
+	private static final String PATIENT_FULL_NAME_PLACEHOLDER = "%{PatientFullName}";
 
-	@Autowired
+	private static final String PATIENT_ID_PLACEHOLDER = "%{PatientId}";
+
 	private PortalNotificationRepository notificationRepo;
 
-	@Autowired
 	private NotificationServiceConfig notificationSrvConfig;
+
+	private EmailLogService emailService;
+
+	private UserRepository userRepository;
+
+	private AuditService auditService;
+
+	private GroupNotificationRequestRepository groupNotificationRequestRepository;
+
+	private RoleRepository roleRepository;
+
+	private ObjectMapper mapper;
+
+	@Autowired
+	public NotificationServiceImpl(PortalNotificationRepository notificationRepo,
+			GroupNotificationRequestRepository groupNotificationRequestRepository, RoleRepository roleRepository,
+			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService, AuditService auditService,
+			UserRepository userRepository) {
+		this.notificationRepo = notificationRepo;
+		this.groupNotificationRequestRepository = groupNotificationRequestRepository;
+		this.roleRepository = roleRepository;
+		this.notificationSrvConfig = notificationSrvConfig;
+		this.emailService = emailService;
+		this.auditService = auditService;
+		this.userRepository = userRepository;
+		this.mapper = new ObjectMapper();
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -44,8 +88,8 @@ public class NotificationServiceImpl implements NotificationService {
 		 * The notification message has placeholders which needs to be replaced at
 		 * runtime
 		 */
-		String replaceStringWith[] = { userName, patientName, patientId };
-		String replaceThisString[] = { "%{FirstName}", "%{PatientName}", "%{PatientId}" };
+		String[] replaceStringWith = { userName, patientName, patientId };
+		String[] replaceThisString = { "%{FirstName}", "%{PatientName}", PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(messageEnglish, replaceThisString, replaceStringWith);
 		String updatedSubjectEnglish = StringUtils.replaceEach(subjectEnglish, replaceThisString, replaceStringWith);
 		String updatedMessageSpanish = StringUtils.replaceEach(messageSpanish, replaceThisString, replaceStringWith);
@@ -108,8 +152,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void notifyCRCWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
-		String replaceStringWith[] = { patientFullName, patientId };
-		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
+		String[] replaceStringWith = { patientFullName, patientId };
+		String[] replaceThisString = { PATIENT_FULL_NAME_PLACEHOLDER, PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyCRCWhenPatientIsAddedMessageEnglish(), replaceThisString,
 				replaceStringWith);
@@ -139,8 +183,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void notifyProviderWhenPatientIsAdded(String patientFullName, Long userId, String patientId) {
-		String replaceStringWith[] = { patientFullName, patientId };
-		String replaceThisString[] = { "%{PatientFullName}", "%{PatientId}" };
+		String[] replaceStringWith = { patientFullName, patientId };
+		String[] replaceThisString = { PATIENT_FULL_NAME_PLACEHOLDER, PATIENT_ID_PLACEHOLDER };
 		String updatedMessageEnglish = StringUtils.replaceEach(
 				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedMessageEnglish(), replaceThisString,
 				replaceStringWith);
@@ -152,15 +196,6 @@ public class NotificationServiceImpl implements NotificationService {
 				notificationSrvConfig.getNotifyProviderWhenPatientIsAddedSubjectSpanish(), updatedMessageEnglish,
 				updatedMessageSpanish, userId);
 	}
-
-	/**
-	 * 
-	 * @param from    - The sender of the message. It is usually system notification
-	 * @param title   - Subject of the message
-	 * @param message - Content of the actual message
-	 * @param userId  - Id for the recipient of the message
-	 * @return
-	 */
 
 	/**
 	 * Private method that inserts a row into PortalNotification Table.
@@ -175,7 +210,8 @@ public class NotificationServiceImpl implements NotificationService {
 	 * @return The saved notification
 	 */
 	private Optional<PortalNotification> addNotificationToAccount(String from, String subjectEnglish,
-			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId) {
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId,
+			GroupNotificationRequest groupNotification) {
 		PortalNotification notificationObj = new PortalNotification();
 		notificationObj.setMessageFrom(from);
 		notificationObj.setSubjectEnglish(subjectEnglish);
@@ -185,8 +221,17 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationObj.setUserId(userId);
 		notificationObj.setDateGenerated(LocalDateTime.now());
 		notificationObj.setViewedByUser(0);
+		if (groupNotification != null) {
+			notificationObj.setGroupNotificationRequest(groupNotification);
+		}
 		notificationObj = notificationRepo.save(notificationObj);
 		return Optional.of(notificationObj);
+	}
+
+	private Optional<PortalNotification> addNotificationToAccount(String from, String subjectEnglish,
+			String subjectSpanish, String messageEnglish, String messageSpanish, Long userId) {
+		return addNotificationToAccount(from, subjectEnglish, subjectSpanish, messageEnglish, messageSpanish, userId,
+				null);
 	}
 
 	@Override
@@ -210,4 +255,60 @@ public class NotificationServiceImpl implements NotificationService {
 
 	}
 
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void sendGroupNotifications(GroupNotificationRequest groupNotification) throws JsonProcessingException {
+		Set<Role> targetRoles = groupNotification.getRecipientRoles().stream()
+				.map(role -> roleRepository.findByRoleName(role.getRoleName())).collect(Collectors.toSet());
+		groupNotification.setRecipientRoles(targetRoles);
+		groupNotification.setTimeOfRequest(LocalDateTime.now());
+		GroupNotificationRequest savedRequest = groupNotificationRequestRepository.save(groupNotification);
+		String from = groupNotification.getRequester().getUserUUID();
+		List<User> recipientGroups = userRepository.findByRoleIn(groupNotification.getRecipientRoles());
+		log.info("Send Group Notification to {} users from {}", recipientGroups.size(), from);
+		recipientGroups.stream().forEach(user -> {
+			addNotificationToAccount(from, groupNotification.getSubjectEnglish(), groupNotification.getSubjectSpanish(),
+					groupNotification.getMessageEnglish(), groupNotification.getMessageSpanish(), user.getUserId(),
+					savedRequest);
+			sendEmail(groupNotification, user);
+		});
+		ObjectNode auditDetailsNode = mapper.createObjectNode();
+		auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
+		auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
+		auditService.logAuditEvent(mapper.writeValueAsString(auditDetailsNode),
+				AuditEventType.PPE_SEND_GROUP_NOTIFICATION.name());
+
+	}
+
+	/**
+	 * Sends out email to the recipient
+	 * 
+	 * @param notification - details of the email content
+	 * @param recipient    - User to send email to
+	 */
+	private void sendEmail(GroupNotificationRequest notification, User recipient) {
+		if (recipient.isAllowEmailNotification()) {
+			String message;
+			String subject;
+			if (LanguageOption.ENGLISH.equals(recipient.getPreferredLanguage())) {
+				message = notification.getMessageEnglish();
+				subject = notification.getSubjectEnglish();
+			} else {
+				message = notification.getMessageSpanish();
+				subject = notification.getSubjectSpanish();
+			}
+			emailService.sendEmailNotification(recipient.getEmail(), null, subject, message);
+		}
+	}
+
+	/*
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<GroupNotificationRequest> getGroupNotificationRequests(User requester) {
+
+		return groupNotificationRequestRepository.findByRequester(requester);
+	}
 }

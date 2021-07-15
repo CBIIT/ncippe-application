@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-NcippeApplication<NCIPPE-Application>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "mainClass": "gov.nci.ppe.NcippeApplication",
+            "projectName": "NCIPPE-Application",
+            "args": "",
+            "env": {
+                "DB_HOSTNAME":"biobank-dev-db.cc2msjsimutx.us-east-1.rds.amazonaws.com",
+                "DB_NAME":"biobank",
+                "DB_PASSWORD":"Ph1-@Asoh08u",
+                "DB_USERNAME":"biobank",
+                "DEFAULT_DESTINATION_EMAIL":"debapriya.sarkar@publicissapient.com",
+                "EMAIL_ADDRESS":"debapriya.sarkar@mail.nih.gov",
+                "HOSTNAME":"moonshotbiobank-dev.cancer.gov",
+                "RESTRICT_OUTGOING_EMAIL_DOMAIN":"true",
+                "TEST_RPT_BUCKET":"nci-cbiit-biobank-dev",
+                "USE_AWS_SES":"false"
+            }
+        }
+    ]
+}
