@@ -268,12 +268,15 @@ public class NotificationServiceImpl implements NotificationService {
 		String from = groupNotification.getRequester().getUserUUID();
 		List<User> recipientGroups = userRepository.findByRoleIn(groupNotification.getRecipientRoles());
 		log.info("Send Group Notification to {} users from {}", recipientGroups.size(), from);
-		recipientGroups.stream().forEach(user -> {
-			addNotificationToAccount(from, groupNotification.getSubjectEnglish(), groupNotification.getSubjectSpanish(),
-					groupNotification.getMessageEnglish(), groupNotification.getMessageSpanish(), user.getUserId(),
-					savedRequest);
-			sendEmail(groupNotification, user);
-		});
+		recipientGroups.stream()
+				.filter(user -> user.isAllowEmailNotification() && StringUtils.isNotBlank(user.getEmail()))
+				.forEach(user -> {
+					addNotificationToAccount(from, groupNotification.getSubjectEnglish(),
+							groupNotification.getSubjectSpanish(), groupNotification.getMessageEnglish(),
+							groupNotification.getMessageSpanish(), user.getUserId(), savedRequest);
+					sendEmail(groupNotification, user);
+				});
+
 		ObjectNode auditDetailsNode = mapper.createObjectNode();
 		auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
 		auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
