@@ -1,19 +1,23 @@
 package gov.nci.ppe.services.impl;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
 
-import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEvents;
-import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEventsClientBuilder;
-import com.amazonaws.services.cloudwatchevents.model.PutEventsRequest;
-import com.amazonaws.services.cloudwatchevents.model.PutEventsRequestEntry;
-import com.amazonaws.services.cloudwatchevents.model.PutEventsResult;
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.DescribeLogStreamsRequest;
 import com.amazonaws.services.logs.model.DescribeLogStreamsResult;
+import com.amazonaws.services.logs.model.InputLogEvent;
 import com.amazonaws.services.logs.model.PutLogEventsRequest;
+import com.amazonaws.services.logs.model.PutLogEventsResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import gov.nci.ppe.data.entity.dto.AuditEventDto;
 import gov.nci.ppe.services.AuditService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuditServiceImpl implements AuditService {
 
-	private AmazonCloudWatchEvents cloudWatchEventClient = AmazonCloudWatchEventsClientBuilder.defaultClient();
-
 	private AWSLogs auditLogsClient = AWSLogsClientBuilder.defaultClient();
+
+	private ObjectMapper mapper = new ObjectMapper();
 
 	@Value("audit.log.group")
 	private String logGroupName;
@@ -44,22 +48,27 @@ public class AuditServiceImpl implements AuditService {
 	/**
 	 * {@inheritDoc}
 	 * 
+	 * @throws JsonProcessingException
+	 * 
 	 */
 	@Override
-	public void logAuditEvent(String eventDetails, String eventDetailType) {
+	public void logAuditEvent(String eventDetails, String eventDetailType) throws JsonProcessingException {
 
+		AuditEventDto auditEventDto = new AuditEventDto(eventDetailType, eventDetails);
 		DescribeLogStreamsRequest logStreamsRequest = new DescribeLogStreamsRequest(logGroupName);
 		logStreamsRequest.setLogStreamNamePrefix(logStreamName);
 		DescribeLogStreamsResult logStreamResult = auditLogsClient.describeLogStreams(logStreamsRequest);
+		String nextSequenceToken = logStreamResult.getNextToken();
 
-		PutLogEventsRequest requestEntry = new PutEventsRequestEntry().withDetail(eventDetails)
-				.withDetailType(eventDetailType).withSource("aws-sdk-java-cloudwatch-example");
+		InputLogEvent auditEvent = new InputLogEvent().withMessage(mapper.writeValueAsString(auditEventDto))
+				.withTimestamp(LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli());
 
-		PutEventsRequest request = new PutEventsRequest().withEntries(requestEntry);
+		PutLogEventsRequest audiEventsRequest = new PutLogEventsRequest(logGroupName, logStreamName,
+				Arrays.asList(auditEvent)).withSequenceToken(nextSequenceToken);
 
-		PutEventsResult response = cloudWatchEventClient.putEvents(request);
-
-		log.info("Created audit event {}", response.getSdkResponseMetadata().getRequestId());
+		PutLogEventsResult response = auditLogsClient.putLogEvents(audiEventsRequest);
+		log.info("Created audit event {} with status {}", response.getSdkResponseMetadata().getRequestId(),
+				response.getSdkHttpMetadata().getHttpStatusCode());
 	}
 
 }
