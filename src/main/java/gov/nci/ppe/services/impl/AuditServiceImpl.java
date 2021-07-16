@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.DescribeLogStreamsRequest;
@@ -13,9 +16,6 @@ import com.amazonaws.services.logs.model.PutLogEventsRequest;
 import com.amazonaws.services.logs.model.PutLogEventsResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.data.entity.dto.AuditEventDto;
 import gov.nci.ppe.services.AuditService;
@@ -39,10 +39,10 @@ public class AuditServiceImpl implements AuditService {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	@Value("audit.log.group")
+	@Value("${audit.log.group}")
 	private String logGroupName;
 
-	@Value("audit.log.stream")
+	@Value("${audit.log.stream}")
 	private String logStreamName;
 
 	/**
