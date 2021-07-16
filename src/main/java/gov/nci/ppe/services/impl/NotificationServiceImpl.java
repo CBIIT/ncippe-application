@@ -276,6 +276,7 @@ public class NotificationServiceImpl implements NotificationService {
 							groupNotification.getMessageSpanish(), user.getUserId(), savedRequest);
 					sendEmail(groupNotification, user);
 				});
+
 		ObjectNode auditDetailsNode = mapper.createObjectNode();
 		auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
 		auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
