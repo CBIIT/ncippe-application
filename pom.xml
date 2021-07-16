@@ -22,7 +22,7 @@
 			<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
-				<version>1.11.646</version>
+				<version>1.12.24</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -151,6 +151,11 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-events</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-logs -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-logs</artifactId>
 		</dependency>
 		<!-- Add Log4j2 Dependency -->
 		<dependency>
