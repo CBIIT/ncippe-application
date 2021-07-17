@@ -1,5 +1,8 @@
 package gov.nci.ppe.data.entity.dto;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -15,6 +18,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class AuditEventDto {
-    private String eventType;
-    private String eventDetail;
+    private AuditEventType eventType;
+    private ObjectNode eventDetail;
 }

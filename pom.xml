@@ -142,10 +142,6 @@
 		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ses -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-ses</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-cloudwatch</artifactId>
 		</dependency>
 		<dependency>
@@ -203,13 +199,13 @@
 			<artifactId>junit-jupiter-params</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
-<dependency>
-    <groupId>org.mockito</groupId>
-    <artifactId>mockito-junit-jupiter</artifactId>
-<!--     <version>2.23.0</version> -->
-    <scope>test</scope>
-</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<!--     <version>2.23.0</version> -->
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

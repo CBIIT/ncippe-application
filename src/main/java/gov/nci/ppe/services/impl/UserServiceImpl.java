@@ -554,7 +554,7 @@ public class UserServiceImpl implements UserService {
 							patientData.getTreatingInvestigatorEmail());
 					providerSet.add((Provider) insertNewProviderDetailsFromOpen(treatingProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					providerSet.add(treatingProviderOptional.get());
 				}
@@ -569,7 +569,7 @@ public class UserServiceImpl implements UserService {
 							patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
 					providerSet.add((Provider) insertNewProviderDetailsFromOpen(creditProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					providerSet.add(creditProviderOptional.get());
 				}
@@ -587,7 +587,7 @@ public class UserServiceImpl implements UserService {
 					crc.setPreferredLanguage(LanguageOption.ENGLISH);
 					crc = (CRC) insertNewCRCDetailsFromOpen(crc).get();
 					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					crc = crcOptional.get();
 				}
@@ -608,7 +608,7 @@ public class UserServiceImpl implements UserService {
 
 				newUsersList.add(patientOptional.get());
 				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(),
-						AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+						AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 			} else {
 				// If the patient exists, check for any changes in the relationship with
 				// Providers and CRC
@@ -667,7 +667,7 @@ public class UserServiceImpl implements UserService {
 					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
 							mapOFProviders.get("ExistingProviders"), mapOFProviders.get(NEW_PROVIDERS),
-							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 				}
 				if (crcUpdatedFlag) {
 					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
@@ -696,14 +696,14 @@ public class UserServiceImpl implements UserService {
 							{
 								add(crcOpentCtepId);
 							}
-						}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+						}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 					} else {
 						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>(),
 								new HashSet<Long>() {
 									{
 										add(crcOpentCtepId);
 									}
-								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 					}
 				}
 			}
@@ -726,8 +726,8 @@ public class UserServiceImpl implements UserService {
 
 		auditDetail.put("UUID", uuid).put("PatientID", patientId).put("PatientEmail", patientEmail)
 				.put("PatientFirstName", patientFirstName).put("PatientLastName", patientLastName);
-		String auditDetailString = mapper.writeValueAsString(auditDetail);
-		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
+
+		auditService.logAuditEvent(auditDetail, AuditEventType.PPE_INVITE_TO_PORTAL);
 	}
 
 	/*
@@ -782,17 +782,17 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * Method to log details for audit purpose
 	 * 
-	 * @param userTypeId    - String representing the specific userId
-	 * @param id            - Id for the user
-	 * @param auditEvntType - Insert event or Update Event
+	 * @param userTypeId     - String representing the specific userId
+	 * @param id             - Id for the user
+	 * @param auditEventType - Insert event or Update Event
 	 */
-	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
+	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, AuditEventType auditEventType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
 		auditDetail.put(userTypeId, id);
-		String auditDetailString;
+
 		try {
-			auditDetailString = mapper.writeValueAsString(auditDetail);
-			auditService.logAuditEvent(auditDetailString, auditEvntType);
+
+			auditService.logAuditEvent(auditDetail, auditEventType);
 		} catch (JsonProcessingException jsonProsException) {
 			log.warn(jsonProsException.getMessage());
 		}
@@ -801,15 +801,15 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * Method to log update details for audit purpose.
 	 * 
-	 * @param oldKey        - Key for exisitng Provider/CRC ids
-	 * @param newKey        - Key for new Provider/CRC ids
-	 * @param oldIds        - Set of existing Provider/CRC ids
-	 * @param newIds        - Set of new Provider/CRC ids
-	 * @param patientId     - patientId from OPEN
-	 * @param auditEvntType - AuditEventType enum
+	 * @param oldKey         - Key for exisitng Provider/CRC ids
+	 * @param newKey         - Key for new Provider/CRC ids
+	 * @param oldIds         - Set of existing Provider/CRC ids
+	 * @param newIds         - Set of new Provider/CRC ids
+	 * @param patientId      - patientId from OPEN
+	 * @param auditEventType - AuditEventType enum
 	 */
 	private void raiseUpdateParticipantAuditEvent(String oldKey, String newKey, Set<Long> oldIds, Set<Long> newIds,
-			String patientId, String auditEvntType) {
+			String patientId, AuditEventType auditEventType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
 		auditDetail.put("PatientId", patientId);
 		final AtomicInteger counter = new AtomicInteger(1);
@@ -823,10 +823,9 @@ public class UserServiceImpl implements UserService {
 			auditDetail.put(newKey + counter2, Long.toString(id));
 			counter2.getAndAdd(1);
 		});
-		String auditDetailString;
+
 		try {
-			auditDetailString = mapper.writeValueAsString(auditDetail);
-			auditService.logAuditEvent(auditDetailString, auditEvntType);
+			auditService.logAuditEvent(auditDetail, auditEventType);
 		} catch (JsonProcessingException jsonProsException) {
 			log.warn(jsonProsException.getMessage());
 		}

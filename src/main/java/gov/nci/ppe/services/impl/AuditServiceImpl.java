@@ -16,7 +16,9 @@ import com.amazonaws.services.logs.model.PutLogEventsRequest;
 import com.amazonaws.services.logs.model.PutLogEventsResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.data.entity.dto.AuditEventDto;
 import gov.nci.ppe.services.AuditService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,16 +47,23 @@ public class AuditServiceImpl implements AuditService {
 	@Value("${audit.log.stream}")
 	private String logStreamName;
 
-	/**
+	/*
 	 * {@inheritDoc}
-	 * 
-	 * @throws JsonProcessingException
 	 * 
 	 */
 	@Override
-	public void logAuditEvent(String eventDetails, String eventDetailType) throws JsonProcessingException {
+	public void logAuditEvent(ObjectNode eventDetails, AuditEventType eventDetailType) throws JsonProcessingException {
 
 		AuditEventDto auditEventDto = new AuditEventDto(eventDetailType, eventDetails);
+		logAuditEvent(auditEventDto);
+	}
+
+	/*
+	 * {@inheritDoc}
+	 * 
+	 */
+	@Override
+	public void logAuditEvent(AuditEventDto auditEventDto) throws JsonProcessingException {
 		DescribeLogStreamsRequest logStreamsRequest = new DescribeLogStreamsRequest(logGroupName);
 		logStreamsRequest.setLogStreamNamePrefix(logStreamName);
 		DescribeLogStreamsResult logStreamResult = auditLogsClient.describeLogStreams(logStreamsRequest);
@@ -69,6 +78,7 @@ public class AuditServiceImpl implements AuditService {
 		PutLogEventsResult response = auditLogsClient.putLogEvents(audiEventsRequest);
 		log.info("Created audit event {} with status {}", response.getSdkResponseMetadata().getRequestId(),
 				response.getSdkHttpMetadata().getHttpStatusCode());
+
 	}
 
 }
