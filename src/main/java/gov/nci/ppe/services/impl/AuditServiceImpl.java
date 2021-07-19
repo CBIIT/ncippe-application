@@ -69,6 +69,7 @@ public class AuditServiceImpl implements AuditService {
 		DescribeLogStreamsResult logStreamResult = auditLogsClient.describeLogStreams(logStreamsRequest);
 		String nextSequenceToken = logStreamResult.getNextToken();
 
+		log.info("Sequence Token {}", nextSequenceToken);
 		InputLogEvent auditEvent = new InputLogEvent().withMessage(mapper.writeValueAsString(auditEventDto))
 				.withTimestamp(LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli());
 
