@@ -105,11 +105,7 @@ public class UserController {
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
 
 		log.info("Received Login request with uuid {} and email {}", uuid, email);
-		ObjectNode auditDetail = mapper.createObjectNode();
-		auditDetail.put("UUID", uuid);
-		auditDetail.put("Email", email);
-		auditDetail.put("Notes", "Attempt to Login");
-		auditService.logAuditEvent(auditDetail, AuditEventType.PPE_LOGIN);
+		raiseLoginAuditEvent(uuid, email, "Attempt to Login", AuditEventType.PPE_LOGIN_ATTEMPT);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -122,6 +118,9 @@ public class UserController {
 
 			if (!userOptional.isPresent()) {
 				log.error("Did not find user with {} and {} ", email, uuid);
+
+				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_SUCCESS);
+
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 			}
@@ -135,10 +134,22 @@ public class UserController {
 			}
 		}
 
+		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
+
 		User user = userOptional.get();
 		String userInJsonFormat = convertUserToJSON(user);
 		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
+	}
+
+	private void raiseLoginAuditEvent(String uuid, String email, String notes, AuditEventType eventType)
+			throws JsonProcessingException {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put("UUID", uuid);
+		auditDetail.put("Email", email);
+
+		auditDetail.put("Notes", notes);
+		auditService.logAuditEvent(auditDetail, eventType);
 	}
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
