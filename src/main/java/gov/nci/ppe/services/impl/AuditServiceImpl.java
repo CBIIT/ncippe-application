@@ -67,7 +67,7 @@ public class AuditServiceImpl implements AuditService {
 		DescribeLogStreamsRequest logStreamsRequest = new DescribeLogStreamsRequest(logGroupName);
 		logStreamsRequest.setLogStreamNamePrefix(logStreamName);
 		DescribeLogStreamsResult logStreamResult = auditLogsClient.describeLogStreams(logStreamsRequest);
-		String nextSequenceToken = logStreamResult.getNextToken();
+		String nextSequenceToken = logStreamResult.getLogStreams().get(0).getUploadSequenceToken();
 
 		log.info("Log Stream {}", logStreamResult.toString());
 		InputLogEvent auditEvent = new InputLogEvent().withMessage(mapper.writeValueAsString(auditEventDto))

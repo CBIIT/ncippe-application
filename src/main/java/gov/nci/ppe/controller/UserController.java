@@ -105,6 +105,11 @@ public class UserController {
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
 
 		log.info("Received Login request with uuid {} and email {}", uuid, email);
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put("UUID", uuid);
+		auditDetail.put("Email", email);
+		auditDetail.put("Notes", "Attempt to Login");
+		auditService.logAuditEvent(auditDetail, AuditEventType.PPE_LOGIN);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -426,17 +431,17 @@ public class UserController {
 				new NamedType(ProviderDTO.class, "ProviderDTO"), new NamedType(CrcDTO.class, "CrcDTO"));
 		PPERole roleName = PPERole.valueOf(user.getRole().getRoleName());
 		switch (roleName) {
-			case ROLE_PPE_PROVIDER:
-				return mapper.writerWithView(JsonViews.ProviderDetailView.class).writeValueAsString(userDTO);
+		case ROLE_PPE_PROVIDER:
+			return mapper.writerWithView(JsonViews.ProviderDetailView.class).writeValueAsString(userDTO);
 
-			case ROLE_PPE_PARTICIPANT:
-				return mapper.writerWithView(JsonViews.ParticipantDetailView.class).writeValueAsString(userDTO);
+		case ROLE_PPE_PARTICIPANT:
+			return mapper.writerWithView(JsonViews.ParticipantDetailView.class).writeValueAsString(userDTO);
 
-			case ROLE_PPE_CRC:
-				return mapper.writerWithView(JsonViews.CrcDetailView.class).writeValueAsString(userDTO);
+		case ROLE_PPE_CRC:
+			return mapper.writerWithView(JsonViews.CrcDetailView.class).writeValueAsString(userDTO);
 
-			default:
-				return mapper.writerWithView(JsonViews.UsersSummaryView.class).writeValueAsString(userDTO);
+		default:
+			return mapper.writerWithView(JsonViews.UsersSummaryView.class).writeValueAsString(userDTO);
 		}
 	}
 
@@ -445,46 +450,46 @@ public class UserController {
 		PPERole roleName = PPERole.valueOf(usr.getRole().getRoleName());
 
 		switch (roleName) {
-			case ROLE_PPE_PROVIDER:
-				Provider provider = (Provider) usr;
-				ProviderDTO providerDTO = dozerBeanMapper.map(provider, ProviderDTO.class);
+		case ROLE_PPE_PROVIDER:
+			Provider provider = (Provider) usr;
+			ProviderDTO providerDTO = dozerBeanMapper.map(provider, ProviderDTO.class);
 
-				// Special case for providers, filter out associated patients who have not been
-				// initiated.
-				providerDTO.getPatients().removeIf(patient -> patient.getPortalAccountStatus()
-						.equalsIgnoreCase(PortalAccountStatus.ACCT_NEW.name()));
+			// Special case for providers, filter out associated patients who have not been
+			// initiated.
+			providerDTO.getPatients().removeIf(
+					patient -> patient.getPortalAccountStatus().equalsIgnoreCase(PortalAccountStatus.ACCT_NEW.name()));
 
-				userDTO = providerDTO;
-				break;
+			userDTO = providerDTO;
+			break;
 
-			case ROLE_PPE_PARTICIPANT:
-				Participant patient = (Participant) usr;
+		case ROLE_PPE_PARTICIPANT:
+			Participant patient = (Participant) usr;
 
-				ParticipantDTO participantDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
-				// Filter out Notifications for CRC and Providers
-				if (participantDTO.getCrc().getNotifications() != null) {
-					participantDTO.getCrc().getNotifications().clear();
+			ParticipantDTO participantDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
+			// Filter out Notifications for CRC and Providers
+			if (participantDTO.getCrc().getNotifications() != null) {
+				participantDTO.getCrc().getNotifications().clear();
+			}
+			participantDTO.getProviders().forEach(associatedProvider -> {
+				if (associatedProvider.getNotifications() != null) {
+					associatedProvider.getNotifications().clear();
 				}
-				participantDTO.getProviders().forEach(associatedProvider -> {
-					if (associatedProvider.getNotifications() != null) {
-						associatedProvider.getNotifications().clear();
-					}
-				});
-				userDTO = participantDTO;
-				break;
+			});
+			userDTO = participantDTO;
+			break;
 
-			case ROLE_PPE_CRC:
-				CRC crcAdmin = (CRC) usr;
-				userDTO = dozerBeanMapper.map(crcAdmin, CrcDTO.class);
-				break;
+		case ROLE_PPE_CRC:
+			CRC crcAdmin = (CRC) usr;
+			userDTO = dozerBeanMapper.map(crcAdmin, CrcDTO.class);
+			break;
 
-			case ROLE_PPE_CONTENT_EDITOR:
-				ContentEditor contentEditor = (ContentEditor) usr;
-				userDTO = dozerBeanMapper.map(contentEditor, ContentEditorDTO.class);
-				break;
+		case ROLE_PPE_CONTENT_EDITOR:
+			ContentEditor contentEditor = (ContentEditor) usr;
+			userDTO = dozerBeanMapper.map(contentEditor, ContentEditorDTO.class);
+			break;
 
-			default:
-				userDTO = dozerBeanMapper.map(usr, UserDTO.class);
+		default:
+			userDTO = dozerBeanMapper.map(usr, UserDTO.class);
 		}
 		return userDTO;
 
