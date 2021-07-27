@@ -3,4 +3,4 @@ logs/
 target/
 application-local.properties
 *.class
-*.class
+

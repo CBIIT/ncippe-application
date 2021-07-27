@@ -119,7 +119,7 @@ public class UserController {
 			if (!userOptional.isPresent()) {
 				log.error("Did not find user with {} and {} ", email, uuid);
 
-				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_SUCCESS);
+				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
 
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
@@ -128,6 +128,8 @@ public class UserController {
 			User user = userOptional.get();
 			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
 				log.error("Did not find user with {} and {} ", email, uuid);
+				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
+						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
 				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(
 						messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null,
 						locale));

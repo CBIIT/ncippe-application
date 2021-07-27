@@ -8,11 +8,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import gov.nci.ppe.constants.CommonConstants.AuditEventType;
 import gov.nci.ppe.constants.FileType;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.UserService;
 
@@ -22,11 +28,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	protected Logger logger = Logger.getLogger(AuthorizationService.class.getName());
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
+
+	@Autowired
+	private AuditService auditService;
+
+	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
 	 * {@inheritDoc}
-	 * 
 	 */
 	@Override
 	public boolean authorize(String requestingUserUUID, User user) {
@@ -68,27 +78,41 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	private boolean authorizeProvider(Participant targetUser, final String requestingUserUUID) {
-		Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
-				.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
-		if (requestingProviderOptional.isEmpty()) {
-			logger.log(Level.WARNING,
-					"Provider " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
+		try {
+			Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
+					.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
+			if (requestingProviderOptional.isEmpty()) {
+				raiseAuthorizationEvent(requestingUserUUID, targetUser.getUserUUID(),
+						"Not authorized to access Patient ", AuditEventType.PPE_UNAUTHORIZED_ACCESS);
+				logger.log(Level.WARNING,
+						"Provider " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
+				return false;
+			} else {
+				logger.log(Level.INFO,
+						"Provider " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
+				return true;
+			}
+		} catch (JsonProcessingException e) {
+			logger.log(Level.SEVERE, "Internal Error", e);
 			return false;
-		} else {
-			logger.log(Level.INFO,
-					"Provider " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
-			return true;
 		}
 	}
 
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
-		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
-			logger.log(Level.INFO,
-					"CRC " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
-			return true;
-		} else {
-			logger.log(Level.WARNING,
-					"CRC " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
+		try {
+			if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
+				logger.log(Level.INFO,
+						"CRC " + requestingUserUUID + " allowed access to patient " + targetUser.getPatientId());
+				return true;
+			} else {
+				raiseAuthorizationEvent(requestingUserUUID, targetUser.getUserUUID(),
+						"Not authorized to access Patient ", AuditEventType.PPE_UNAUTHORIZED_ACCESS);
+				logger.log(Level.WARNING,
+						"CRC " + requestingUserUUID + " denied access to patient " + targetUser.getPatientId());
+				return false;
+			}
+		} catch (JsonProcessingException e) {
+			logger.log(Level.SEVERE, "Internal Error", e);
 			return false;
 		}
 	}
@@ -197,4 +221,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		}
 	}
 
+	private void raiseAuthorizationEvent(String requester, String target, String notes, AuditEventType eventType)
+			throws JsonProcessingException {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put("Requester UUID", requester);
+		auditDetail.put("Target User UUID", target);
+		auditDetail.put("Notes", notes);
+		auditService.logAuditEvent(auditDetail, eventType);
+
+	}
 }
