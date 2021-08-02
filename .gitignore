@@ -1,4 +1,6 @@
-
-*.class
-*.class
+.vscode/
+logs/
+target/
 application-local.properties
+*.class
+

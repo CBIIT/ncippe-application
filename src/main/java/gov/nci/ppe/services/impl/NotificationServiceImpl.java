@@ -129,9 +129,7 @@ public class NotificationServiceImpl implements NotificationService {
 	public List<PortalNotification> updateAllNotificationsForUserAsReadByUserGUID(User user) {
 		List<PortalNotification> notificationsForUpdate = getAllNotificationsForUserByUserId(user.getUserId());
 
-		notificationsForUpdate.forEach(notification -> {
-			notification.setViewedByUser(1);
-		});
+		notificationsForUpdate.forEach(notification -> notification.setViewedByUser(1));
 		return notificationRepo.saveAll(notificationsForUpdate);
 	}
 
@@ -280,8 +278,7 @@ public class NotificationServiceImpl implements NotificationService {
 		ObjectNode auditDetailsNode = mapper.createObjectNode();
 		auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
 		auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
-		auditService.logAuditEvent(mapper.writeValueAsString(auditDetailsNode),
-				AuditEventType.PPE_SEND_GROUP_NOTIFICATION.name());
+		auditService.logAuditEvent(auditDetailsNode, AuditEventType.PPE_SEND_GROUP_NOTIFICATION);
 
 	}
 
