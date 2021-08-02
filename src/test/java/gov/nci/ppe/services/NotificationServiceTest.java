@@ -120,6 +120,7 @@ public class NotificationServiceTest {
 			verify(mockRoleRepository).findByRoleName(roleProvider.getRoleName());
 			verify(mockGroupNotificationRequestRepository).save(any(GroupNotificationRequest.class));
 			verify(mockNotificationRepo, times(1)).save(any(PortalNotification.class));
+
 			verify(mockEmailService).sendEmailNotification(anyString(), isNull(), anyString(), anyString());
 
 		} catch (JsonProcessingException e) {
