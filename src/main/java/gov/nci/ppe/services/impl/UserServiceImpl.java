@@ -11,13 +11,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.nci.ppe.configurations.NotificationServiceConfig;
 import gov.nci.ppe.constants.CommonConstants.AuditEventType;
@@ -528,6 +528,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO) {
+
+		raiseOpenInsertAuditEvent(openResponseDTO);
 		List<String> validAccountStatusList = new ArrayList<>();
 		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
 		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
@@ -710,6 +712,16 @@ public class UserServiceImpl implements UserService {
 		});
 
 		return newUsersList;
+	}
+
+	private void raiseOpenInsertAuditEvent(OpenResponseDTO openResponseDTO) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.set("OpenData", mapper.valueToTree(openResponseDTO));
+		try {
+			auditService.logAuditEvent(auditDetail, AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
+		} catch (JsonProcessingException e) {
+			log.error("Error with Auditing OPEN Insert", e);
+		}
 	}
 
 	/*
