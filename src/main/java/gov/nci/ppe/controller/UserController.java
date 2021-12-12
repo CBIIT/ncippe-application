@@ -130,9 +130,7 @@ public class UserController {
 				log.error("Did not find user with {} and {} ", email, uuid);
 				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
 						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(
-						messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null,
-						locale));
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
 			}
 		}
 
