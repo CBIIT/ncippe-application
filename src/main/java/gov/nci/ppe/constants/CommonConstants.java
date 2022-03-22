@@ -13,11 +13,11 @@ public class CommonConstants {
 	public static final String FAILURE = "FAILURE";
 	public static final String ERROR = "ERROR";
 
-
 	public enum AuditEventType {
-		PPE_LOGIN, PPE_ACCOUNT_CREATION, PPE_ACCOUNT_MODIFICATION, PPE_DEACTIVATE_ACCOUNT, PPE_WITHDRAW_FROM_PROGRAM,
+		PPE_LOGIN_ATTEMPT, PPE_LOGIN_SUCCESS, PPE_LOGIN_USER_NOT_FOUND, PPE_LOGIN_EMAIL_UUID_CONFLICT,
+		PPE_ACCOUNT_CREATION, PPE_ACCOUNT_MODIFICATION, PPE_DEACTIVATE_ACCOUNT, PPE_WITHDRAW_FROM_PROGRAM,
 		PPE_BIOMARKER_TEST_FILE_UPLOAD, PPE_ECONSENT_FILE_UPLOAD, PPE_INVITE_TO_PORTAL, PPE_INSERT_DATA_FROM_OPEN,
-		PPE_UPDATE_DATA_FROM_OPEN
+		PPE_UPDATE_DATA_FROM_OPEN, PPE_SEND_GROUP_NOTIFICATION, PPE_UNAUTHORIZED_ACCESS, PPE_AUTHORIZATION_SUCCESS
 	}
 
 	public enum ActionType {
@@ -32,12 +32,12 @@ public class CommonConstants {
 		LanguageOption(String language) {
 			this.language = language;
 		}
-		
+
 		@JsonValue
 		public String getLanguage() {
 			return this.language;
 		}
-		
+
 		public static LanguageOption getLanguageOption(String langStr) {
 			if (StringUtils.isBlank(langStr)) {
 				return null;

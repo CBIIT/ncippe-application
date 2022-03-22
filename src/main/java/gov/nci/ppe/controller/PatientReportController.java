@@ -3,14 +3,18 @@ package gov.nci.ppe.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dozermapper.core.Mapper;
+
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +31,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.HttpResponseConstants;
@@ -50,6 +49,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller class for Participant's Report related actions.
@@ -58,11 +58,9 @@ import io.swagger.annotations.ApiResponses;
  * @version 2.0
  * @since 2019-08-13
  */
-
+@Slf4j
 @RestController
 public class PatientReportController {
-
-	private static final Logger logger = LogManager.getLogger(PatientReportController.class);
 
 	@Autowired
 	private AmazonS3Service amazonS3Service;
@@ -108,8 +106,8 @@ public class PatientReportController {
 			HttpServletRequest req, Locale locale) {
 
 		String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
-		logger.info("File Upload request for patient id=" + patientId + " for file type " + uploadedFileType
-				+ " filename =" + file.getOriginalFilename() + " by " + requestingUserUUID);
+		log.info("File Upload request for patient id={} for file type {} filename ={} by {}", patientId,
+				uploadedFileType, file.getOriginalFilename(), requestingUserUUID);
 
 		if (!authorizationService.authorizeFileUpload(requestingUserUUID, patientId, uploadedFileType)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Not Authorized");
@@ -122,7 +120,7 @@ public class PatientReportController {
 			/* Only take the filename and not the extension */
 			folderWithFileName.append("/")
 					.append(file.getOriginalFilename().substring(0, file.getOriginalFilename().indexOf(".")));
-			try {
+			try (InputStream inputStream = file.getInputStream();) {
 				/* Get patient details */
 				Optional<User> patientOptional = userService.findActiveParticipantByPatientId(patientId);
 				Participant patient = (Participant) patientOptional.get();
@@ -131,7 +129,7 @@ public class PatientReportController {
 				Optional<User> adminOptional = userService.findByUuid(req.getHeader(CommonConstants.HEADER_UUID));
 				User adminUser = adminOptional.get();
 
-				amazonS3Service.putObjectOnS3(file.getInputStream(), folderWithFileName.toString(), file.getSize(),
+				amazonS3Service.putObjectOnS3(inputStream, folderWithFileName.toString(), file.getSize(),
 						file.getContentType(), CannedAccessControlList.BucketOwnerFullControl, patient, adminUser,
 						file.getOriginalFilename(), uploadedFileType);
 				return ResponseEntity.status(HttpStatus.OK)
@@ -139,15 +137,14 @@ public class PatientReportController {
 								new Object[] { file.getOriginalFilename(), patientId }, locale));
 
 			} catch (Exception exception) {
-				logger.error(exception.getMessage());
+				log.error(exception.getMessage());
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_INTERNAL_ERROR, null, locale));
 			}
 		} else {
-			logger.error(" The file upload process failed as the file you are uploading is empty.");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(messageSource.getMessage(HttpResponseConstants.UPLOADED_FILE_EMPTY,
-							new Object[] { file.getOriginalFilename() }, locale));
+			log.error(" The file upload process failed as the file you are uploading is empty.");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageSource.getMessage(
+					HttpResponseConstants.UPLOADED_FILE_EMPTY, new Object[] { file.getOriginalFilename() }, locale));
 		}
 	}
 
@@ -193,15 +190,15 @@ public class PatientReportController {
 				participantReport = amazonS3Service.getFileFromS3(fileMetadata.getSearchKey(),
 						StringUtils.remove(fileMetadata.getFileName(), PatientReportConstants.FILE_EXTENSION_PDF),
 						PatientReportConstants.FILE_EXTENSION_PDF);
-				logger.debug("file is saved locally to " + participantReport.getPath());
+				log.debug("file is saved locally to {}", participantReport.getPath());
 				httpHeaders.set("Content-Disposition", "attachment; filename=" + fileMetadata.getFileName());
 				resource = new InputStreamResource(new FileInputStream(participantReport));
 			} catch (ApiException apiEx) {
-				logger.error("Error Message : " + apiEx.getMessage());
+				log.error("Error Message : {}", apiEx.getMessage());
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
 						messageSource.getMessage(HttpResponseConstants.FILE_DOWNLOAD_INTERNAL_ERROR, null, locale));
 			} catch (FileNotFoundException fileNotFndEx) {
-				logger.error("FILENOTFOUND Error Message : " + fileNotFndEx.getMessage());
+				log.error("FILENOTFOUND Error Message : {}", fileNotFndEx.getMessage());
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource.getMessage(
 						HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
 			}
@@ -223,9 +220,7 @@ public class PatientReportController {
 	@PostMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
 			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
-			HttpServletRequest req,
-			Locale locale)
-			throws JsonProcessingException {
+			HttpServletRequest req, Locale locale) throws JsonProcessingException {
 
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);
 		if (rptOptional.isEmpty()) {

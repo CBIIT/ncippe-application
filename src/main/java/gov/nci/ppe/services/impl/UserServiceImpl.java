@@ -10,12 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +48,7 @@ import gov.nci.ppe.services.EmailLogService;
 import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is a Service class that orchestrates all the calls to entities and
@@ -59,10 +58,11 @@ import gov.nci.ppe.services.UserService;
  * @version 1.0
  * @since 2019-07-22
  */
-@Component
+@Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
-	private Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
+	private static final String NEW_PROVIDERS = "NewProviders";
 
 	private UserRepository userRepository;
 
@@ -89,9 +89,6 @@ public class UserServiceImpl implements UserService {
 	private AuditService auditService;
 
 	private ObjectMapper mapper = new ObjectMapper();
-
-	public UserServiceImpl() {
-	}
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepo, CodeRepository codeRepo, ParticipantRepository participantRepo,
@@ -240,11 +237,11 @@ public class UserServiceImpl implements UserService {
 		return optionalUser;
 	}
 
-	private List<Code> convertToCode(List<String> accountStatusList) {
-		List<Code> accountStatusCodeList = codeRepository.findByCodeNameIn(accountStatusList);
-		List<Long> accountStatusCodeIdList = new ArrayList<Long>();
-		accountStatusCodeList.forEach(code -> accountStatusCodeIdList.add(code.getCodeId()));
-		return accountStatusCodeList;
+	private List<Code> convertToCode(List<String> codeNameList) {
+		List<Code> codeList = codeRepository.findByCodeNameIn(codeNameList);
+		List<Long> accountStatusCodeIdList = new ArrayList<>();
+		codeList.forEach(code -> accountStatusCodeIdList.add(code.getCodeId()));
+		return codeList;
 	}
 
 	/**
@@ -325,10 +322,9 @@ public class UserServiceImpl implements UserService {
 			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
 
 				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(),
-						withdrawnPatient.getCrc().getFirstName(), withdrawnPatient.getCrc().getEmail(),
-						questionAnswers.toString(), withdrawnPatient.getPatientId(),
-						withdrawnPatient.getCrc().getPreferredLanguage());
+						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
+						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), withdrawnPatient.getCrc().getPreferredLanguage());
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
@@ -425,8 +421,8 @@ public class UserServiceImpl implements UserService {
 					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
 							provider.getPreferredLanguage());
 				}
-				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(),
-						provider.getUserId(), participant.getPatientId());
+				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
+						participant.getPatientId());
 
 			}
 		}
@@ -532,6 +528,8 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO) {
+
+		raiseOpenInsertAuditEvent(openResponseDTO);
 		List<String> validAccountStatusList = new ArrayList<>();
 		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
 		validAccountStatusList.add(PortalAccountStatus.ACCT_INITIATED.name());
@@ -542,7 +540,7 @@ public class UserServiceImpl implements UserService {
 		List<UserEnrollmentDataDTO> userEnrollmentData = openResponseDTO.getData();
 		List<User> newUsersList = new ArrayList<>();
 		userEnrollmentData.forEach(patientData -> {
-			Set<Provider> providerSet = new HashSet<Provider>();
+			Set<Provider> providerSet = new HashSet<>();
 			/*
 			 * Verify if the provider for a particular patient is already in the system If
 			 * not insert the provider details and then associate it with them with the
@@ -558,7 +556,7 @@ public class UserServiceImpl implements UserService {
 							patientData.getTreatingInvestigatorEmail());
 					providerSet.add((Provider) insertNewProviderDetailsFromOpen(treatingProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(treatingProvider.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					providerSet.add(treatingProviderOptional.get());
 				}
@@ -573,7 +571,7 @@ public class UserServiceImpl implements UserService {
 							patientData.getCreditInvestigatorPhone(), patientData.getCreditInvestigatorEmail());
 					providerSet.add((Provider) insertNewProviderDetailsFromOpen(creditProvider).get());
 					raiseInsertParticipantAuditEvent("ProviderID", Long.toString(creditProvider.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					providerSet.add(creditProviderOptional.get());
 				}
@@ -591,7 +589,7 @@ public class UserServiceImpl implements UserService {
 					crc.setPreferredLanguage(LanguageOption.ENGLISH);
 					crc = (CRC) insertNewCRCDetailsFromOpen(crc).get();
 					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()),
-							AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
 					crc = crcOptional.get();
 				}
@@ -612,7 +610,7 @@ public class UserServiceImpl implements UserService {
 
 				newUsersList.add(patientOptional.get());
 				raiseInsertParticipantAuditEvent("PatientID", newPatient.getPatientId(),
-						AuditEventType.PPE_INSERT_DATA_FROM_OPEN.name());
+						AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 			} else {
 				// If the patient exists, check for any changes in the relationship with
 				// Providers and CRC
@@ -620,7 +618,7 @@ public class UserServiceImpl implements UserService {
 				boolean crcUpdatedFlag = false;
 				Participant patient = (Participant) patientOptional.get();
 				Set<Provider> existingProviders = patient.getProviders();
-				Map<String, Set<Long>> mapOFProviders = new HashMap<String, Set<Long>>();
+				Map<String, Set<Long>> mapOFProviders = new HashMap<>();
 
 				if (!providerSet.isEmpty() || existingProviders.size() != providerSet.size()
 						|| !providerSet.containsAll(existingProviders)) {
@@ -649,7 +647,7 @@ public class UserServiceImpl implements UserService {
 				patientOptional = updatePatientDetailsFromOpen(patient);
 				newUsersList.add(patientOptional.get());
 				if (providerUpdatedFlag) {
-					Set<Long> providerOpenId = mapOFProviders.get("NewProviders");
+					Set<Long> providerOpenId = mapOFProviders.get(NEW_PROVIDERS);
 					providerOpenId.forEach(providerCtepId -> {
 						Optional<Provider> providerOptional = findProviderByCtepId(providerCtepId);
 						if (providerOptional.isPresent()) {
@@ -670,8 +668,8 @@ public class UserServiceImpl implements UserService {
 					}
 					notificationService.notifyPatientWhenProviderIsReplaced(patient.getUserId());
 					raiseUpdateParticipantAuditEvent("OldProviderId", "NewProviderId",
-							mapOFProviders.get("ExistingProviders"), mapOFProviders.get("NewProviders"),
-							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+							mapOFProviders.get("ExistingProviders"), mapOFProviders.get(NEW_PROVIDERS),
+							patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 				}
 				if (crcUpdatedFlag) {
 					if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
@@ -700,20 +698,30 @@ public class UserServiceImpl implements UserService {
 							{
 								add(crcOpentCtepId);
 							}
-						}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+						}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 					} else {
 						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>(),
 								new HashSet<Long>() {
 									{
 										add(crcOpentCtepId);
 									}
-								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN.name());
+								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 					}
 				}
 			}
 		});
 
 		return newUsersList;
+	}
+
+	private void raiseOpenInsertAuditEvent(OpenResponseDTO openResponseDTO) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.set("OpenData", mapper.valueToTree(openResponseDTO));
+		try {
+			auditService.logAuditEvent(auditDetail, AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
+		} catch (JsonProcessingException e) {
+			log.error("Error with Auditing OPEN Insert", e);
+		}
 	}
 
 	/*
@@ -730,8 +738,8 @@ public class UserServiceImpl implements UserService {
 
 		auditDetail.put("UUID", uuid).put("PatientID", patientId).put("PatientEmail", patientEmail)
 				.put("PatientFirstName", patientFirstName).put("PatientLastName", patientLastName);
-		String auditDetailString = mapper.writeValueAsString(auditDetail);
-		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_INVITE_TO_PORTAL.name());
+
+		auditService.logAuditEvent(auditDetail, AuditEventType.PPE_INVITE_TO_PORTAL);
 	}
 
 	/*
@@ -756,7 +764,7 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 		String formattedNumber = formattedPhoneNumber.toString().substring(0, 10);
-		logger.log(Level.INFO, "Formatted Phone number is {}", formattedNumber);
+		log.info("Formatted Phone number is {}", formattedNumber);
 		return formattedNumber;
 	}
 
@@ -779,41 +787,41 @@ public class UserServiceImpl implements UserService {
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
 		provider.setPreferredLanguage(LanguageOption.ENGLISH);
-		logger.log(Level.INFO, "Provider with Basic Details is {}", provider.toString());
+		log.info("Provider with Basic Details is {}", provider.toString());
 		return provider;
 	}
 
 	/**
 	 * Method to log details for audit purpose
 	 * 
-	 * @param userTypeId    - String representing the specific userId
-	 * @param id            - Id for the user
-	 * @param auditEvntType - Insert event or Update Event
+	 * @param userTypeId     - String representing the specific userId
+	 * @param id             - Id for the user
+	 * @param auditEventType - Insert event or Update Event
 	 */
-	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, String auditEvntType) {
+	private void raiseInsertParticipantAuditEvent(String userTypeId, String id, AuditEventType auditEventType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
 		auditDetail.put(userTypeId, id);
-		String auditDetailString;
+
 		try {
-			auditDetailString = mapper.writeValueAsString(auditDetail);
-			auditService.logAuditEvent(auditDetailString, auditEvntType);
+
+			auditService.logAuditEvent(auditDetail, auditEventType);
 		} catch (JsonProcessingException jsonProsException) {
-			logger.log(Level.WARNING, jsonProsException.getMessage());
+			log.warn(jsonProsException.getMessage());
 		}
 	}
 
 	/**
 	 * Method to log update details for audit purpose.
 	 * 
-	 * @param oldKey        - Key for exisitng Provider/CRC ids
-	 * @param newKey        - Key for new Provider/CRC ids
-	 * @param oldIds        - Set of existing Provider/CRC ids
-	 * @param newIds        - Set of new Provider/CRC ids
-	 * @param patientId     - patientId from OPEN
-	 * @param auditEvntType - AuditEventType enum
+	 * @param oldKey         - Key for exisitng Provider/CRC ids
+	 * @param newKey         - Key for new Provider/CRC ids
+	 * @param oldIds         - Set of existing Provider/CRC ids
+	 * @param newIds         - Set of new Provider/CRC ids
+	 * @param patientId      - patientId from OPEN
+	 * @param auditEventType - AuditEventType enum
 	 */
 	private void raiseUpdateParticipantAuditEvent(String oldKey, String newKey, Set<Long> oldIds, Set<Long> newIds,
-			String patientId, String auditEvntType) {
+			String patientId, AuditEventType auditEventType) {
 		ObjectNode auditDetail = mapper.createObjectNode();
 		auditDetail.put("PatientId", patientId);
 		final AtomicInteger counter = new AtomicInteger(1);
@@ -827,12 +835,11 @@ public class UserServiceImpl implements UserService {
 			auditDetail.put(newKey + counter2, Long.toString(id));
 			counter2.getAndAdd(1);
 		});
-		String auditDetailString;
+
 		try {
-			auditDetailString = mapper.writeValueAsString(auditDetail);
-			auditService.logAuditEvent(auditDetailString, auditEvntType);
+			auditService.logAuditEvent(auditDetail, auditEventType);
 		} catch (JsonProcessingException jsonProsException) {
-			logger.log(Level.WARNING, jsonProsException.getMessage());
+			log.warn(jsonProsException.getMessage());
 		}
 	}
 
@@ -857,7 +864,7 @@ public class UserServiceImpl implements UserService {
 		}
 		result.removeAll(newDataSet);
 		Map<String, Set<Long>> mapOfPrviders = new HashMap<>();
-		mapOfPrviders.put("NewProviders", newDataSet);
+		mapOfPrviders.put(NEW_PROVIDERS, newDataSet);
 		mapOfPrviders.put("ExistingProviders", result);
 		return mapOfPrviders;
 	}
@@ -886,8 +893,7 @@ public class UserServiceImpl implements UserService {
 		LocalDateTime startOfPeriod = today.minusDays(daysUnread).atStartOfDay();
 		LocalDateTime endOfPeriod = startOfPeriod.plusDays(1);
 
-		logger.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString()
-				+ " and "
+		log.info(today.toString() + ":Fetching Unread reports Uploaded between " + startOfPeriod.toString() + " and "
 				+ endOfPeriod.toString());
 		List<FileMetadata> uploadedFiles = fileService.getFilesUploadedBetween(
 				codeRepository.findByCodeName(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType()), startOfPeriod,
@@ -898,7 +904,7 @@ public class UserServiceImpl implements UserService {
 
 	private void sendOverdueNotification(FileMetadata fileMetadata) {
 
-		logger.log(Level.FINE, "Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
+		log.debug("Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
 				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
 		CRC assocCRC = patient.getCrc();
@@ -930,6 +936,15 @@ public class UserServiceImpl implements UserService {
 						provider.getUserId(), patient.getPatientId());
 			}
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<User> getUsersByRole(Set<Role> userRoles) {
+
+		return userRepository.findByRoleIn(userRoles);
 	}
 
 }

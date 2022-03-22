@@ -2,16 +2,17 @@ package gov.nci.ppe.services;
 
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.stereotype.Component;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import gov.nci.ppe.constants.CommonConstants.LanguageOption;
+import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
+import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 
@@ -20,7 +21,6 @@ import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
  * @version 1.0
  * @since 2019-07-22
  */
-@Component
 public interface UserService {
 
 	/**
@@ -226,7 +226,6 @@ public interface UserService {
 	 */
 	public Optional<User> updatePatientDetailsFromOpen(Participant existingPatient);
 
-
 	/**
 	 * Generate Email and System Notification to Users who have unread reports for
 	 * the specified number of days
@@ -235,4 +234,12 @@ public interface UserService {
 	 *                   notification
 	 */
 	public void generateUnreadReportReminderNotification(int daysUnread);
+
+	/**
+	 * Get all active users with the specified {@link PPERole}
+	 * 
+	 * @param set - List of {@link PPERole}
+	 * @return the list of {@link User} records
+	 */
+	public List<User> getUsersByRole(Set<Role> set);
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -60,6 +59,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller class for User related actions.
@@ -70,9 +70,8 @@ import io.swagger.annotations.ApiResponses;
  */
 
 @RestController
+@Slf4j
 public class UserController {
-
-	protected Logger logger = Logger.getLogger(UserController.class.getName());
 
 	@Autowired
 	@Qualifier("dozerBean")
@@ -105,11 +104,12 @@ public class UserController {
 		String uuid = request.getHeader(CommonConstants.HEADER_UUID);
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
 
-		logger.info("Received Login request with uuid " + uuid + " and email " + email);
+		log.info("Received Login request with uuid {} and email {}", uuid, email);
+		raiseLoginAuditEvent(uuid, email, "Attempt to Login", AuditEventType.PPE_LOGIN_ATTEMPT);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		List<String> accountStatusList = new ArrayList<String>();
+		List<String> accountStatusList = new ArrayList<>();
 		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 
 		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
@@ -117,24 +117,39 @@ public class UserController {
 			userOptional = userService.activateUser(email, uuid);
 
 			if (!userOptional.isPresent()) {
-				logger.severe("Did not find user with " + email + " and " + uuid);
+				log.error("Did not find user with {} and {} ", email, uuid);
+
+				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
+
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
 						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 			}
 
 			User user = userOptional.get();
 			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				logger.severe("Did not find user with " + email + " and " + uuid);
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(
-						messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale), null,
-						locale));
+				log.error("Did not find user with {} and {} ", email, uuid);
+				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
+						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
 			}
 		}
 
+		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
+
 		User user = userOptional.get();
 		String userInJsonFormat = convertUserToJSON(user);
-		return new ResponseEntity<String>(userInJsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
+	}
+
+	private void raiseLoginAuditEvent(String uuid, String email, String notes, AuditEventType eventType)
+			throws JsonProcessingException {
+		ObjectNode auditDetail = mapper.createObjectNode();
+		auditDetail.put("UUID", uuid);
+		auditDetail.put("Email", email);
+
+		auditDetail.put("Notes", notes);
+		auditService.logAuditEvent(auditDetail, eventType);
 	}
 
 	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
@@ -174,7 +189,7 @@ public class UserController {
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 		if (!authService.authorize(requestingUserUUID, userGUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 
 					HttpStatus.UNAUTHORIZED);
@@ -195,15 +210,14 @@ public class UserController {
 		Optional<User> userOptional = userService.updateUserDetails(userGUID, allowEmailNotification, phoneNumber,
 				preferredLang, requestingUserUUID);
 		if (!userOptional.isPresent()) {
-			return new ResponseEntity<String>(
-					messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale), httpHeaders,
-					HttpStatus.NO_CONTENT);
+			return new ResponseEntity<>(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale),
+					httpHeaders, HttpStatus.NO_CONTENT);
 		}
 
 		User user = userOptional.get();
 		String jsonFormat = convertUserToJSON(user);
 
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	/**
@@ -227,14 +241,14 @@ public class UserController {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
 		if (!authService.authorize(requestingUserUUID, userUUID)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
 
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
 		String jsonFormat = convertUserToJSON(userOptional.get());
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	/**
@@ -270,11 +284,11 @@ public class UserController {
 		HttpHeaders httpHeaders = createHeader();
 
 		if (!authService.authorize(updatedByUserUUID, patient)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
-		logger.info("Request to withdraw Participant " + patient.getPatientId() + " by User " + updatedByUserUUID);
+		log.info("Request to withdraw Participant " + patient.getPatientId() + " by User " + updatedByUserUUID);
 		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
 		List<QuestionAnswer> qsAnsList = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(qsAnsDTO)) {
@@ -301,11 +315,11 @@ public class UserController {
 		Optional<User> userOptional = userService.withdrawParticipationFromBiobankProgramAndSendNotification(patient,
 				qsAnsList);
 		Participant withdrawnPatient = (Participant) userOptional.get();
-		logger.info("Patient " + withdrawnPatient.getPatientId() + " new status "
+		log.info("Patient " + withdrawnPatient.getPatientId() + " new status "
 				+ withdrawnPatient.getPortalAccountStatus().getCodeName());
 		raiseWithdrawParticipationAuditEvent(patientId, updatedByUserUUID);
 		String jsonFormat = convertUserToJSON(withdrawnPatient);
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
@@ -329,7 +343,7 @@ public class UserController {
 		HttpHeaders httpHeaders = createHeader();
 
 		if (!authService.authorize(updatedByUserUUID, participantOptional.get())) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
@@ -337,7 +351,7 @@ public class UserController {
 		participantOptional = userService.invitePatientToPortal(patientId, updatedByUserUUID);
 
 		String jsonFormat = convertUserToJSON(participantOptional.get());
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
@@ -383,7 +397,7 @@ public class UserController {
 
 		User newPatient = participantOptional.get();
 		if (!authService.authorize(updatedByUserUUID, newPatient)) {
-			return new ResponseEntity<String>(
+			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
@@ -403,7 +417,7 @@ public class UserController {
 		participantOptional = userService.updateUser(newPatient);
 
 		String jsonFormat = convertUserToJSON(participantOptional.get());
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	private HttpHeaders createHeader() {
@@ -423,7 +437,7 @@ public class UserController {
 	 */
 	private String convertUserToJSON(User user) throws JsonProcessingException {
 		UserDTO userDTO = convertUserDTO(user);
-		ObjectMapper mapper = new ObjectMapper();
+
 		mapper.registerSubtypes(new NamedType(ParticipantDTO.class, "ParticipantDTO"),
 				new NamedType(ProviderDTO.class, "ProviderDTO"), new NamedType(CrcDTO.class, "CrcDTO"));
 		PPERole roleName = PPERole.valueOf(user.getRole().getRoleName());
@@ -496,15 +510,14 @@ public class UserController {
 		ObjectNode auditDetail = mapper.createObjectNode();
 
 		auditDetail.put("UUID", uuid).put("PatientID", patientId);
-		String auditDetailString = mapper.writeValueAsString(auditDetail);
-		auditService.logAuditEvent(auditDetailString, AuditEventType.PPE_WITHDRAW_FROM_PROGRAM.name());
+		auditService.logAuditEvent(auditDetail, AuditEventType.PPE_WITHDRAW_FROM_PROGRAM);
 	}
 
 	private ResponseEntity<String> fetchUser(HttpServletRequest request, String uuid, String email, String patientId,
 			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		Optional<User> userOptional = null;
+		Optional<User> userOptional = Optional.empty();
 		if (StringUtils.isNotBlank(uuid)) {
 			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());
 		} else if (StringUtils.isNotBlank(email)) {
@@ -529,6 +542,6 @@ public class UserController {
 		}
 
 		String userJson = convertUserToJSON(user);
-		return new ResponseEntity<String>(userJson, httpHeaders, HttpStatus.OK);
+		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
 }

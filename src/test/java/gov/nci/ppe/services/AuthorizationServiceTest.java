@@ -48,6 +48,9 @@ public class AuthorizationServiceTest {
 	@Mock
 	public UserService userService;
 
+	@Mock
+	public AuditService mockAuditService;
+
 	@InjectMocks
 	private AuthorizationServiceImpl authService;
 
@@ -64,7 +67,7 @@ public class AuthorizationServiceTest {
 			when(userService.findByUuid(targetUUID)).thenReturn(Optional.empty());
 
 			boolean result = authService.authorize(requester, targetUUID);
-			
+
 			assertFalse(result);
 			verify(userService).findByUuid(targetUUID);
 		}
@@ -99,7 +102,6 @@ public class AuthorizationServiceTest {
 			verify(userService).findByUuid(targetUUID);
 			verify(userService).findByUuid(requester);
 		}
-
 
 		@Test
 		public void testAuthorize_Mocha() {
@@ -165,8 +167,7 @@ public class AuthorizationServiceTest {
 		@Test
 		public void testAuthorize_Provider_Fail() {
 			Optional<User> optionalUser = createRequestingUser(PPERole.ROLE_PPE_PARTICIPANT, targetUUID);
-			Provider assignedProvider = (Provider) createRequestingUser(PPERole.ROLE_PPE_PROVIDER, assigned)
-					.get();
+			Provider assignedProvider = (Provider) createRequestingUser(PPERole.ROLE_PPE_PROVIDER, assigned).get();
 			Set<Provider> providers = new HashSet<>();
 			providers.add(assignedProvider);
 			((Participant) optionalUser.get()).setProviders(providers);
@@ -175,7 +176,6 @@ public class AuthorizationServiceTest {
 
 			Optional<User> requestingProvider = createRequestingUser(PPERole.ROLE_PPE_PROVIDER, requester);
 			when(userService.findByUuid(requester)).thenReturn(requestingProvider);
-
 
 			assertFalse(authService.authorize(requester, targetUUID));
 
@@ -293,8 +293,7 @@ public class AuthorizationServiceTest {
 		public void testAuthorizeFileDownload_Invalid_Requester(FileType fileType) {
 			when(userService.findByUuid(requester)).thenReturn(Optional.empty());
 
-			assertFalse(authService.authorizeFileDownload(requester, targetUUID,
-					fileType.getFileType()));
+			assertFalse(authService.authorizeFileDownload(requester, targetUUID, fileType.getFileType()));
 			verify(userService).findByUuid(requester);
 		}
 
@@ -305,8 +304,7 @@ public class AuthorizationServiceTest {
 			when(userService.findByUuid(requester)).thenReturn(crcOpt);
 			when(userService.findActiveParticipantByPatientId(requester)).thenReturn(Optional.empty());
 
-			assertFalse(authService.authorizeFileDownload(requester, requester,
-					fileType.getFileType()));
+			assertFalse(authService.authorizeFileDownload(requester, requester, fileType.getFileType()));
 
 		}
 
@@ -317,8 +315,7 @@ public class AuthorizationServiceTest {
 			when(userService.findByUuid(requester)).thenReturn(patientOpt);
 			when(userService.findActiveParticipantByPatientId(requester)).thenReturn(patientOpt);
 
-			assertTrue(authService.authorizeFileDownload(requester, requester,
-					fileType.getFileType()));
+			assertTrue(authService.authorizeFileDownload(requester, requester, fileType.getFileType()));
 
 		}
 
@@ -334,8 +331,7 @@ public class AuthorizationServiceTest {
 			when(userService.findByUuid(requester)).thenReturn(requestingCRCOpt);
 			when(userService.findActiveParticipantByPatientId(targetUUID)).thenReturn(patientOpt);
 
-			assertTrue(
-					authService.authorizeFileDownload(requester, targetUUID, fileType.getFileType()));
+			assertTrue(authService.authorizeFileDownload(requester, targetUUID, fileType.getFileType()));
 
 		}
 
