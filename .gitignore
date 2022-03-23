@@ -1,6 +1,10 @@
 .vscode/
 logs/
+.settings/
 target/
 application-local.properties
 *.class
 
+.DS_Store
+.classpath
+.factorypath
