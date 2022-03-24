@@ -6,6 +6,7 @@ import lombok.Data;
 
 /**
  * DTO object for News and Events record
+ * 
  * @author sarkard
  *
  */
@@ -14,12 +15,12 @@ import lombok.Data;
 public class NewsEventDto {
 
 	private Long id;
-	
+
 	private String contentType;
-	
-	private Timestamp date;
-	
+
+	private Timestamp expirationDate;
+
 	private String author;
-	
+
 	private String link;
 }

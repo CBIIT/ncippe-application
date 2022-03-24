@@ -35,7 +35,7 @@ public class NewsEventToNewsEventDtoMappingTest {
 		source.setId(-1L);
 		source.setAuthor("Author");
 		source.setContentType(NewsEventType.NEWS);
-		source.setDate(LocalDateTime.now());
+		source.setExpirationDate(LocalDateTime.now());
 		source.setLink("Http://google.com");
 
 		Mapper mapper = DozerBeanMapperBuilder.create().withMappingFiles("dozer-mappings.xml").build();
@@ -44,7 +44,7 @@ public class NewsEventToNewsEventDtoMappingTest {
 		assertNotNull(dest);
 		assertEquals(source.getAuthor(), dest.getAuthor());
 		assertEquals(source.getContentType().getNewsEventType(), dest.getContentType());
-		assertEquals(source.getDate(), dest.getDate().toLocalDateTime());
+		assertEquals(source.getExpirationDate(), dest.getExpirationDate().toLocalDateTime());
 		assertEquals(source.getId(), dest.getId());
 		assertEquals(source.getLink(), dest.getLink());
 
