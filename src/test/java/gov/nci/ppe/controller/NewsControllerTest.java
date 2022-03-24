@@ -18,16 +18,29 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.github.dozermapper.core.Mapper;
+
+import gov.nci.ppe.constants.CommonConstants.NewsEventType;
 import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.NewsEvent;
 import gov.nci.ppe.services.NewsEventsService;
 
+/**
+ * Unit Test class for {@link NewsController}.
+ * 
+ * @author PublicisSapient
+ * @version 2.6;
+ * @since 2022-03-24
+ */
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = NewsController.class)
 public class NewsControllerTest {
 
 	@MockBean
 	private NewsEventsService mockNewsEventsService;
+
+	@MockBean(name = "dozerBean")
+	private Mapper mockDozerBeanMapper;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -37,7 +50,9 @@ public class NewsControllerTest {
 
 		List<NewsEvent> expected = new ArrayList<>();
 		NewsEvent news = new NewsEvent();
+		news.setContentType(NewsEventType.NEWS);
 		NewsEvent event = new NewsEvent();
+		event.setContentType(NewsEventType.EVENT);
 		expected.add(news);
 		expected.add(event);
 		when(mockNewsEventsService.getActiveNewsEvents()).thenReturn(expected);
