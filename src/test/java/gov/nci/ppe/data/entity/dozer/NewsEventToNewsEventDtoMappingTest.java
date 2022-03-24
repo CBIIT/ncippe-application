@@ -34,6 +34,7 @@ public class NewsEventToNewsEventDtoMappingTest {
 		NewsEvent source = new NewsEvent();
 		source.setId(-1L);
 		source.setAuthor("Author");
+		source.setTitle("Title");
 		source.setContentType(NewsEventType.NEWS);
 		source.setExpirationDate(LocalDateTime.now());
 		source.setLink("Http://google.com");
@@ -43,6 +44,7 @@ public class NewsEventToNewsEventDtoMappingTest {
 		NewsEventDto dest = mapper.map(source, NewsEventDto.class);
 		assertNotNull(dest);
 		assertEquals(source.getAuthor(), dest.getAuthor());
+		assertEquals(source.getTitle(), dest.getTitle());
 		assertEquals(source.getContentType().getNewsEventType(), dest.getContentType());
 		assertEquals(source.getExpirationDate(), dest.getExpirationDate().toLocalDateTime());
 		assertEquals(source.getId(), dest.getId());

@@ -64,6 +64,15 @@ public class CommonConstants {
 		public String getNewsEventType() {
 			return this.newsEventType;
 		}
+
+		public static NewsEventType getContentType(String contentTypeStr) {
+			if (StringUtils.isBlank(contentTypeStr)) {
+				return null;
+			}
+			return Stream.of(NewsEventType.values())
+					.filter(contentType -> contentType.getNewsEventType().equals(contentTypeStr)).findFirst()
+					.orElseThrow(IllegalArgumentException::new);
+		}
 	}
 
 	public static final String HEADER_UUID = "sm_user";

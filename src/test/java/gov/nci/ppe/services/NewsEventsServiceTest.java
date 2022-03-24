@@ -56,12 +56,12 @@ public class NewsEventsServiceTest {
 		event.setContentType(NewsEventType.EVENT);
 		expected.add(event);
 
-		when(newsEventsRepository.findByExpirationDateBefore(any(LocalDateTime.class))).thenReturn(expected);
+		when(newsEventsRepository.findByExpirationDateAfter(any(LocalDateTime.class))).thenReturn(expected);
 		List<NewsEvent> result = classUnderTest.getActiveNewsEvents();
 
 		assertNotNull(result);
 		assertFalse(result.isEmpty());
-		verify(newsEventsRepository).findByExpirationDateBefore(any(LocalDateTime.class));
+		verify(newsEventsRepository).findByExpirationDateAfter(any(LocalDateTime.class));
 
 	}
 }

@@ -2,6 +2,9 @@ package gov.nci.ppe.data.entity.dto;
 
 import java.sql.Timestamp;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import lombok.Data;
 
 /**
@@ -20,6 +23,9 @@ public class NewsEventDto {
 
 	private Timestamp expirationDate;
 
+	private String title;
+
+	@JsonInclude(value = Include.NON_EMPTY)
 	private String author;
 
 	private String link;

@@ -29,6 +29,9 @@ public class NewsEvent {
 	@Column(name = "ExpirationDate", nullable = false)
 	private LocalDateTime expirationDate;
 
+	@Column(name = "Title", nullable = false, length = 512)
+	private String title;
+
 	@Column(name = "Author", nullable = true, length = 128)
 	private String author;
 

@@ -18,6 +18,6 @@ import gov.nci.ppe.data.entity.NewsEvent;
  */
 public interface NewsEventsRepository extends JpaRepository<NewsEvent, Long> {
 
-	List<NewsEvent> findByExpirationDateBefore(LocalDateTime valueOf);
+	List<NewsEvent> findByExpirationDateAfter(LocalDateTime valueOf);
 
 }

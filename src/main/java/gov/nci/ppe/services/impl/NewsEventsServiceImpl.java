@@ -32,7 +32,7 @@ public class NewsEventsServiceImpl implements NewsEventsService {
 
 	@Override
 	public List<NewsEvent> getActiveNewsEvents() {
-		return newsEventsRepository.findByExpirationDateBefore(LocalDateTime.now());
+		return newsEventsRepository.findByExpirationDateAfter(LocalDateTime.now());
 	}
 
 }
