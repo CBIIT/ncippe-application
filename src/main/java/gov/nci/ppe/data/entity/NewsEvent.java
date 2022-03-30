@@ -26,13 +26,16 @@ public class NewsEvent {
 	@Column(name = "ContentType", nullable = false)
 	private NewsEventType contentType;
 
+	@Column(name = "PublishedDate", nullable = false)
+	private LocalDateTime publishedDate;
+
 	@Column(name = "ExpirationDate", nullable = false)
 	private LocalDateTime expirationDate;
 
 	@Column(name = "Title", nullable = false, length = 512)
 	private String title;
 
-	@Column(name = "Author", nullable = true, length = 128)
+	@Column(name = "Author", nullable = false, length = 128)
 	private String author;
 
 	@Column(name = "Link", nullable = false, length = 1024)

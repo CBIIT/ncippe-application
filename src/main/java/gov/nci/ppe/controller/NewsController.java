@@ -1,6 +1,7 @@
 package gov.nci.ppe.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,7 +19,6 @@ import com.github.dozermapper.core.Mapper;
 import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.NewsEvent;
 import gov.nci.ppe.data.entity.dto.NewsEventDto;
-import gov.nci.ppe.data.entity.dto.NewsEventsListDto;
 import gov.nci.ppe.services.NewsEventsService;
 import io.swagger.annotations.ApiOperation;
 
@@ -56,22 +56,8 @@ public class NewsController {
 	}
 
 	private String convertToString(List<NewsEvent> newsEvents) throws JsonProcessingException {
-		NewsEventsListDto newsEventsList = new NewsEventsListDto();
-
-		for (NewsEvent record : newsEvents) {
-			NewsEventDto recDto = dozerBeanMapper.map(record, NewsEventDto.class);
-			switch (record.getContentType()) {
-			case EVENT:
-				newsEventsList.getEvents().add(recDto);
-				break;
-			case NEWS:
-				newsEventsList.getNews().add(recDto);
-				break;
-			default:
-				break;
-
-			}
-		}
+		List<NewsEventDto> newsEventsList = newsEvents.stream()
+				.map(from -> this.dozerBeanMapper.map(from, NewsEventDto.class)).collect(Collectors.toList());
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writeValueAsString(newsEventsList);
 	}

@@ -1,6 +1,9 @@
 package gov.nci.ppe.controller;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,11 +60,10 @@ public class NewsControllerTest {
 		expected.add(event);
 		when(mockNewsEventsService.getActiveNewsEvents()).thenReturn(expected);
 		String result = mockMvc.perform(get(UrlConstants.URL_NEWS_EVENTS)).andExpect(status().isOk())
-				.andExpect(jsonPath("$.news").isNotEmpty()).andExpect(jsonPath("$.events").isNotEmpty()).andReturn()
-				.getResponse().getContentAsString();
+				.andExpect(jsonPath("$", hasSize(expected.size()))).andReturn().getResponse().getContentAsString();
 		assertTrue(StringUtils.isNotBlank(result));
 		verify(mockNewsEventsService).getActiveNewsEvents();
-
+		verify(mockDozerBeanMapper, times(expected.size())).map(any(NewsEvent.class), any(Class.class));
 	}
 
 }
