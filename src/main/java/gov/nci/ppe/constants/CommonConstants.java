@@ -75,6 +75,30 @@ public class CommonConstants {
 		}
 	}
 
+	public enum AlertContentType {
+		ERROR("error"), WARNING("warning"), INFO("info"), SUCCESS("success");
+	
+		private String alertContentType;
+	
+		private AlertContentType(String alertContentType) {
+			this.alertContentType = alertContentType;
+		}
+	
+		@JsonValue
+		public String getContentType() {
+			return alertContentType;
+		}
+	
+		public static AlertContentType getContentType(String contentTypeStr) {
+			if (StringUtils.isBlank(contentTypeStr)) {
+				return null;
+			}
+			return Stream.of(AlertContentType.values())
+					.filter(contentType -> contentType.getContentType().equals(contentTypeStr)).findFirst()
+					.orElseThrow(IllegalArgumentException::new);
+		}
+	}
+	
 	public static final String HEADER_UUID = "sm_user";
 	public static final String HEADER_EMAIL = "user_email";
 	public static final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";
