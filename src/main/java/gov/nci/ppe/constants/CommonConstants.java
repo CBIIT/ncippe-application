@@ -51,6 +51,30 @@ public class CommonConstants {
 		}
 	}
 
+	public enum NewsEventType {
+		NEWS("news"), EVENT("event");
+
+		private final String newsEventType;
+
+		NewsEventType(String newsEventType) {
+			this.newsEventType = newsEventType;
+		}
+
+		@JsonValue
+		public String getNewsEventType() {
+			return this.newsEventType;
+		}
+
+		public static NewsEventType getContentType(String contentTypeStr) {
+			if (StringUtils.isBlank(contentTypeStr)) {
+				return null;
+			}
+			return Stream.of(NewsEventType.values())
+					.filter(contentType -> contentType.getNewsEventType().equals(contentTypeStr)).findFirst()
+					.orElseThrow(IllegalArgumentException::new);
+		}
+	}
+
 	public static final String HEADER_UUID = "sm_user";
 	public static final String HEADER_EMAIL = "user_email";
 	public static final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";

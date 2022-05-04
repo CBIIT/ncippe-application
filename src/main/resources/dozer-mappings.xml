@@ -201,4 +201,12 @@
 			<b>dateSent</b>
 		</field>
 	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.NewsEvent</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.NewsEventDto</class-b>
+		<field>
+			<a>contentType.newsEventType</a>
+			<b>contentType</b>
+		</field>
+	</mapping>
 </mappings>

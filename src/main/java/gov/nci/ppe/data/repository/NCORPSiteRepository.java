@@ -3,6 +3,7 @@ package gov.nci.ppe.data.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import gov.nci.ppe.data.entity.NCORPSite;
 
@@ -13,6 +14,7 @@ import gov.nci.ppe.data.entity.NCORPSite;
  * @since 2020-01-27
  *
  */
+@Repository
 public interface NCORPSiteRepository extends JpaRepository<NCORPSite, Long> {
 
 	/**
