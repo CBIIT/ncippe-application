@@ -209,4 +209,16 @@
 			<b>contentType</b>
 		</field>
 	</mapping>
+	<mapping>
+		<class-a>gov.nci.ppe.data.entity.Alert</class-a>
+		<class-b>gov.nci.ppe.data.entity.dto.AlertDto</class-b>
+				<field>
+			<a>messageEnglish</a>
+			<b>message.en</b>
+		</field>
+		<field>
+			<a>messageSpanish</a>
+			<b>message.es</b>
+		</field>
+	</mapping>
 </mappings>
