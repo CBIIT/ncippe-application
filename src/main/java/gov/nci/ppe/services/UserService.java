@@ -242,4 +242,6 @@ public interface UserService {
 	 * @return the list of {@link User} records
 	 */
 	public List<User> getUsersByRole(Set<Role> set);
+
+	public Optional<User> updateUserEmail(String userUUID, String newEmail);
 }

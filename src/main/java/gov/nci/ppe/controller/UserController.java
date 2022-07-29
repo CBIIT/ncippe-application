@@ -37,6 +37,7 @@ import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.QuestionAnswerType;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
+import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.ContentEditor;
@@ -78,7 +79,7 @@ public class UserController {
 	private Mapper dozerBeanMapper;
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
 
 	@Autowired
 	private CodeService codeService;
@@ -130,7 +131,8 @@ public class UserController {
 				log.error("Did not find user with {} and {} ", email, uuid);
 				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
 						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
+				return ResponseEntity.status(HttpStatus.CONFLICT)
+						.body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
 			}
 		}
 
@@ -544,4 +546,25 @@ public class UserController {
 		String userJson = convertUserToJSON(user);
 		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
+
+	@PostMapping(value = UrlConstants.URL_USER_UPDATE_EMAIL, produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> updateEmail(HttpServletRequest request,
+			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
+			@ApiParam(value = "New email for the User", required = true) @PathVariable String email, Locale locale)
+			throws JsonProcessingException {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		if (!authService.authorize(requestingUserUUID, userGUID)) {
+			return new ResponseEntity<>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.FORBIDDEN);
+		}
+
+		Optional<User> updatedUserOpt = userService.updateUserEmail(userGUID, email);
+		String userJson = convertUserToJSON(updatedUserOpt.get());
+		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
+	}
+
 }

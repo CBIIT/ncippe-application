@@ -8,21 +8,23 @@ package gov.nci.ppe.constants;
  * @since 2021-05-17
  */
 public class UrlConstants {
-    private static final String PARAM_NOTIFICATIONS = "/notifications";
-    private static final String URL_API_VERSION = "/api/v1";
-    private static final String URL_PUBLIC_API_VERSION = "/publicapi/v1";
-    private static final String URL_USER = URL_API_VERSION + "/user";
+	private static final String PARAM_NOTIFICATIONS = "/notifications";
+	private static final String URL_API_VERSION = "/api/v1";
+	private static final String URL_PUBLIC_API_VERSION = "/publicapi/v1";
+	private static final String URL_USER = URL_API_VERSION + "/user";
 
-    private static final String PARAM_ALERTS = "/alerts";
-    private static final String PARAM_USER_GUID = "/{userGUUID}";
+	private static final String PARAM_ALERTS = "/alerts";
+	private static final String PARAM_USER_GUID = "/{userGUID}";
+	private static final String PARAM_EMAIL = "/{email}";
 
-    public static final String URL_NOTIFICATIONS = URL_API_VERSION + PARAM_NOTIFICATIONS;
-    public static final String URL_HEALTHCHECK = "/healthcheck";
-    public static final String URL_USER_NOTIFICATIONS = URL_USER + PARAM_USER_GUID + PARAM_NOTIFICATIONS;
-    public static final String URL_NEWS_EVENTS = URL_PUBLIC_API_VERSION + "/newsEvents";
-    public static final String URL_ALERTS = URL_PUBLIC_API_VERSION + PARAM_ALERTS;
-    
-    private UrlConstants() {
+	public static final String URL_NOTIFICATIONS = URL_API_VERSION + PARAM_NOTIFICATIONS;
+	public static final String URL_HEALTHCHECK = "/healthcheck";
+	public static final String URL_USER_NOTIFICATIONS = URL_USER + PARAM_USER_GUID + PARAM_NOTIFICATIONS;
+	public static final String URL_NEWS_EVENTS = URL_PUBLIC_API_VERSION + "/newsEvents";
+	public static final String URL_ALERTS = URL_PUBLIC_API_VERSION + PARAM_ALERTS;
+	public static final String URL_USER_UPDATE_EMAIL = URL_USER + PARAM_USER_GUID + "/email" + PARAM_EMAIL;
 
-    }
+	private UrlConstants() {
+
+	}
 }

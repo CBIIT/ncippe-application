@@ -947,4 +947,13 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findByRoleIn(userRoles);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Optional<User> updateUserEmail(String userUUID, String newEmail) {
+		// TODO Auto-generated method stub
+		return Optional.empty();
+	}
+
 }
