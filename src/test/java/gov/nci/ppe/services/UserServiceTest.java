@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +52,7 @@ import gov.nci.ppe.data.repository.ProviderRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.services.impl.UserServiceImpl;
 
 @ActiveProfiles("unittest")
@@ -315,4 +319,32 @@ public class UserServiceTest {
 		verify(codeRepository).findByCodeName(codeName);
 	}
 
+	@Test
+	public void testUpdateEmail_FailUUIDPresent() {
+		String patientId = "PATID001";
+		String newEmail = "newEmail@example.com";
+		Participant userToUpdate = new Participant();
+		userToUpdate.setUserUUID(UUID.randomUUID().toString());
+		when(participantRepository.findByPatientId(patientId)).thenReturn(Optional.of(userToUpdate));
+		assertThrows(BusinessConstraintViolationException.class,
+				() -> userService.updatePatientEmail(patientId, newEmail));
+	}
+
+	@Test
+	public void testUpdateEmail_Success() {
+		String patientId = "PATID001";
+		String newEmail = "newEmail@example.com";
+		Participant userToUpdate = new Participant();
+		userToUpdate.setPatientId(patientId);
+		userToUpdate.setUserUUID(null);
+		when(participantRepository.findByPatientId(patientId)).thenReturn(Optional.of(userToUpdate));
+		when(participantRepository.save(userToUpdate)).thenReturn(userToUpdate);
+		try {
+			User updatedUser = userService.updatePatientEmail(patientId, newEmail).get();
+
+			assertEquals(updatedUser.getEmail(), userToUpdate.getEmail());
+		} catch (BusinessConstraintViolationException e) {
+			fail(e.getMessage());
+		}
+	}
 }

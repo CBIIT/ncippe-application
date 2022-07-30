@@ -52,6 +52,7 @@ import gov.nci.ppe.data.entity.dto.ParticipantDTO;
 import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
@@ -547,24 +548,36 @@ public class UserController {
 		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
 
+	@ApiOperation(value = "CRC updates an existing participant's email by supplying the Patient Id and the new email")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Participant Email updated"),
+			@ApiResponse(code = 403, message = "CRC Not Authorized to alter the participant's email."),
+			@ApiResponse(code = 409, message = "User has already been activated. Cannot change email."),
+			@ApiResponse(code = 404, message = "User not found"),
+			@ApiResponse(code = 406, message = "Language Not Supported") })
 	@PostMapping(value = UrlConstants.URL_USER_UPDATE_EMAIL, produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<String> updateEmail(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "New email for the User", required = true) @PathVariable String email, Locale locale)
-			throws JsonProcessingException {
+	public ResponseEntity<String> updateParticipantEmail(HttpServletRequest request,
+			@ApiParam(value = "Patient Id of the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_PATIENT_ID, required = true) String patientId,
+			@ApiParam(value = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email,
+			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-		if (!authService.authorize(requestingUserUUID, userGUID)) {
+		if (!authService.authorize(requestingUserUUID, patientId)) {
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.FORBIDDEN);
 		}
-
-		Optional<User> updatedUserOpt = userService.updateUserEmail(userGUID, email);
-		String userJson = convertUserToJSON(updatedUserOpt.get());
-		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
+		try {
+			Optional<User> updatedUserOpt = userService.updatePatientEmail(patientId, email);
+			String userJson = convertUserToJSON(updatedUserOpt.get());
+			return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
+		} catch (BusinessConstraintViolationException ex) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.PARTICIPANT_EMAIL_UNALTERABLE,
+							new Object[] { patientId }, locale),
+					httpHeaders, HttpStatus.CONFLICT);
+		}
 	}
 
 }

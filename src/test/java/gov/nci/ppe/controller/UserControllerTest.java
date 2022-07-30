@@ -31,10 +31,12 @@ import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.dto.CrcDTO;
 import gov.nci.ppe.data.entity.dto.ParticipantDTO;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.UserService;
+import lombok.SneakyThrows;
 
 /**
  * Unit Test class for {@link UserController}
@@ -74,7 +76,8 @@ public class UserControllerTest {
 	private final String newEmail = "newemail@example.com";
 
 	@Test
-	public void testUpdateUserEmail_Success() {
+	@SneakyThrows
+	public void testUpdatePatientEmail_Success() {
 		Participant updatedUser = new Participant();
 		Role participantRole = new Role();
 		participantRole.setRoleName(PPERole.ROLE_PPE_PARTICIPANT.name());
@@ -89,13 +92,15 @@ public class UserControllerTest {
 		CrcDTO crcDto = new CrcDTO();
 		expectedUser.setCrc(crcDto);
 
-		when(mockUserService.updateUserEmail(targetUserUUID, newEmail)).thenReturn(Optional.of(updatedUser));
+		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail)).thenReturn(Optional.of(updatedUser));
 		when(mockAuthorizationService.authorize(requestingUserUUID, targetUserUUID)).thenReturn(true);
 		try {
 			// String expectedUserString = mapper.writeValueAsString(expectedUser);
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
-			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL, targetUserUUID, newEmail)
-					.contentType(MediaType.TEXT_PLAIN_VALUE).header(CommonConstants.HEADER_UUID, requestingUserUUID))
+			mockMvc.perform(
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
+							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isOk()).andExpect(jsonPath("$.uuid", is(targetUserUUID)));
 		} catch (Exception ex) {
 			fail(ex.getMessage());
@@ -106,14 +111,31 @@ public class UserControllerTest {
 	public void testUpdateUserEmail_NotAuthorized() {
 		when(mockAuthorizationService.authorize(requestingUserUUID, targetUserUUID)).thenReturn(false);
 		try {
-			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL, targetUserUUID, newEmail)
-					.contentType(MediaType.TEXT_PLAIN_VALUE).header(CommonConstants.HEADER_UUID, requestingUserUUID))
+			mockMvc.perform(
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
+							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isForbidden());
 			verify(mockAuthorizationService).authorize(requestingUserUUID, targetUserUUID);
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}
 
+	}
+
+	@Test
+	public void testUpdatePatientEmail_Conflict() {
+		String patientId = "PAT21";
+		try {
+			when(mockAuthorizationService.authorize(requestingUserUUID, patientId)).thenReturn(true);
+			when(mockUserService.updatePatientEmail(patientId, newEmail))
+					.thenThrow(new BusinessConstraintViolationException("error"));
+			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
+					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
+					.header(CommonConstants.HEADER_UUID, requestingUserUUID)).andExpect(status().isConflict());
+		} catch (Exception ex) {
+			fail(ex.getMessage());
+		}
 	}
 
 }

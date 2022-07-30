@@ -19,12 +19,26 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	 * Returns an User entity matching the supplied patient id and
 	 * PortalAccountStatus
 	 * 
-	 * @param patientId         - Email of the User to search for
+	 * @param patientId         - OPEN Id of the User to search for
 	 * @param accountStatusList - List of possible Account Status
-	 * @return User object found.
+	 * @return Participant object found.
 	 */
 	Optional<User> findByPatientIdAndPortalAccountStatusIn(String patientId, List<Code> accountStatusCodeList);
 
+	/**
+	 * Returns active Patient Record matching the provided patient id
+	 * 
+	 * @param patientId - OPEN Id of the User to search for
+	 * @return {@link Participant} object found
+	 */
 	Optional<User> findByPatientIdAndIsActiveBiobankParticipantTrue(String patientId);
+
+	/**
+	 * Returns Patient Record matching the provided patient id
+	 * 
+	 * @param patientId - OPEN Id of the User to search for
+	 * @return {@link Participant} object found
+	 */
+	Optional<Participant> findByPatientId(String patientId);
 
 }

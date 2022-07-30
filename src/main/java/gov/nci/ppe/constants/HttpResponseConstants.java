@@ -18,4 +18,5 @@ public class HttpResponseConstants {
 	public static final String NOTIFICATION_NOT_FOUND = "error.notification.not.found";
 	public static final String INTERNAL_SERVER_ERROR = "error.internal";
 	public static final String NO_SITE_FOUND_MSG = "error.no.site.found";
+	public static final String PARTICIPANT_EMAIL_UNALTERABLE = "error.cannot.modify.email";
 }

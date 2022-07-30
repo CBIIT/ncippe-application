@@ -14,6 +14,7 @@ import gov.nci.ppe.data.entity.Provider;
 import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 
 /**
@@ -243,5 +244,16 @@ public interface UserService {
 	 */
 	public List<User> getUsersByRole(Set<Role> set);
 
-	public Optional<User> updateUserEmail(String userUUID, String newEmail);
+	/**
+	 * Update Email address of {@link Participant} with the specified Patient ID
+	 * only if the participant has not already logged in.
+	 * 
+	 * @param patientId - Patient Id of the Participant to modify
+	 * @param newEmail  - New Email address of the participant
+	 * @return the updated {@link Participant} record.
+	 * @throws BusinessConstraintViolationException - If the participant has already
+	 *                                              logged in
+	 */
+	public Optional<User> updatePatientEmail(String patientId, String newEmail)
+			throws BusinessConstraintViolationException;
 }
