@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.AdditionalAnswers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -327,7 +329,7 @@ public class UserServiceTest {
 		userToUpdate.setUserUUID(UUID.randomUUID().toString());
 		when(participantRepository.findByPatientId(patientId)).thenReturn(Optional.of(userToUpdate));
 		assertThrows(BusinessConstraintViolationException.class,
-				() -> userService.updatePatientEmail(patientId, newEmail));
+				() -> userService.updatePatientEmail(patientId, newEmail, UUID.randomUUID().toString()));
 	}
 
 	@Test
@@ -340,11 +342,43 @@ public class UserServiceTest {
 		when(participantRepository.findByPatientId(patientId)).thenReturn(Optional.of(userToUpdate));
 		when(participantRepository.save(userToUpdate)).thenReturn(userToUpdate);
 		try {
-			User updatedUser = userService.updatePatientEmail(patientId, newEmail).get();
+			User updatedUser = userService.updatePatientEmail(patientId, newEmail, UUID.randomUUID().toString()).get();
 
 			assertEquals(updatedUser.getEmail(), userToUpdate.getEmail());
 		} catch (BusinessConstraintViolationException e) {
 			fail(e.getMessage());
 		}
 	}
+
+	@Test
+	public void testSynchronizeUserEmailWithLogin_replace_old_email() {
+		String oldEmail = "oldemail@example.com";
+		String newEmail = "newEmail@example.com";
+		String userUuid = UUID.randomUUID().toString();
+		User user = new User();
+		user.setUserUUID(userUuid);
+		user.setEmail(oldEmail);
+		when(userRepository.save(user)).then(AdditionalAnswers.returnsFirstArg());
+		User updatedUser = userService.synchronizeUserEmailWithLogin(user, userUuid, newEmail).get();
+
+		assertNotNull(updatedUser);
+		assertEquals(updatedUser.getEmail(), newEmail);
+	}
+
+	@Test
+	public void testSynchronizeUserEmailWithLogin_matching_email() {
+		String oldEmail = "oldemail@example.com";
+
+		String userUuid = UUID.randomUUID().toString();
+		User user = new User();
+		user.setUserUUID(userUuid);
+		user.setEmail(oldEmail);
+
+		User updatedUser = userService.synchronizeUserEmailWithLogin(user, userUuid, oldEmail).get();
+
+		assertNotNull(updatedUser);
+		assertEquals(updatedUser.getEmail(), oldEmail);
+		verifyNoMoreInteractions(userRepository);
+	}
+
 }

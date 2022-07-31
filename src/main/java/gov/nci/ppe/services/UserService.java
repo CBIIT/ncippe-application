@@ -250,10 +250,22 @@ public interface UserService {
 	 * 
 	 * @param patientId - Patient Id of the Participant to modify
 	 * @param newEmail  - New Email address of the participant
+	 * @param crcUuid   - UniqueId of CRC requesting the change
 	 * @return the updated {@link Participant} record.
 	 * @throws BusinessConstraintViolationException - If the participant has already
 	 *                                              logged in
 	 */
-	public Optional<User> updatePatientEmail(String patientId, String newEmail)
+	public Optional<User> updatePatientEmail(String patientId, String newEmail, String crcUuid)
 			throws BusinessConstraintViolationException;
+
+	/**
+	 * Checks that the UUID and Email provided by login.gov matches the the User
+	 * record and updates if needed.
+	 * 
+	 * @param user     - the User record to update
+	 * @param uuid     - Unique Identifier received from login.gov
+	 * @param newEmail - email received from login.gov
+	 * @return - the updated User record.
+	 */
+	public Optional<User> synchronizeUserEmailWithLogin(User user, String uuid, String newEmail);
 }

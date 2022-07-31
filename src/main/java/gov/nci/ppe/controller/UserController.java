@@ -137,10 +137,11 @@ public class UserController {
 			}
 		}
 
+		userOptional = userService.synchronizeUserEmailWithLogin(userOptional.get(), uuid, email);
+
 		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
 
-		User user = userOptional.get();
-		String userInJsonFormat = convertUserToJSON(user);
+		String userInJsonFormat = convertUserToJSON(userOptional.get());
 		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
 	}
@@ -569,7 +570,7 @@ public class UserController {
 					HttpStatus.FORBIDDEN);
 		}
 		try {
-			Optional<User> updatedUserOpt = userService.updatePatientEmail(patientId, email);
+			Optional<User> updatedUserOpt = userService.updatePatientEmail(patientId, email, requestingUserUUID);
 			String userJson = convertUserToJSON(updatedUserOpt.get());
 			return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 		} catch (BusinessConstraintViolationException ex) {

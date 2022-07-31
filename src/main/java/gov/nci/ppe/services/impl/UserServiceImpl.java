@@ -951,17 +951,58 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * {@inheritDoc}
 	 * 
+	 * @param crcUuid
+	 * 
 	 */
 	@Override
-	public Optional<User> updatePatientEmail(String patientId, String newEmail)
+	public Optional<User> updatePatientEmail(String patientId, String newEmail, String crcUuid)
 			throws BusinessConstraintViolationException {
 		Participant pa = participantRepository.findByPatientId(patientId).get();
+		String previousEmail = pa.getEmail();
 		if (StringUtils.isNotBlank(pa.getUserUUID())) {
 			throw new BusinessConstraintViolationException("Patient has already activated. Email cannot be changed");
 		}
 		pa.setEmail(newEmail);
 		pa = participantRepository.save(pa);
+		raisePatientEmailUpdatedByCrcEvent(crcUuid, patientId, previousEmail, newEmail);
 		return Optional.of(pa);
+	}
+
+	@Override
+	public Optional<User> synchronizeUserEmailWithLogin(User user, String uuid, String newEmail) {
+		final String previousEmail = user.getEmail();
+		if (!newEmail.equalsIgnoreCase(previousEmail) && user.getUserUUID().equalsIgnoreCase(uuid)) {
+			user.setEmail(newEmail);
+			user = userRepository.save(user);
+			raiseEmailUpdatedAtLoginGovEvent(uuid, previousEmail, newEmail);
+		}
+		return Optional.of(user);
+	}
+
+	private void raisePatientEmailUpdatedByCrcEvent(String uuid, String patientId, String previousEmail,
+			String changedEmail) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+
+		auditDetail.put("CrcUUID", uuid).put("PatientId", patientId).put("PreviousEmail", previousEmail)
+				.put("ChangedEmail", changedEmail);
+
+		try {
+			auditService.logAuditEvent(auditDetail, AuditEventType.PPE_EMAIL_MODIFIED);
+		} catch (JsonProcessingException e) {
+			log.warn(e.getMessage());
+		}
+	}
+
+	private void raiseEmailUpdatedAtLoginGovEvent(String uuid, String previousEmail, String changedEmail) {
+		ObjectNode auditDetail = mapper.createObjectNode();
+
+		auditDetail.put("UUID", uuid).put("PreviousEmail", previousEmail).put("ChangedEmail", changedEmail);
+
+		try {
+			auditService.logAuditEvent(auditDetail, AuditEventType.PPE_EMAIL_MODIFIED);
+		} catch (JsonProcessingException e) {
+			log.warn(e.getMessage());
+		}
 	}
 
 }

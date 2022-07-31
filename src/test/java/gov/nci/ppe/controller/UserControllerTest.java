@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
@@ -69,8 +68,6 @@ public class UserControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	private ObjectMapper mapper = new ObjectMapper();
-
 	private final String requestingUserUUID = UUID.randomUUID().toString();
 	private final String targetUserUUID = UUID.randomUUID().toString();
 	private final String newEmail = "newemail@example.com";
@@ -92,7 +89,8 @@ public class UserControllerTest {
 		CrcDTO crcDto = new CrcDTO();
 		expectedUser.setCrc(crcDto);
 
-		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail)).thenReturn(Optional.of(updatedUser));
+		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail, requestingUserUUID))
+				.thenReturn(Optional.of(updatedUser));
 		when(mockAuthorizationService.authorize(requestingUserUUID, targetUserUUID)).thenReturn(true);
 		try {
 			// String expectedUserString = mapper.writeValueAsString(expectedUser);
@@ -128,7 +126,7 @@ public class UserControllerTest {
 		String patientId = "PAT21";
 		try {
 			when(mockAuthorizationService.authorize(requestingUserUUID, patientId)).thenReturn(true);
-			when(mockUserService.updatePatientEmail(patientId, newEmail))
+			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
 			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
 					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)

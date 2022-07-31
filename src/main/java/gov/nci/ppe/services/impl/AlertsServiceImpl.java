@@ -31,7 +31,6 @@ public class AlertsServiceImpl implements AlertsService {
 
 	@Override
 	public List<Alert> getAlerts() {
-		// TODO Auto-generated method stub
 		return alertsRepository.findByExpirationDateGreaterThanOrExpirationDateIsNull(LocalDateTime.now());
 	}
 

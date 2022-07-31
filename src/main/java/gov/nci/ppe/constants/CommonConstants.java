@@ -17,7 +17,8 @@ public class CommonConstants {
 		PPE_LOGIN_ATTEMPT, PPE_LOGIN_SUCCESS, PPE_LOGIN_USER_NOT_FOUND, PPE_LOGIN_EMAIL_UUID_CONFLICT,
 		PPE_ACCOUNT_CREATION, PPE_ACCOUNT_MODIFICATION, PPE_DEACTIVATE_ACCOUNT, PPE_WITHDRAW_FROM_PROGRAM,
 		PPE_BIOMARKER_TEST_FILE_UPLOAD, PPE_ECONSENT_FILE_UPLOAD, PPE_INVITE_TO_PORTAL, PPE_INSERT_DATA_FROM_OPEN,
-		PPE_UPDATE_DATA_FROM_OPEN, PPE_SEND_GROUP_NOTIFICATION, PPE_UNAUTHORIZED_ACCESS, PPE_AUTHORIZATION_SUCCESS
+		PPE_UPDATE_DATA_FROM_OPEN, PPE_SEND_GROUP_NOTIFICATION, PPE_UNAUTHORIZED_ACCESS, PPE_AUTHORIZATION_SUCCESS,
+		PPE_EMAIL_MODIFIED
 	}
 
 	public enum ActionType {
@@ -77,18 +78,18 @@ public class CommonConstants {
 
 	public enum AlertContentType {
 		ERROR("error"), WARNING("warning"), INFO("info"), SUCCESS("success");
-	
+
 		private String alertContentType;
-	
+
 		private AlertContentType(String alertContentType) {
 			this.alertContentType = alertContentType;
 		}
-	
+
 		@JsonValue
 		public String getContentType() {
 			return alertContentType;
 		}
-	
+
 		public static AlertContentType getContentType(String contentTypeStr) {
 			if (StringUtils.isBlank(contentTypeStr)) {
 				return null;
@@ -98,7 +99,7 @@ public class CommonConstants {
 					.orElseThrow(IllegalArgumentException::new);
 		}
 	}
-	
+
 	public static final String HEADER_UUID = "sm_user";
 	public static final String HEADER_EMAIL = "user_email";
 	public static final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";
