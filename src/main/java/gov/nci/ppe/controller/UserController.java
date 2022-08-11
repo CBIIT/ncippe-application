@@ -563,7 +563,15 @@ public class UserController {
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-		if (!authService.authorize(requestingUserUUID, patientId)) {
+		Optional<User> userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names());
+		if (!userOptional.isPresent()) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+		}
+		User user = userOptional.get();
+
+		if (!authService.authorize(requestingUserUUID, user)) {
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.FORBIDDEN);
