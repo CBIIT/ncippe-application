@@ -41,6 +41,7 @@ import gov.nci.ppe.data.repository.ProviderRepository;
 import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
@@ -945,6 +946,22 @@ public class UserServiceImpl implements UserService {
 	public List<User> getUsersByRole(Set<Role> userRoles) {
 
 		return userRepository.findByRoleIn(userRoles);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 */
+	@Override
+	public Optional<User> updatePatientEmail(String patientId, String newEmail)
+			throws BusinessConstraintViolationException {
+		Participant pa = participantRepository.findByPatientId(patientId).get();
+		if (StringUtils.isNotBlank(pa.getUserUUID())) {
+			throw new BusinessConstraintViolationException("Patient has already activated. Email cannot be changed");
+		}
+		pa.setEmail(newEmail);
+		pa = participantRepository.save(pa);
+		return Optional.of(pa);
 	}
 
 }

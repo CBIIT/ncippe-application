@@ -1,10 +1,10 @@
 package gov.nci.ppe.services;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import gov.nci.ppe.data.entity.User;
 
-@Component
+@Service
 public interface AuthorizationService {
 
 	/**

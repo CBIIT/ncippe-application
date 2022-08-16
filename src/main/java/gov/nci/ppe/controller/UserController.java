@@ -37,6 +37,7 @@ import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.constants.DatabaseConstants.QuestionAnswerType;
 import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.constants.PPERole;
+import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.CRC;
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.ContentEditor;
@@ -51,6 +52,7 @@ import gov.nci.ppe.data.entity.dto.ParticipantDTO;
 import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
+import gov.nci.ppe.exception.BusinessConstraintViolationException;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
@@ -78,7 +80,7 @@ public class UserController {
 	private Mapper dozerBeanMapper;
 
 	@Autowired
-	public UserService userService;
+	private UserService userService;
 
 	@Autowired
 	private CodeService codeService;
@@ -130,7 +132,8 @@ public class UserController {
 				log.error("Did not find user with {} and {} ", email, uuid);
 				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
 						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
-				return ResponseEntity.status(HttpStatus.CONFLICT).body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
+				return ResponseEntity.status(HttpStatus.CONFLICT)
+						.body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
 			}
 		}
 
@@ -544,4 +547,45 @@ public class UserController {
 		String userJson = convertUserToJSON(user);
 		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
+
+	@ApiOperation(value = "CRC updates an existing participant's email by supplying the Patient Id and the new email")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Participant Email updated"),
+			@ApiResponse(code = 403, message = "CRC Not Authorized to alter the participant's email."),
+			@ApiResponse(code = 409, message = "User has already been activated. Cannot change email."),
+			@ApiResponse(code = 404, message = "User not found"),
+			@ApiResponse(code = 406, message = "Language Not Supported") })
+	@PostMapping(value = UrlConstants.URL_USER_UPDATE_EMAIL, produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ResponseEntity<String> updateParticipantEmail(HttpServletRequest request,
+			@ApiParam(value = "Patient Id of the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_PATIENT_ID, required = true) String patientId,
+			@ApiParam(value = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email,
+			Locale locale) throws JsonProcessingException {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		Optional<User> userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names());
+		if (!userOptional.isPresent()) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+		}
+		User user = userOptional.get();
+
+		if (!authService.authorize(requestingUserUUID, user)) {
+			return new ResponseEntity<>(
+					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
+					HttpStatus.FORBIDDEN);
+		}
+		try {
+			Optional<User> updatedUserOpt = userService.updatePatientEmail(patientId, email);
+			String userJson = convertUserToJSON(updatedUserOpt.get());
+			return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
+		} catch (BusinessConstraintViolationException ex) {
+			return new ResponseEntity<String>(
+					messageSource.getMessage(HttpResponseConstants.PARTICIPANT_EMAIL_UNALTERABLE,
+							new Object[] { patientId }, locale),
+					httpHeaders, HttpStatus.CONFLICT);
+		}
+	}
+
 }
