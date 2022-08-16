@@ -26,6 +26,7 @@ import com.github.dozermapper.core.Mapper;
 import gov.nci.ppe.constants.CommonConstants;
 import gov.nci.ppe.constants.PPERole;
 import gov.nci.ppe.constants.UrlConstants;
+import gov.nci.ppe.constants.DatabaseConstants.PortalAccountStatus;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.dto.CrcDTO;
@@ -89,11 +90,10 @@ public class UserControllerTest {
 		CrcDTO crcDto = new CrcDTO();
 		expectedUser.setCrc(crcDto);
 
-		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail, requestingUserUUID))
-				.thenReturn(Optional.of(updatedUser));
-		when(mockAuthorizationService.authorize(requestingUserUUID, targetUserUUID)).thenReturn(true);
+		when(mockUserService.findByPatientIdAndPortalAccountStatus(targetUserUUID, PortalAccountStatus.names())).thenReturn(Optional.of(updatedUser));
+		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail, requestingUserUUID)).thenReturn(Optional.of(updatedUser));
+		when(mockAuthorizationService.authorize(requestingUserUUID, updatedUser)).thenReturn(true);
 		try {
-			// String expectedUserString = mapper.writeValueAsString(expectedUser);
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
 			mockMvc.perform(
 					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
@@ -102,19 +102,23 @@ public class UserControllerTest {
 					.andExpect(status().isOk()).andExpect(jsonPath("$.uuid", is(targetUserUUID)));
 		} catch (Exception ex) {
 			fail(ex.getMessage());
-		}
+		}	
 	}
 
 	@Test
 	public void testUpdateUserEmail_NotAuthorized() {
-		when(mockAuthorizationService.authorize(requestingUserUUID, targetUserUUID)).thenReturn(false);
+		String patientId = "PAT21";
+		Participant pa = new Participant();
+		pa.setPatientId(patientId);
+		when(mockUserService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names())).thenReturn(Optional.of(pa));
+		when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(false);
 		try {
 			mockMvc.perform(
-					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
 							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
 							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isForbidden());
-			verify(mockAuthorizationService).authorize(requestingUserUUID, targetUserUUID);
+			verify(mockAuthorizationService).authorize(requestingUserUUID, pa);
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}
@@ -124,8 +128,11 @@ public class UserControllerTest {
 	@Test
 	public void testUpdatePatientEmail_Conflict() {
 		String patientId = "PAT21";
+		Participant pa = new Participant();
+		pa.setPatientId(patientId);
 		try {
-			when(mockAuthorizationService.authorize(requestingUserUUID, patientId)).thenReturn(true);
+			when(mockUserService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names())).thenReturn(Optional.of(pa));
+			when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(true);
 			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
 			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
