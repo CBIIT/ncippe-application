@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
 import gov.nci.ppe.constants.CommonConstants;
@@ -92,7 +91,7 @@ public class UserControllerTest {
 		expectedUser.setCrc(crcDto);
 
 		when(mockUserService.findByPatientIdAndPortalAccountStatus(targetUserUUID, PortalAccountStatus.names())).thenReturn(Optional.of(updatedUser));
-		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail)).thenReturn(Optional.of(updatedUser));
+		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail, requestingUserUUID)).thenReturn(Optional.of(updatedUser));
 		when(mockAuthorizationService.authorize(requestingUserUUID, updatedUser)).thenReturn(true);
 		try {
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
@@ -103,7 +102,7 @@ public class UserControllerTest {
 					.andExpect(status().isOk()).andExpect(jsonPath("$.uuid", is(targetUserUUID)));
 		} catch (Exception ex) {
 			fail(ex.getMessage());
-		}
+		}	
 	}
 
 	@Test
@@ -134,7 +133,7 @@ public class UserControllerTest {
 		try {
 			when(mockUserService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names())).thenReturn(Optional.of(pa));
 			when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(true);
-			when(mockUserService.updatePatientEmail(patientId, newEmail))
+			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
 			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
 					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
