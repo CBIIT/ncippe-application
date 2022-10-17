@@ -35,6 +35,7 @@ public class NcippeApplication {
 
 	@Bean
 	public Docket api() throws FileNotFoundException, IOException, XmlPullParserException {
+        System.out.println("MHL TEST 000");
 		return new Docket(DocumentationType.SWAGGER_2).select()
 				.apis(RequestHandlerSelectors.basePackage("gov.nci.ppe.controller")).paths(PathSelectors.any())
 				.build().apiInfo(new ApiInfo("NCI PPE Api Documentation", "Documentation automatically generated", null,
@@ -44,7 +45,8 @@ public class NcippeApplication {
 
 	@Bean
 	public MessageSource messageSource() {
-		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        System.out.println("MHL TEST 001");
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
 		messageSource.setBasenames("messages/errors/error", "messages/emails/email");
 		return messageSource;
 	}
