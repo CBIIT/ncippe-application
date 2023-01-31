@@ -78,6 +78,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private boolean authorizeProvider(Participant targetUser, final String requestingUserUUID) {
 		Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
 				.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
+
 		if (requestingProviderOptional.isEmpty()) {
 			raiseAuthorizationEvent(requestingUserUUID, targetUser.getUserUUID(), "Not authorized to access Patient ",
 					AuditEventType.PPE_UNAUTHORIZED_ACCESS);
@@ -91,6 +92,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
+		log.info( "MHL TargetUser UUID: " + targetUser.getCrc().getUserUUID());
+		log.info( "MHL requestingUserUUID UUID: " + requestingUserUUID);
+
 		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
 			log.info("CRC {} allowed access to patient {} ", requestingUserUUID, targetUser.getPatientId());
 			return true;
