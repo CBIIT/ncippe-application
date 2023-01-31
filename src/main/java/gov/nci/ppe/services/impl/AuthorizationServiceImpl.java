@@ -64,6 +64,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		switch (PPERole.valueOf(requestingUserRole)) {
 
 		case ROLE_PPE_CRC:
+			log.info("MHL 01 user.getUserUUID: " + user.getUserUUID());
+			log.info("MHL 01 user.requestingUserUUID: " + requestingUserUUID);
 			return authorizeCRC((Participant) user, requestingUserUUID);
 
 		case ROLE_PPE_PROVIDER:
