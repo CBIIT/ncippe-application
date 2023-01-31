@@ -39,6 +39,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Override
 	public boolean authorize(String requestingUserUUID, User user) {
 
+		log.info("MHL authorize0 requestingUserUUID: " + requestingUserUUID);
+		log.info("MHL authorize0 user.getUserUUID(): " + user.getUserUUID());
+
 		// Invalid request no username present
 		if (StringUtils.isBlank(requestingUserUUID)) {
 			log.error("No Username present in Request");
@@ -117,6 +120,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			log.error("No user found with UUID " + targetUUID);
 			return false;
 		} else {
+			log.info("MHL authorize1 requestingUserUUID: " + requestingUserUUID);
+			log.info("MHL authorize1 targetUserOptional.get(): " + targetUserOptional.get());
+
 			return authorize(requestingUserUUID, targetUserOptional.get());
 		}
 	}

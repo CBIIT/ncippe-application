@@ -540,6 +540,8 @@ public class UserController {
 		User user = userOptional.get();
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
+		log.info("MHL fetchUser requestingUserUUID: " + requestingUserUUID);
+		log.info("MHL fetchUser user: " + user);
 		if (!authService.authorize(requestingUserUUID, user)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale));
