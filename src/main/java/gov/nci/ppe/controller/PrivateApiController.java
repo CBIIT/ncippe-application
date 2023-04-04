@@ -76,7 +76,9 @@ public class PrivateApiController {
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 		String jsonFormat = convertUsersToJSON(newUsersList);
 		logger.info("OPEN Insertion complete");
-		return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
+        System.out.println("MHL convertUsersToJSON: " + jsonFormat);
+
+        return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
 	/**

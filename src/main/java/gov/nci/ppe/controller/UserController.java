@@ -142,6 +142,7 @@ public class UserController {
 		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
 
 		String userInJsonFormat = convertUserToJSON(userOptional.get());
+        System.out.println("MHL userInJsonFormat: " + userInJsonFormat);
 		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
 	}

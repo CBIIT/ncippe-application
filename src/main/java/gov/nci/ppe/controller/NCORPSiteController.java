@@ -63,6 +63,7 @@ public class NCORPSiteController {
 		}
 
 		String responseString = convertSitesToJSON(sitesList);
+        System.out.println("MHL responseString: " + responseString);
 		return new ResponseEntity<String>(responseString, httpHeaders, HttpStatus.OK);
 
 	}
