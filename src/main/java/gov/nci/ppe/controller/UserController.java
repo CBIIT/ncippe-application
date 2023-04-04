@@ -164,6 +164,11 @@ public class UserController {
 			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
 			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId,
 			Locale locale) throws JsonProcessingException {
+
+        System.out.println("MHL userUUID: " + userUUID);
+        System.out.println("MHL email: " + email);
+        System.out.println("MHL patientId: " + patientId);
+
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);

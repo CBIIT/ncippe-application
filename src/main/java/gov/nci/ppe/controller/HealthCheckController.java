@@ -35,6 +35,7 @@ public class HealthCheckController {
 		headers.forEach((key, value) -> {
 			headerString
 					.append(String.format("Header '%s' = %s%n", key, value.stream().collect(Collectors.joining("|"))));
+            System.out.println("MHL headerString: " + headerString.toString());
 		});
 
 		return new ResponseEntity<>(headerString.toString(), HttpStatus.OK);
