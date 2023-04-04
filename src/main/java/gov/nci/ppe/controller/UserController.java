@@ -168,6 +168,9 @@ public class UserController {
         System.out.println("MHL userUUID: " + userUUID);
         System.out.println("MHL email: " + email);
         System.out.println("MHL patientId: " + patientId);
+        log.info("MHL userUUID: {}", userUUID);
+        log.info("MHL email: {}", email);
+        log.info("MHL patientId: {}", patientId);
 
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
