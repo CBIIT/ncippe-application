@@ -175,7 +175,7 @@ public class UserController {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);
-		return fetchUser(request, userUUID, email, patientId, locale);
+		return fetchUser(request, userUUID, email, patientId, locale)
 	}
 
 	/**
@@ -201,7 +201,13 @@ public class UserController {
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-		if (!authService.authorize(requestingUserUUID, userGUID)) {
+
+
+
+        System.out.println("MHL requestingUserUUID: " + requestingUserUUID);
+
+
+        if (!authService.authorize(requestingUserUUID, userGUID)) {
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 
