@@ -39,6 +39,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Override
 	public boolean authorize(String requestingUserUUID, User user) {
 
+		log.info("MHL authorize0 requestingUserUUID: " + requestingUserUUID);
+		log.info("MHL authorize0 user.getUserUUID(): " + user.getUserUUID());
+
 		// Invalid request no username present
 		if (StringUtils.isBlank(requestingUserUUID)) {
 			log.error("No Username present in Request");
@@ -61,6 +64,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		switch (PPERole.valueOf(requestingUserRole)) {
 
 		case ROLE_PPE_CRC:
+			log.info("MHL 01 user.getUserUUID: " + user.getUserUUID());
+			log.info("MHL 01 user.requestingUserUUID: " + requestingUserUUID);
 			return authorizeCRC((Participant) user, requestingUserUUID);
 
 		case ROLE_PPE_PROVIDER:
@@ -78,6 +83,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private boolean authorizeProvider(Participant targetUser, final String requestingUserUUID) {
 		Optional<Provider> requestingProviderOptional = targetUser.getProviders().stream()
 				.filter(provider -> requestingUserUUID.equals(provider.getUserUUID())).findAny();
+
 		if (requestingProviderOptional.isEmpty()) {
 			raiseAuthorizationEvent(requestingUserUUID, targetUser.getUserUUID(), "Not authorized to access Patient ",
 					AuditEventType.PPE_UNAUTHORIZED_ACCESS);
@@ -91,6 +97,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
+		log.info( "MHL TargetUser UUID: " + targetUser.getCrc().getUserUUID());
+		log.info( "MHL requestingUserUUID UUID: " + requestingUserUUID);
+
 		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
 			log.info("CRC {} allowed access to patient {} ", requestingUserUUID, targetUser.getPatientId());
 			return true;
@@ -113,6 +122,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			log.error("No user found with UUID " + targetUUID);
 			return false;
 		} else {
+			log.info("MHL authorize1 requestingUserUUID: " + requestingUserUUID);
+			log.info("MHL authorize1 targetUserOptional.get(): " + targetUserOptional.get());
+
 			return authorize(requestingUserUUID, targetUserOptional.get());
 		}
 	}
