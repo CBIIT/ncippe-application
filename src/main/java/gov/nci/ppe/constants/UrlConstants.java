@@ -8,7 +8,8 @@ package gov.nci.ppe.constants;
  * @since 2021-05-17
  */
 public class UrlConstants {
-	private static final String PARAM_NOTIFICATIONS = "/notifications";
+
+    private static final String PARAM_NOTIFICATIONS = "/notifications";
 	private static final String URL_API_VERSION = "/api/v1";
 	private static final String URL_PUBLIC_API_VERSION = "/publicapi/v1";
 	private static final String URL_USER = URL_API_VERSION + "/user";
@@ -25,7 +26,9 @@ public class UrlConstants {
 	public static final String URL_ALERTS = URL_PUBLIC_API_VERSION + PARAM_ALERTS;
 	public static final String URL_USER_UPDATE_EMAIL = URL_USER + "/update-participant-email";
 
-	private UrlConstants() {
+    public static final String CHART_DATA = "/chartData";
+
+    private UrlConstants() {
 
 	}
 }

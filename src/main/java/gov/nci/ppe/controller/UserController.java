@@ -175,7 +175,7 @@ public class UserController {
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);
-		return fetchUser(request, userUUID, email, patientId, locale)
+		return fetchUser(request, userUUID, email, patientId, locale);
 	}
 
 	/**
