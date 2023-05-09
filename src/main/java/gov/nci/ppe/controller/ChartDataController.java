@@ -16,13 +16,11 @@ import java.util.List;
 @RestController
 public class ChartDataController
 {
-    public ChartDataController() {
-        System.out.println("MHL ChartDataController: constructor");
-    }
+
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getChartData() throws JsonProcessingException
+    public ResponseEntity<String> getChartData()
     {
         System.out.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
