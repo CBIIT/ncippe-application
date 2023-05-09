@@ -16,6 +16,9 @@ import java.util.List;
 @RestController
 public class ChartDataController
 {
+    public ChartDataController() {
+        System.out.println("MHL ChartDataController: constructor");
+    }
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
