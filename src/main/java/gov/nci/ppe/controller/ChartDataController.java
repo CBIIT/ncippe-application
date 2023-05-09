@@ -21,9 +21,9 @@ public class ChartDataController
     @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getChartData() throws JsonProcessingException
     {
+        System.out.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set( "Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        System.out.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
     }
 
