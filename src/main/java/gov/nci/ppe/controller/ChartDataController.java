@@ -17,14 +17,14 @@ import java.util.List;
 public class ChartDataController
 {
 
-    @ApiOperation(value = "Method to return list of active alerts")
+    @ApiOperation(value = "Method to return data for charts")
     @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getAlerts() throws JsonProcessingException
+    public ResponseEntity<String> getChartData() throws JsonProcessingException
     {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set( "Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
-        return new ResponseEntity<String>("MHL test data", httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
     }
 
 }
