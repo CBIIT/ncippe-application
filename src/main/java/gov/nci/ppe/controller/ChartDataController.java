@@ -13,17 +13,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-@Slf4j
+import java.util.logging.Logger;
+
 @RestController
 public class ChartDataController
 {
+    private Logger logger = Logger.getLogger(ChartDataController.class.getName());
 
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getChartData()
     {
-        log.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
+        logger.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set( "Content-Type", MediaType.APPLICATION_JSON_VALUE);
         return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
