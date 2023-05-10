@@ -26,9 +26,12 @@ public class ChartDataController
     public ResponseEntity<String> getChartData()
     {
         logger.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
+        System.out.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
+        System.err.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set( "Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.FORBIDDEN);
+       // return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
     }
 
 }
