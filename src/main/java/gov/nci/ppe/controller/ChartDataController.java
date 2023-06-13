@@ -3,6 +3,7 @@ package gov.nci.ppe.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.Alert;
+import gov.nci.ppe.data.entity.NewsEvent;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,8 +30,13 @@ public class ChartDataController
         System.out.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         System.err.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set( "Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
+        httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        System.out.println("MHL IN NewsController");
+        String responseString = "{\"data\": \"MHL test data\"}";
+        System.out.println(responseString);
+        return new ResponseEntity<String>(responseString, httpHeaders, HttpStatus.OK);
+
+        // return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
        // return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
     }
 
