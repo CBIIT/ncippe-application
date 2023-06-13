@@ -22,7 +22,7 @@ public class ChartDataController
 
 
     @ApiOperation(value = "Method to return data for charts")
-    @GetMapping(value = UrlConstants.CHART_DATA, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = UrlConstants.CHART_DATA)
     public ResponseEntity<String> getChartData()
     {
         logger.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
