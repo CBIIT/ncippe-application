@@ -26,8 +26,7 @@ public class UrlConstants {
 	public static final String URL_ALERTS = URL_PUBLIC_API_VERSION + PARAM_ALERTS;
 	public static final String URL_USER_UPDATE_EMAIL = URL_USER + "/update-participant-email";
 
-    public static final String CHART_DATA = "/chartData";
-
+    public static final String CHART_DATA = URL_PUBLIC_API_VERSION + "/chartData";
     private UrlConstants() {
 
 	}

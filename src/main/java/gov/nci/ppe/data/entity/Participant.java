@@ -41,10 +41,12 @@ public class Participant extends User {
 	@Column(name = "PatientID", nullable = false, length = 20)
 	private String patientId;
 
+
+
 	@ManyToMany
 	@JoinTable(name = "ProviderParticipant", joinColumns = {
 			@JoinColumn(name = "ParticipantId") }, inverseJoinColumns = { @JoinColumn(name = "ProviderId") })
-	private Set<Provider> providers = new HashSet<>();
+	private Set<Provider> providers = new HashSet<>(); // Make CRC like this
 
 	@OneToMany(mappedBy = "participant")
 	@Where(clause = "FileType = 102")
@@ -56,9 +58,12 @@ public class Participant extends User {
 	@OrderBy("DateUploaded DESC")
 	List<FileMetadata> reports;
 
-	@OneToOne
+	@ManyToMany
 	@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "ParticipantId"), inverseJoinColumns = @JoinColumn(name = "CRCId"))
-	private CRC crc;
+	// private CRC crc;
+	private Set<CRC> crc = new HashSet<>(); // MHL @CHECKME
+
+
 
 	@Transient
 	private boolean hasNewReports;

@@ -1,6 +1,7 @@
 package gov.nci.ppe.controller;
 
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ public class NewsController {
 	private NewsEventsService newsEventsService;
 
 	private Mapper dozerBeanMapper;
+	private Logger logger = Logger.getLogger(NewsController.class.getName());
 
 	@Autowired
 	public NewsController(NewsEventsService newsEventsService, @Qualifier("dozerBean") Mapper dozerBeanMapper) {
@@ -48,7 +50,7 @@ public class NewsController {
 	public ResponseEntity<String> getActiveNewsAndEvents() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-
+System.out.println("MHL IN NewsController");
 		List<NewsEvent> newsEvents = newsEventsService.getActiveNewsEvents();
 		String responseString = convertToString(newsEvents);
 		System.out.println(responseString);

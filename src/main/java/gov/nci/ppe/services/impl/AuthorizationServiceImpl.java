@@ -39,8 +39,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Override
 	public boolean authorize(String requestingUserUUID, User user) {
 
-		log.info("MHL authorize0 requestingUserUUID: " + requestingUserUUID);
-		log.info("MHL authorize0 user.getUserUUID(): " + user.getUserUUID());
+		log.info("MHL authorize7 requestingUserUUID: " + requestingUserUUID);
+		log.info("MHL authorize7 user.getUserUUID(): " + user.getUserUUID());
 
 		// Invalid request no username present
 		if (StringUtils.isBlank(requestingUserUUID)) {
@@ -64,8 +64,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		switch (PPERole.valueOf(requestingUserRole)) {
 
 		case ROLE_PPE_CRC:
-			log.info("MHL 01 user.getUserUUID: " + user.getUserUUID());
-			log.info("MHL 01 user.requestingUserUUID: " + requestingUserUUID);
+			log.info("MHL 01 ROLE_PPE_CRC user.getUserUUID: " + user.getUserUUID());
+			log.info("MHL 01 ROLE_PPE_CRC user.requestingUserUUID: " + requestingUserUUID);
 			return authorizeCRC((Participant) user, requestingUserUUID);
 
 		case ROLE_PPE_PROVIDER:
@@ -99,7 +99,6 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	private boolean authorizeCRC(Participant targetUser, final String requestingUserUUID) {
 		log.info( "MHL TargetUser UUID: " + targetUser.getCrc().getUserUUID());
 		log.info( "MHL requestingUserUUID UUID: " + requestingUserUUID);
-
 		if (targetUser.getCrc().getUserUUID().equalsIgnoreCase(requestingUserUUID)) {
 			log.info("CRC {} allowed access to patient {} ", requestingUserUUID, targetUser.getPatientId());
 			return true;
