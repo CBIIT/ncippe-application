@@ -58,10 +58,11 @@ public class Participant extends User {
 	@OrderBy("DateUploaded DESC")
 	List<FileMetadata> reports;
 
-	@ManyToMany
+	@OneToOne
+	// @ManyToMany
 	@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "ParticipantId"), inverseJoinColumns = @JoinColumn(name = "CRCId"))
 	private CRC crc;
-
+	// private Set<CRC> crc = new HashSet<>(); // MHL @CHECKME
 
 
 
