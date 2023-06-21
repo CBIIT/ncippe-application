@@ -21,9 +21,13 @@ public class ChartDataController
 {
     private Logger logger = Logger.getLogger(ChartDataController.class.getName());
 
+    public ChartDataController( ) {
+        System.out.println("MHL IN ChartDataController constructor");
+
+    }
 
     @ApiOperation(value = "Method to return data for charts")
-    @GetMapping(value = UrlConstants.CHART_DATA)
+    @GetMapping(UrlConstants.CHART_DATA)
     public ResponseEntity<String> getChartData()
     {
         logger.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
@@ -31,7 +35,7 @@ public class ChartDataController
         System.err.println("MHL ChartDataController: {\"data\": \"MHL test data\"}");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        System.out.println("MHL IN NewsController");
+        System.out.println("MHL IN ChartDataController");
         String responseString = "{\"data\": \"MHL test data\"}";
         System.out.println(responseString);
         return new ResponseEntity<String>(responseString, httpHeaders, HttpStatus.OK);
