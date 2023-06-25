@@ -28,6 +28,12 @@ public class ChartDataController
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(UrlConstants.CHART_DATA)
+    public ResponseEntity<String> isHere() {
+        logger.info("MHL ChartDataController");
+        return ResponseEntity.ok("Here");
+    }
+
+/*
     public ResponseEntity<String> getChartData()
     {
         logger.info("MHL ChartDataController: {\"data\": \"MHL test data\"}");
@@ -43,5 +49,6 @@ public class ChartDataController
         // return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
        // return new ResponseEntity<String>("{\"data\": \"MHL test data\"}", httpHeaders, HttpStatus.OK);
     }
+*/
 
 }
