@@ -59,12 +59,8 @@ public class Participant extends User {
 	List<FileMetadata> reports;
 
 	@OneToOne
-	// @ManyToMany
 	@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "ParticipantId"), inverseJoinColumns = @JoinColumn(name = "CRCId"))
 	private CRC crc;
-	// private Set<CRC> crc = new HashSet<>(); // MHL @CHECKME
-
-
 
 	@Transient
 	private boolean hasNewReports;
