@@ -30,7 +30,7 @@ public class ChartDataController
     @GetMapping(UrlConstants.CHART_DATA)
     public ResponseEntity<String> isHere() {
         logger.info("MHL ChartDataController");
-        return ResponseEntity.ok("Here");
+        return ResponseEntity.ok("{\"data\": \"The Data\"}");
     }
 
 /*
