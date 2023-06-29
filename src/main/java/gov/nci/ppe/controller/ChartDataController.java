@@ -20,7 +20,7 @@ public class ChartDataController {
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(UrlConstants.CHART_DATA)
-    public ResponseEntity<String> isHere() {
+    public ResponseEntity<String> getChartData() {
         logger.info("MHL ChartDataController");
         // return ResponseEntity.ok("{\"data\": \"The Data\"}");
         return ResponseEntity.ok(testData);
