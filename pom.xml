@@ -206,6 +206,11 @@
 			<!--     <version>2.23.0</version> -->
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>google</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
