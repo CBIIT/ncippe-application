@@ -46,7 +46,7 @@ public class Participant extends User {
 	@ManyToMany
 	@JoinTable(name = "ProviderParticipant", joinColumns = {
 			@JoinColumn(name = "ParticipantId") }, inverseJoinColumns = { @JoinColumn(name = "ProviderId") })
-	private Set<Provider> providers = new HashSet<>(); // Make CRC like this
+	private Set<Provider> providers = new HashSet<>();
 
 	@OneToMany(mappedBy = "participant")
 	@Where(clause = "FileType = 102")
