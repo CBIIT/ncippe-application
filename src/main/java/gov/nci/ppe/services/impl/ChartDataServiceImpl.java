@@ -22,6 +22,7 @@ public class ChartDataServiceImpl implements ChartDataService {
 
     @Override
     public String getChartData() {
-        return chartDataRepository.getChartData();
+        return testData;
+        // return chartDataRepository.getChartData();
     }
 }
