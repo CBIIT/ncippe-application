@@ -4,7 +4,7 @@ import gov.nci.ppe.data.repository.ChartDataRepository;
 import gov.nci.ppe.services.ChartDataService;
 import org.springframework.stereotype.Service;
 
-// @Service
+@Service
 public class ChartDataServiceImpl implements ChartDataService {
     private ChartDataService chartDataService;
     ChartDataRepository chartDataRepository;
@@ -24,7 +24,8 @@ public class ChartDataServiceImpl implements ChartDataService {
 */
     @Override
     public String getChartData() {
-        return testData;
-        // return chartDataRepository.getChartData();
+       // return testData;
+        System.out.println("MHL getChartData");
+        return chartDataRepository.getChartData();
     }
 }
