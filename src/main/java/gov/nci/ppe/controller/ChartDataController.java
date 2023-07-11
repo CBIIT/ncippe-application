@@ -37,7 +37,7 @@ public class ChartDataController {
 
     @ApiOperation(value = "Method to return data for charts")
     @GetMapping(UrlConstants.CHART_DATA)
-    public ResponseEntity<JsonNode> getChartData() {
+    public ResponseEntity<JsonNode> getAllChartData() {
 
         // build the return object here
 
