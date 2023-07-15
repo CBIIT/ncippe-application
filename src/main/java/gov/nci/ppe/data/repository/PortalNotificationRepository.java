@@ -11,7 +11,7 @@ import gov.nci.ppe.data.entity.PortalNotification;
 
 @Repository
 public interface PortalNotificationRepository extends JpaRepository<PortalNotification, Long>{
-	
+	System.out.println("MHL IN PortalNotificationRepository");
 	@Query(value = "SELECT * FROM PortalNotification PN WHERE PN.UserId = :userId",nativeQuery=true)
 	List<PortalNotification> findNotificationstByUserId(@Param("userId") Long userId);
 

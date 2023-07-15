@@ -74,6 +74,7 @@ public class NotificationServiceImpl implements NotificationService {
 		this.auditService = auditService;
 		this.userRepository = userRepository;
 		this.mapper = new ObjectMapper();
+		System.out.println("MHL IN NotificationServiceImpl");
 	}
 
 	/**
