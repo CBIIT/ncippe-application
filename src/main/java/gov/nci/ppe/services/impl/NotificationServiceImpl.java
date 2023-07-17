@@ -66,6 +66,7 @@ public class NotificationServiceImpl implements NotificationService {
 			GroupNotificationRequestRepository groupNotificationRequestRepository, RoleRepository roleRepository,
 			NotificationServiceConfig notificationSrvConfig, EmailLogService emailService, AuditService auditService,
 			UserRepository userRepository) {
+		System.out.println("MHL NotificationServiceImpl");
 		this.notificationRepo = notificationRepo;
 		this.groupNotificationRequestRepository = groupNotificationRequestRepository;
 		this.roleRepository = roleRepository;
