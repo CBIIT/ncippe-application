@@ -50,7 +50,6 @@ public class NewsController {
 	public ResponseEntity<String> getActiveNewsAndEvents() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-System.out.println("MHL IN NewsController");
 		List<NewsEvent> newsEvents = newsEventsService.getActiveNewsEvents();
 		String responseString = convertToString(newsEvents);
 		System.out.println(responseString);
