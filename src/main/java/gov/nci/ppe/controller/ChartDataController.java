@@ -41,8 +41,8 @@ public class ChartDataController {
         // build the return object here
         ObjectMapper mapper = new ObjectMapper();
         try {
-            actualObj = mapper.readTree(chartDataRepository.getChartData());
-            // actualObj = mapper.readTree(testData); // @TODO Test data
+           // actualObj = mapper.readTree(chartDataRepository.getChartData());
+             actualObj = mapper.readTree(testData); // @TODO Test data
         } catch (IOException e) {
             e.printStackTrace();
         }
