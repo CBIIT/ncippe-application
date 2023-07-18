@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nci.ppe.constants.UrlConstants;
+import gov.nci.ppe.data.repository.ChartDataRepository;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import java.util.logging.Logger;
 @RestController
 public class ChartDataController {
     private Logger logger = Logger.getLogger(ChartDataController.class.getName());
+    private ChartDataRepository chartDataRepository;
+
     @JsonValue
     String testData  = "{" +
             " \"projectSummary\": [ { \"label\": \"charts.chart_data.ProjectSummary.ParticipantsEnrolled\", \"value\": 27}, { \"label\": \"charts.chart_data.ProjectSummary.SitesThatHaveEnrolledParticipants\", \"value\": 21}, { \"label\": \"charts.chart_data.ProjectSummary.CancerTypes\", \"value\": 18}, { \"label\": \"charts.chart_data.ProjectSummary.BiomarkerTestReturned\", \"value\": 16}], " +
@@ -33,14 +36,14 @@ public class ChartDataController {
     public ResponseEntity<JsonNode> getAllChartData() {
 
         // build the return object here
-
         ObjectMapper mapper = new ObjectMapper();
         try {
-            actualObj = mapper.readTree(testData); // @TODO Test data
+            actualObj = mapper.readTree(chartDataRepository.getChartData());
+            // actualObj = mapper.readTree(testData); // @TODO Test data
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+       ;
         return ResponseEntity.ok(actualObj);
 
     }
