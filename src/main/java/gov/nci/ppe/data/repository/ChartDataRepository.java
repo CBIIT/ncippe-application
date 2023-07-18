@@ -11,7 +11,6 @@ import java.util.List;
 
 @Repository
 public interface ChartDataRepository  extends JpaRepository<PortalNotification, Long> {
-     String sqlString = "SELECT * FROM biobank.ChartLabels";
      String sqlString0 = "select distinct case \n" +
             "\twhen pd.MedDRADiseaseTerm = 'Colorectal Carcinoma' Then 'Colon Cancer'\n" +
             "    when pd.MedDRADiseaseTerm = 'Non-Small Cell Lung Carcinoma' Then 'Lung Cancer'\n" +
@@ -37,6 +36,9 @@ public interface ChartDataRepository  extends JpaRepository<PortalNotification, 
             "from ParticipantData pd\n" +
             "group by CancerType\n" +
             "order by CancerType;\n";
+
+    String sqlString = "SELECT * FROM biobank.ChartLabels";
+
     @Query(value = sqlString,nativeQuery=true)
     String getChartData();
 
