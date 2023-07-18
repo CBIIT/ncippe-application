@@ -11,8 +11,8 @@ import java.util.List;
 
 @Repository
 public interface ChartDataRepository  extends JpaRepository<PortalNotification, Long> {
-
-     String sqlString = "select distinct case \n" +
+     String sqlString = "SELECT * FROM biobank.ChartLabels";
+     String sqlString0 = "select distinct case \n" +
             "\twhen pd.MedDRADiseaseTerm = 'Colorectal Carcinoma' Then 'Colon Cancer'\n" +
             "    when pd.MedDRADiseaseTerm = 'Non-Small Cell Lung Carcinoma' Then 'Lung Cancer'\n" +
             "    when pd.MedDRADiseaseTerm = 'Small Cell Lung Carcinoma' Then 'Lung Cancer'\n" +
