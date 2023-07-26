@@ -44,7 +44,7 @@ public class ChartDataController {
         try {
             if( chartDataRepository != null ){
                 logger.info("MHL IN ChartDataController chartDataRepository != null");
-                logger.info ("MHL chartDataRepository: " + chartDataRepository );
+                logger.info ("MHL chartDataRepository: " + chartDataRepository.getChartData() );
             }
            // actualObj = mapper.readTree(chartDataRepository.getChartData()); //
              actualObj = mapper.readTree(testData); // @TODO Test data
