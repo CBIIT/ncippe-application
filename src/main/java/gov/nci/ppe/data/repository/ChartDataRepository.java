@@ -37,7 +37,7 @@ public interface ChartDataRepository  extends JpaRepository<PortalNotification, 
             "group by CancerType\n" +
             "order by CancerType;\n";
 
-    String sqlString = "SELECT * FROM biobank.ChartLabels";
+    String sqlString = "SELECT label FROM biobank.ChartLabels";
 
     @Query(value = sqlString,nativeQuery=true)
     String getChartData();
