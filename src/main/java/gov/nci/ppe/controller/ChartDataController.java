@@ -32,6 +32,7 @@ public class ChartDataController {
     JsonNode actualObj;
     public ChartDataController() {
         System.out.println("MHL IN ChartDataController constructor");
+        logger.info("MHL IN ChartDataController constructor");
     }
 
     @ApiOperation(value = "Method to return data for charts")
@@ -42,8 +43,8 @@ public class ChartDataController {
         ObjectMapper mapper = new ObjectMapper();
         try {
             if( chartDataRepository != null ){
-                System.out.println("MHL IN ChartDataController chartDataRepository != null");
-                System.out.println("MHL chartDataRepository: " +chartDataRepository );
+                logger.info("MHL IN ChartDataController chartDataRepository != null");
+                logger.info ("MHL chartDataRepository: " + chartDataRepository );
             }
            // actualObj = mapper.readTree(chartDataRepository.getChartData()); //
              actualObj = mapper.readTree(testData); // @TODO Test data
