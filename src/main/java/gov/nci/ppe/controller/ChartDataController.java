@@ -41,7 +41,11 @@ public class ChartDataController {
         // build the return object here
         ObjectMapper mapper = new ObjectMapper();
         try {
-           // actualObj = mapper.readTree(chartDataRepository.getChartData());
+            if( chartDataRepository != null ){
+                System.out.println("MHL IN ChartDataController chartDataRepository != null");
+                System.out.println("MHL chartDataRepository: " +chartDataRepository );
+            }
+           // actualObj = mapper.readTree(chartDataRepository.getChartData()); //
              actualObj = mapper.readTree(testData); // @TODO Test data
         } catch (IOException e) {
             e.printStackTrace();
