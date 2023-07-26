@@ -25,11 +25,4 @@ public class ChartData {
         this.id = id;
     }
 
-
-    @Column(name="MedDRADiseaseTerm")
-    private String MedDRADiseaseTerm;
-    public String getMedDRADiseaseTerm() {
-        return MedDRADiseaseTerm;
-    }
-
 }
