@@ -31,8 +31,6 @@ public class ChartDataController {
 
     JsonNode actualObj;
     public ChartDataController() {
-        System.out.println("MHL IN ChartDataController constructor");
-        logger.info("MHL IN ChartDataController constructor");
     }
 
     @ApiOperation(value = "Method to return data for charts")
