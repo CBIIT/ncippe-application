@@ -12,7 +12,14 @@ public class CommonConstants {
 	public static final String SUCCESS = "SUCCESS";
 	public static final String FAILURE = "FAILURE";
 	public static final String ERROR = "ERROR";
-
+	
+	public static final String CHART_AREA = "Area Demographics";
+	public static final String CHART_BIOMARKER = "ParticipantBioMarkers";
+	public static final String CHART_CANCERTYPE = "Cancer Demographics";
+	public static final String CHART_ETHNICITY = "Ethnicity Demographics";
+	public static final String CHART_RACE = "Race Demographics";
+	public static final String CHART_SEX = "Sex Demographics";
+	
 	public enum AuditEventType {
 		PPE_LOGIN_ATTEMPT, PPE_LOGIN_SUCCESS, PPE_LOGIN_USER_NOT_FOUND, PPE_LOGIN_EMAIL_UUID_CONFLICT,
 		PPE_ACCOUNT_CREATION, PPE_ACCOUNT_MODIFICATION, PPE_DEACTIVATE_ACCOUNT, PPE_WITHDRAW_FROM_PROGRAM,

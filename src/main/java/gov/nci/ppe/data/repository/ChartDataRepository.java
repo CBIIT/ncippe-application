@@ -1,7 +1,6 @@
 package gov.nci.ppe.data.repository;
 
 import gov.nci.ppe.data.entity.ChartData;
-import gov.nci.ppe.data.entity.PortalNotification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ChartDataRepository  extends JpaRepository<PortalNotification, Long> {
+public interface ChartDataRepository  extends JpaRepository<ChartData, Long> {
 /*
      String sqlString0 = "select distinct case \n" +
             "\twhen pd.MedDRADiseaseTerm = 'Colorectal Carcinoma' Then 'Colon Cancer'\n" +
@@ -39,9 +38,9 @@ public interface ChartDataRepository  extends JpaRepository<PortalNotification, 
             "order by CancerType;\n";
 */
 
-    String sqlString = "SELECT label FROM biobank.ChartLabels";
-
-    @Query(value = sqlString,nativeQuery=true)
-    String getChartData();
+//    String sqlString = "SELECT label FROM biobank.ChartLabels";
+//
+//    @Query(value = sqlString,nativeQuery=true)
+//    String getChartData();
 
 }
