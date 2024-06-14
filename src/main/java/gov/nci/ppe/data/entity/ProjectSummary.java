@@ -34,7 +34,7 @@ public class ProjectSummary {
 	private Long cancerTypesCount;
 
 	@Column(name = "BiomarkerReturnedCount")
-	private Long biomarkerReturnedCount;
+	private Long bioMarkerReturnedCount;
 
 	@Column(name = "LastRevisedDate", nullable = false)
 	private LocalDateTime lastRevisedDate;
