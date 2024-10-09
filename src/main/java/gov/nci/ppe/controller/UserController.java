@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -95,6 +96,8 @@ public class UserController {
 	private MessageSource messageSource;
 
 	private ObjectMapper mapper = new ObjectMapper();
+	
+	private Logger logger = Logger.getLogger(UserController.class.getName());
 
 	@ApiOperation("Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "User data found"),
@@ -106,7 +109,7 @@ public class UserController {
 		String uuid = request.getHeader(CommonConstants.HEADER_UUID);
 		String email = request.getHeader(CommonConstants.HEADER_EMAIL);
 
-		log.info("Received Login request with uuid {} and email {}", uuid, email);
+		logger.info("Received Login request with uuid { " + uuid + " } and email { " +  email + " }");
 		raiseLoginAuditEvent(uuid, email, "Attempt to Login", AuditEventType.PPE_LOGIN_ATTEMPT);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -119,7 +122,7 @@ public class UserController {
 			userOptional = userService.activateUser(email, uuid);
 
 			if (!userOptional.isPresent()) {
-				log.error("Did not find user with {} and {} ", email, uuid);
+				logger.info( "Did not find user with " + email + " and " + uuid);
 
 				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
 
@@ -129,7 +132,7 @@ public class UserController {
 
 			User user = userOptional.get();
 			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				log.error("Did not find user with {} and {} ", email, uuid);
+				logger.severe("Did not find user with " + email + " and " + uuid);
 				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
 						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
 				return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -168,9 +171,9 @@ public class UserController {
         System.out.println("MHL userUUID: " + userUUID);
         System.out.println("MHL email: " + email);
         System.out.println("MHL patientId: " + patientId);
-        log.info("MHL userUUID: {}", userUUID);
-        log.info("MHL email: {}", email);
-        log.info("MHL patientId: {}", patientId);
+        logger.info("MHL userUUID: " + userUUID);
+        logger.info("MHL email: " +  email);
+        logger.info("MHL patientId: " + patientId);
 
 		userUUID = StringUtils.stripToEmpty(userUUID);
 		email = StringUtils.stripToEmpty(email);
@@ -307,7 +310,7 @@ public class UserController {
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
 		}
-		log.info("Request to withdraw Participant " + patient.getPatientId() + " by User " + updatedByUserUUID);
+		logger.info("Request to withdraw Participant " + patient.getPatientId() + " by User " + updatedByUserUUID);
 		Code code = codeService.getCode(QuestionAnswerType.PPE_WITHDRAW_SURVEY_QUESTION.getQuestionAnswerType());
 		List<QuestionAnswer> qsAnsList = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(qsAnsDTO)) {
@@ -334,7 +337,7 @@ public class UserController {
 		Optional<User> userOptional = userService.withdrawParticipationFromBiobankProgramAndSendNotification(patient,
 				qsAnsList);
 		Participant withdrawnPatient = (Participant) userOptional.get();
-		log.info("Patient " + withdrawnPatient.getPatientId() + " new status "
+		logger.info("Patient " + withdrawnPatient.getPatientId() + " new status "
 				+ withdrawnPatient.getPortalAccountStatus().getCodeName());
 		raiseWithdrawParticipationAuditEvent(patientId, updatedByUserUUID);
 		String jsonFormat = convertUserToJSON(withdrawnPatient);
@@ -392,7 +395,12 @@ public class UserController {
 		patientId = StringUtils.stripToEmpty(patientId);
 		firstName = StringUtils.stripToEmpty(firstName);
 		lastName = StringUtils.stripToEmpty(lastName);
-		emailId = StringUtils.stripToEmpty(emailId);
+		if(StringUtils.stripToEmpty(emailId).isBlank()) {
+			System.out.println(" empty email " + StringUtils.stripToEmpty(emailId));
+		}else {
+			System.out.println(" non-empty email " + StringUtils.stripToEmpty(emailId));
+		}
+		emailId = (StringUtils.stripToEmpty(emailId)).isBlank()?null:StringUtils.stripToEmpty(emailId);
 
 		LanguageOption preferredLang = null;
 
@@ -555,8 +563,8 @@ public class UserController {
 		User user = userOptional.get();
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
-		log.info("MHL fetchUser requestingUserUUID: " + requestingUserUUID);
-		log.info("MHL fetchUser user:\n " + user.getUserUUID() + "\n");
+		logger.info("MHL fetchUser requestingUserUUID: " + requestingUserUUID);
+		logger.info("MHL fetchUser user:\n " + user.getUserUUID() + "\n");
 		if (!authService.authorize(requestingUserUUID, user)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale));
