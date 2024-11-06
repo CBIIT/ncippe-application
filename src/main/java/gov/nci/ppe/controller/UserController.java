@@ -176,6 +176,7 @@ public class UserController {
         logger.info("MHL patientId: " + patientId);
 
 		userUUID = StringUtils.stripToEmpty(userUUID);
+
 		email = StringUtils.stripToEmpty(email);
 		patientId = StringUtils.stripToEmpty(patientId);
 		return fetchUser(request, userUUID, email, patientId, locale);
@@ -204,6 +205,7 @@ public class UserController {
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+
 
 
 
@@ -505,9 +507,14 @@ public class UserController {
 
 			ParticipantDTO participantDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
 			// Filter out Notifications for CRC and Providers
-			if (participantDTO.getCrc().getNotifications() != null) {
-				participantDTO.getCrc().getNotifications().clear();
-			}
+			// if (participantDTO.getCrc().getNotifications() != null) {
+			// 	participantDTO.getCrc().getNotifications().clear();
+			// }
+			participantDTO.getCrcsSet().forEach(crc -> {
+				if (crc.getNotifications() != null) {
+				 	crc.getNotifications().clear();
+				}
+			});
 			participantDTO.getProviders().forEach(associatedProvider -> {
 				if (associatedProvider.getNotifications() != null) {
 					associatedProvider.getNotifications().clear();
@@ -562,7 +569,7 @@ public class UserController {
 		}
 		User user = userOptional.get();
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-
+		
 		logger.info("MHL fetchUser requestingUserUUID: " + requestingUserUUID);
 		logger.info("MHL fetchUser user:\n " + user.getUserUUID() + "\n");
 		if (!authService.authorize(requestingUserUUID, user)) {
@@ -589,6 +596,7 @@ public class UserController {
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		
 		Optional<User> userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names());
 		if (!userOptional.isPresent()) {
 
