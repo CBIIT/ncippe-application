@@ -43,8 +43,9 @@
 		<class-a>gov.nci.ppe.data.entity.Participant</class-a>
 		<class-b>gov.nci.ppe.data.entity.dto.ParticipantDTO</class-b>
 		<field>
-			<a is-accessible="true">crc</a>
-			<b is-accessible="true">crc</b>
+			<a is-accessible="true">crcsSet</a>
+			<b is-accessible="true">crcsSet</b>
+			<b-hint>gov.nci.ppe.data.entity.dto.CrcDTO</b-hint>
 		</field>
 		<field>
 			<a is-accessible="true">providers</a>

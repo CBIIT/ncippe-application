@@ -314,56 +314,64 @@ public class UserServiceImpl implements UserService {
 			List<QuestionAnswer> qsAnsList) {
 		Optional<User> userOptional = withdrawParticipationFromBiobankProgram(patient, qsAnsList);
 		Participant withdrawnPatient = (Participant) userOptional.get();
+		Set<CRC> crcforPatientSet = withdrawnPatient.getCrcsSet();
 		StringBuilder questionAnswers = new StringBuilder();
 		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
 			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
 					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
 		if (patient.getUserId() == patient.getLastRevisedUser()) {
-			if (withdrawnPatient.getCrc().isAllowEmailNotification()) {
+			crcforPatientSet.forEach(crc -> {
+				if (crc.isAllowEmailNotification()) {
 
-				emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
-						withdrawnPatient.getLastName(), withdrawnPatient.getCrc().getFirstName(),
-						withdrawnPatient.getCrc().getEmail(), questionAnswers.toString(),
-						withdrawnPatient.getPatientId(), withdrawnPatient.getCrc().getPreferredLanguage());
-			}
-			if (PortalAccountStatus.ACCT_ACTIVE.name()
+					emailService.sendEmailToCRCAfterParticipantWithdraws(withdrawnPatient.getFirstName(),
+						withdrawnPatient.getLastName(), crc.getFirstName(),
+						crc.getEmail(), questionAnswers.toString(),
+						withdrawnPatient.getPatientId(), crc.getPreferredLanguage());
+				}
+			
+				if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-				String notificationTitleEnglish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectEnglish();
-				notificationTitleEnglish = StringUtils.replace(notificationTitleEnglish, "%{FullName}",
+					String notificationTitleEnglish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectEnglish();
+					notificationTitleEnglish = StringUtils.replace(notificationTitleEnglish, "%{FullName}",
 						withdrawnPatient.getFullName());
-				String notificationTitleSpanish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectSpanish();
-				notificationTitleSpanish = StringUtils.replace(notificationTitleSpanish, "%{FullName}",
+					String notificationTitleSpanish = notificationServiceConfig.getParticipantWithdrawsSelfSubjectSpanish();
+					notificationTitleSpanish = StringUtils.replace(notificationTitleSpanish, "%{FullName}",
 						withdrawnPatient.getFullName());
-				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
+					notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawsSelfFrom(),
 						notificationTitleEnglish, notificationTitleSpanish,
 						notificationServiceConfig.getParticipantWithdrawsSelfMessageEnglish(),
 						notificationServiceConfig.getParticipantWithdrawsSelfMessageSpanish(),
-						withdrawnPatient.getCrc().getUserId(), withdrawnPatient.getFirstName(),
+						crc.getUserId(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getFirstName(), withdrawnPatient.getPatientId());
 
-			}
+				}
+			});
 		} else {
 			if (withdrawnPatient.isAllowEmailNotification()) {
-				emailService.sendEmailToPatientAfterCRCWithdrawsPatient(withdrawnPatient.getCrc().getFirstName(),
-						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getFirstName(),
+				crcforPatientSet.forEach(crc -> {
+					emailService.sendEmailToPatientAfterCRCWithdrawsPatient(crc.getFirstName(),
+						crc.getLastName(), withdrawnPatient.getFirstName(),
 						withdrawnPatient.getEmail(), questionAnswers.toString(),
 						withdrawnPatient.getPreferredLanguage());
+				});
 			}
 			if (PortalAccountStatus.ACCT_ACTIVE.name()
 					.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())
 					|| PortalAccountStatus.ACCT_INITIATED.name()
 							.equalsIgnoreCase(withdrawnPatient.getPortalAccountStatus().getCodeName())) {
-
-				notificationService.addNotification(notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
+								crcforPatientSet.forEach(crc -> {
+						notificationService.addNotification(
+							notificationServiceConfig.getParticipantWithdrawnByCRCFrom(),
 						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectEnglish(),
 						notificationServiceConfig.getParticipantWithdrawnByCRCSubjectSpanish(),
 						notificationServiceConfig.getParticipantWithdrawnByCRCMessageEnglish(),
 						notificationServiceConfig.getParticipantWithdrawnByCRCMessageSpanish(),
-						withdrawnPatient.getUserId(), withdrawnPatient.getCrc().getFirstName(),
-						withdrawnPatient.getCrc().getLastName(), withdrawnPatient.getPatientId());
+						withdrawnPatient.getUserId(), crc.getFirstName(),
+						crc.getLastName(), withdrawnPatient.getPatientId());
+								});
 			}
 		}
 		return Optional.of(withdrawnPatient);
@@ -449,7 +457,8 @@ public class UserServiceImpl implements UserService {
 		newPatient.setDateCreated(LocalDateTime.now());
 		newPatient.setLastRevisedDate(LocalDateTime.now());
 		Optional<User> patientOptional = Optional.of(userRepository.save(newPatient));
-		CRC crc = newPatient.getCrc();
+		Set<CRC> crcsSet = newPatient.getCrcsSet();
+		crcsSet.forEach(crc -> {
 		if (null != crc) {
 
 			// Send System notification to CRC when a new patient is inserted into PPE from
@@ -468,6 +477,7 @@ public class UserServiceImpl implements UserService {
 			}
 
 		}
+		});
 		return patientOptional;
 	}
 
@@ -542,6 +552,7 @@ public class UserServiceImpl implements UserService {
 		List<User> newUsersList = new ArrayList<>();
 		userEnrollmentData.forEach(patientData -> {
 			Set<Provider> providerSet = new HashSet<>();
+			Set<CRC> crcSet = new HashSet<>();
 			/*
 			 * Verify if the provider for a particular patient is already in the system If
 			 * not insert the provider details and then associate it with them with the
@@ -577,11 +588,11 @@ public class UserServiceImpl implements UserService {
 					providerSet.add(creditProviderOptional.get());
 				}
 			}
-			CRC crc = null;
+			
 			if (null != patientData.getCraCtepId()) {
 				Optional<CRC> crcOptional = findCRCByCtepId(patientData.getCraCtepId());
 				if (crcOptional.isEmpty()) {
-					crc = new CRC();
+					CRC crc = new CRC();
 					crc.setOpenCtepID(patientData.getCraCtepId());
 					crc.setFirstName(patientData.getCraFirstName());
 					crc.setLastName(patientData.getCraLastName());
@@ -589,10 +600,11 @@ public class UserServiceImpl implements UserService {
 					crc.setEmail(patientData.getCraEmail());
 					crc.setPreferredLanguage(LanguageOption.ENGLISH);
 					crc = (CRC) insertNewCRCDetailsFromOpen(crc).get();
+					crcSet.add(crc);
 					raiseInsertParticipantAuditEvent("CRCID", Long.toString(crc.getOpenCtepID()),
 							AuditEventType.PPE_INSERT_DATA_FROM_OPEN);
 				} else {
-					crc = crcOptional.get();
+					crcSet.add(crcOptional.get());
 				}
 			}
 			Optional<User> patientOptional = findByPatientIdAndPortalAccountStatus(patientData.getPatientId(),
@@ -604,8 +616,8 @@ public class UserServiceImpl implements UserService {
 				newPatient.setPreferredLanguage(LanguageOption.ENGLISH);
 				// Associate the providers & CRC to the patient
 				newPatient.setProviders(providerSet);
-				if (null != crc) {
-					newPatient.setCrc(crc);
+				if (crcSet.size()> 0) {
+					newPatient.setCrcsSet(crcSet);
 				}
 				patientOptional = insertNewPatientDetailsFromOpen(newPatient);
 
@@ -629,18 +641,19 @@ public class UserServiceImpl implements UserService {
 					providerUpdatedFlag = true;
 				}
 
-				CRC existingCRC = patient.getCrc();
+				Set<CRC> existingCRCsSet = patient.getCrcsSet();
 
 				// Adding a new CRC to a patient
-				if (null == existingCRC && null != crc) {
-					patient.setCrc(crc);
+				if (existingCRCsSet.isEmpty() && crcSet.size() > 0 ) {
+					patient.setCrcsSet(crcSet);
 					crcUpdatedFlag = true;
 				}
 				// Updating CRC for a patient
-				if (null != crc && null != existingCRC) {
-					// Check if the CRC remains unchanged.
-					if (existingCRC.getOpenCtepID() != crc.getOpenCtepID()) {
-						patient.setCrc(crc);
+				if (!existingCRCsSet.isEmpty() && crcSet.size() > 0) {
+					// merge new CRC into existing CRC set 
+					if (!existingCRCsSet.equals(crcSet)) {
+						existingCRCsSet.addAll(crcSet);
+						patient.setCrcsSet(existingCRCsSet);
 						crcUpdatedFlag = true;
 					}
 				}
@@ -680,6 +693,8 @@ public class UserServiceImpl implements UserService {
 					// Notify the patient in the system
 					notificationService.notifyPatientWhenCRCIsReplaced(patient.getUserId());
 
+					existingCRCsSet.forEach(crc -> { 
+
 					if (null != crc) {
 						// Notify the CRC in the system
 						notificationService.notifyCRCWhenPatientIsAdded(patient.getFullName(), crc.getUserId(),
@@ -689,11 +704,12 @@ public class UserServiceImpl implements UserService {
 									crc.getPreferredLanguage());
 						}
 					}
+					
 					final Long crcOpentCtepId = crc.getOpenCtepID();
-					if (null != existingCRC) {
+					if (crcSet.contains(crc)) {
 						raiseUpdateParticipantAuditEvent("OldCRCId", "NewCRCId", new HashSet<Long>() {
 							{
-								add(existingCRC.getOpenCtepID());
+								add(crc.getOpenCtepID());
 							}
 						}, new HashSet<Long>() {
 							{
@@ -708,6 +724,7 @@ public class UserServiceImpl implements UserService {
 									}
 								}, patient.getPatientId(), AuditEventType.PPE_UPDATE_DATA_FROM_OPEN);
 					}
+				});
 				}
 			}
 		});
@@ -908,7 +925,7 @@ public class UserServiceImpl implements UserService {
 		log.debug("Sending notifications for file " + fileMetadata.getFileGUID() + " uploaded "
 				+ fileMetadata.getDateUploaded());
 		Participant patient = fileMetadata.getParticipant();
-		CRC assocCRC = patient.getCrc();
+		Set <CRC> assocCRCsSet = patient.getCrcsSet();
 		Set<Provider> associatedProviders = patient.getProviders();
 
 		// Unread notification and email to patient.
@@ -920,13 +937,17 @@ public class UserServiceImpl implements UserService {
 			}
 		}
 
-		if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
-			if (assocCRC.isAllowEmailNotification()) {
-				emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
-						assocCRC.getEmail(), patient.getFullName(), assocCRC.getPreferredLanguage());
-				notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
-						assocCRC.getUserId(), patient.getPatientId());
-			}
+		if(!assocCRCsSet.isEmpty()){
+			assocCRCsSet.forEach(assocCRC -> {
+				if (!fileMetadata.hasViewed(assocCRC.getUserUUID())) {
+					if (assocCRC.isAllowEmailNotification()) {
+							emailService.sendEmailToCRCAndProvidersReminderUnreadReport(assocCRC.getFirstName(),
+							assocCRC.getEmail(), patient.getFullName(), assocCRC.getPreferredLanguage());
+							notificationService.notifyProviderCRCReminderToReadBiomarkerReport(patient.getFullName(),
+							assocCRC.getUserId(), patient.getPatientId());
+						}
+					}
+			});
 		}
 
 		for (Provider provider : associatedProviders) {

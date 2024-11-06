@@ -1,5 +1,6 @@
 package gov.nci.ppe.data.entity.dto;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -15,6 +16,6 @@ public class CrcDTO extends UserDTO{
 	private Long openCtepID;
 
 	@JsonView(JsonViews.CrcDetailView.class)
-	private Set<ParticipantDTO> patients;
+	private Set<ParticipantDTO> patients = new HashSet<>();
 
 }

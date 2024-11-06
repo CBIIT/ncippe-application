@@ -138,9 +138,16 @@ public class PrivateApiController {
 
 			ParticipantDTO participantDTO = dozerBeanMapper.map(patient, ParticipantDTO.class);
 			// Filter out Notifications for CRC and Providers
-			if (participantDTO.getCrc().getNotifications() != null) {
-				participantDTO.getCrc().getNotifications().clear();
-			}
+			// if (participantDTO.getCrc().getNotifications() != null) {
+			// 	participantDTO.getCrc().getNotifications().clear();
+			// }
+
+			participantDTO.getCrcsSet().forEach(associateCRC -> {
+				if (associateCRC.getNotifications() != null) {
+				associateCRC.getNotifications().clear();
+				}
+			});
+
 			participantDTO.getProviders().forEach(associatedProvider -> {
 				if (associatedProvider.getNotifications() != null) {
 					associatedProvider.getNotifications().clear();

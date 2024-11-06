@@ -58,9 +58,14 @@ public class Participant extends User {
 	@OrderBy("DateUploaded DESC")
 	List<FileMetadata> reports;
 
-	@OneToOne
-	@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "ParticipantId"), inverseJoinColumns = @JoinColumn(name = "CRCId"))
-	private CRC crc;
+	//@OneToOne
+	//@JoinTable(name = "CRCParticipant", joinColumns = @JoinColumn(name = "ParticipantId"), inverseJoinColumns = @JoinColumn(name = "CRCId"))
+	//private CRC crc;
+
+	@ManyToMany
+	@JoinTable(name = "CRCParticipant", joinColumns = {
+			@JoinColumn(name = "ParticipantId") }, inverseJoinColumns = { @JoinColumn(name = "CRCId") })
+	private Set<CRC> crcsSet = new HashSet<>();
 
 	@Transient
 	private boolean hasNewReports;

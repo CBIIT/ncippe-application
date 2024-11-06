@@ -405,11 +405,13 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			}
 		});
 
-		CRC crcforPatient = patient.getCrc();
-		if (crcforPatient.isAllowEmailNotification()) {
-			emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(crcforPatient.getFirstName(),
+		Set<CRC> crcforPatientSet = patient.getCrcsSet();
+		crcforPatientSet.forEach(crcforPatient -> {
+			if (crcforPatient.isAllowEmailNotification()) {
+				emailLogService.sendEmailToCRCAndProvidersAfterUploadingBioMarkerReport(crcforPatient.getFirstName(),
 					crcforPatient.getEmail(), patient.getFullName(), crcforPatient.getPreferredLanguage());
-		}
+			}
+		});
 
 	}
 
@@ -439,10 +441,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 				userDetailMap.put(provider.getUserId(), provider.getFirstName());
 			});
 
-			CRC crc = patient.getCrc();
-			if (crc != null) {
-				userDetailMap.put(crc.getUserId(), crc.getFirstName());
-			}
+			Set<CRC> crcsSet = patient.getCrcsSet();
+			crcsSet.forEach(crc ->{
+				if (crc != null) {
+					userDetailMap.put(crc.getUserId(), crc.getFirstName());
+				}
+			});
 		}
 
 		return userDetailMap;

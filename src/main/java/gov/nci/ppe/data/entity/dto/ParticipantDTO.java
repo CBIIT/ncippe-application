@@ -29,7 +29,7 @@ public class ParticipantDTO extends UserDTO {
 	private String patientId;
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
-	private CrcDTO crc;
+	private Set<CrcDTO> crcsSet = new HashSet<>();
 
 	@JsonView(JsonViews.ParticipantDetailView.class)
 	private Set<ProviderDTO> providers = new HashSet<>();
@@ -55,7 +55,7 @@ public class ParticipantDTO extends UserDTO {
 	@Override
 	public String toString() {
 		StringBuilder retValue = new StringBuilder("{");
-		retValue.append(super.toString()).append(StringUtils.CR).append(" crc : ").append(crc.toString())
+		retValue.append(super.toString()).append(StringUtils.CR)//.append(" crc : ").append(crcsSet.toString())
 				.append(StringUtils.CR).append("}");
 		return retValue.toString();
 	}
