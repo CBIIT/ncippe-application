@@ -129,7 +129,9 @@ public class AuthorizationServiceTest {
 			Optional<User> optionalUser = createRequestingUser(PPERole.ROLE_PPE_PARTICIPANT, targetUUID);
 			when(userService.findByUuid(targetUUID)).thenReturn(optionalUser);
 			Optional<User> crcOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, requester);
-			((Participant) optionalUser.get()).setCrc((CRC) crcOpt.get());
+			Set<CRC> crcsSet = new HashSet<>();
+			crcsSet.add((CRC)crcOpt.get());
+			((Participant) optionalUser.get()).setCrcsSet(crcsSet);
 			when(userService.findByUuid(requester)).thenReturn(crcOpt);
 
 			assertTrue(authService.authorize(requester, targetUUID));
@@ -140,7 +142,10 @@ public class AuthorizationServiceTest {
 		public void testAuthorize_CRC_Fail() {
 			Optional<User> optionalUser = createRequestingUser(PPERole.ROLE_PPE_PARTICIPANT, targetUUID);
 			CRC assignedCRC = (CRC) createRequestingUser(PPERole.ROLE_PPE_CRC, assigned).get();
-			((Participant) optionalUser.get()).setCrc(assignedCRC);
+			Set<CRC> crcSet = new HashSet<>();
+			crcSet.add(assignedCRC);
+			((Participant) optionalUser.get()).setCrcsSet(crcSet);
+			
 			when(userService.findByUuid(targetUUID)).thenReturn(optionalUser);
 			Optional<User> crcOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, requester);
 
@@ -223,7 +228,8 @@ public class AuthorizationServiceTest {
 			Optional<User> requestingCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, requester);
 			Optional<User> targetOpt = createRequestingUser(PPERole.ROLE_PPE_PARTICIPANT, targetUUID);
 			Participant target = (Participant) targetOpt.get();
-			target.setCrc((CRC) requestingCRCOpt.get());
+			//target.setCrc((CRC) requestingCRCOpt.get());
+			target.getCrcsSet().add((CRC) requestingCRCOpt.get());
 			when(userService.findByUuid(requester)).thenReturn(requestingCRCOpt);
 			when(userService.findActiveParticipantByPatientId(targetUUID)).thenReturn(targetOpt);
 
@@ -241,7 +247,7 @@ public class AuthorizationServiceTest {
 			Optional<User> assignedCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, assigned);
 
 			Participant target = (Participant) targetOpt.get();
-			target.setCrc((CRC) assignedCRCOpt.get());
+			target.getCrcsSet().add((CRC) assignedCRCOpt.get());
 			when(userService.findByUuid(requester)).thenReturn(requestingCRCOpt);
 			when(userService.findActiveParticipantByPatientId(targetUUID)).thenReturn(targetOpt);
 
@@ -272,7 +278,8 @@ public class AuthorizationServiceTest {
 			Optional<User> requestingCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, requester);
 			Optional<User> targetOpt = createRequestingUser(PPERole.ROLE_PPE_PARTICIPANT, targetUUID);
 			Participant target = (Participant) targetOpt.get();
-			target.setCrc((CRC) requestingCRCOpt.get());
+			//target.setCrc((CRC) requestingCRCOpt.get());
+			target.getCrcsSet().add((CRC) requestingCRCOpt.get());
 			when(userService.findByUuid(requester)).thenReturn(requestingCRCOpt);
 			when(userService.findActiveParticipantByPatientId(targetUUID)).thenReturn(targetOpt);
 
@@ -326,7 +333,8 @@ public class AuthorizationServiceTest {
 			Optional<User> requestingCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, requester);
 
 			Participant patient = (Participant) patientOpt.get();
-			patient.setCrc((CRC) requestingCRCOpt.get());
+			//patient.setCrc((CRC) requestingCRCOpt.get());
+			patient.getCrcsSet().add((CRC) requestingCRCOpt.get());
 
 			when(userService.findByUuid(requester)).thenReturn(requestingCRCOpt);
 			when(userService.findActiveParticipantByPatientId(targetUUID)).thenReturn(patientOpt);
@@ -345,7 +353,8 @@ public class AuthorizationServiceTest {
 			Optional<User> assignedCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, assigned);
 
 			Participant patient = (Participant) patientOpt.get();
-			patient.setCrc((CRC) assignedCRCOpt.get());
+			//patient.setCrc((CRC) assignedCRCOpt.get());
+			patient.getCrcsSet().add((CRC) assignedCRCOpt.get());
 			patient.setProviders(providers);
 
 			when(userService.findByUuid(requester)).thenReturn(requestingProviderOpt);
@@ -369,7 +378,8 @@ public class AuthorizationServiceTest {
 			Optional<User> assignedCRCOpt = createRequestingUser(PPERole.ROLE_PPE_CRC, assigned);
 
 			Participant patient = (Participant) patientOpt.get();
-			patient.setCrc((CRC) assignedCRCOpt.get());
+			//patient.setCrc((CRC) assignedCRCOpt.get());
+			patient.getCrcsSet().add((CRC) assignedCRCOpt.get());
 			patient.setProviders(providers);
 
 			when(userService.findByUuid(requester)).thenReturn(requestingProviderOpt);

@@ -9,7 +9,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -88,7 +89,9 @@ public class UserControllerTest {
 		expectedUser.setEmail(newEmail);
 
 		CrcDTO crcDto = new CrcDTO();
-		expectedUser.setCrc(crcDto);
+		Set<CrcDTO> crcDtoSet = new HashSet<>();
+		crcDtoSet.add(crcDto);
+		expectedUser.setCrcsSet(crcDtoSet);
 
 		when(mockUserService.findByPatientIdAndPortalAccountStatus(targetUserUUID, PortalAccountStatus.names())).thenReturn(Optional.of(updatedUser));
 		when(mockUserService.updatePatientEmail(targetUserUUID, newEmail, requestingUserUUID)).thenReturn(Optional.of(updatedUser));

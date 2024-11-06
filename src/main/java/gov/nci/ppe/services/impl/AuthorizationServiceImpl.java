@@ -46,8 +46,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		// Invalid request no username present
 		if (StringUtils.isBlank(requestingUserUUID)) {
 			log.error("No Username present in Request");
-			//return false;
-			return true;
+			return false;		
 		}
 		// If the UUID in the requester matches the UUID of the targetUser, always allow
 		if (requestingUserUUID.equalsIgnoreCase(user.getUserUUID())) {
@@ -122,17 +121,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	@Override
 	public boolean authorize(String requestingUserUUID, String targetUUID) {
 		Optional<User> targetUserOptional = userService.findByUuid(targetUUID);
-		return true;
-		// if (targetUserOptional.isEmpty()) {
-		// 	log.error("No user found with UUID " + targetUUID);
-		// 	return false;
+		if (targetUserOptional.isEmpty()) {
+			log.error("No user found with UUID " + targetUUID);
+			return false;
 			
-		// } else {
-		// 	log.info("MHL authorize1 requestingUserUUID: " + requestingUserUUID);
-		// 	log.info("MHL authorize1 targetUserOptional.get(): " + targetUserOptional.get());
+		} else {
+			log.info("MHL authorize1 requestingUserUUID: " + requestingUserUUID);
+			log.info("MHL authorize1 targetUserOptional.get(): " + targetUserOptional.get());
 
-		// 	return authorize(requestingUserUUID, targetUserOptional.get());
-		// }
+			return authorize(requestingUserUUID, targetUserOptional.get());
+		}
 	}
 
 	/**
