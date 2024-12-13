@@ -412,7 +412,7 @@ public class UserServiceImpl implements UserService {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
 			participant.setLastRevisedDate(LocalDateTime.now());
 		}
-		log.info("Participant details after updating the status to INITIATED",participant.getParticipantId());
+		log.info("Participant details before updating the status to INITIATED",participant.getParticipantId());
 
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
 		participant.setPortalAccountStatus(portalAccountStatusCode);

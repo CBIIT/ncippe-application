@@ -359,6 +359,7 @@ public class UserController {
 		validAccountStatusList.add(PortalAccountStatus.ACCT_NEW.name());
 		Optional<User> participantOptional = userService.findByPatientIdAndPortalAccountStatus(patientId,
 				validAccountStatusList);
+		log.info("Particpant invite-participant-to-portal ");
 		if (participantOptional.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
