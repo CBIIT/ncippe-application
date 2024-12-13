@@ -418,21 +418,23 @@ public class UserServiceImpl implements UserService {
 
 		participantOptional = Optional.of(userRepository.save(participant));
 
-		raiseInvitedParticipationAuditEvent(patientId, uuid, participant.getEmail(), participant.getFirstName(),
-				participant.getLastName());
+		if(!participant.getEmail().isEmpty() && participant.getEmail() != null){
+			raiseInvitedParticipationAuditEvent(patientId, uuid, participant.getEmail(), participant.getFirstName(),
+					participant.getLastName());
+			
+			// Send Notification to Patient & Providers
+			emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName(),
+					participant.getPreferredLanguage());
+			if (participant.getProviders() != null) {
+				for (Provider provider : participant.getProviders()) {
+					if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
+						emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
+								provider.getPreferredLanguage());
+					}
+					notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
+							participant.getPatientId());
 
-		// Send Notification to Patient & Providers
-		emailService.sendEmailToInvitePatient(participant.getEmail(), participant.getFirstName(),
-				participant.getPreferredLanguage());
-		if (participant.getProviders() != null) {
-			for (Provider provider : participant.getProviders()) {
-				if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
-					emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
-							provider.getPreferredLanguage());
 				}
-				notificationService.notifyProviderWhenPatientIsAdded(participant.getFullName(), provider.getUserId(),
-						participant.getPatientId());
-
 			}
 		}
 
