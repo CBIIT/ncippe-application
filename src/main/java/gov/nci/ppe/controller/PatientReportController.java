@@ -129,6 +129,9 @@ public class PatientReportController {
 				Optional<User> adminOptional = userService.findByUuid(req.getHeader(CommonConstants.HEADER_UUID));
 				User adminUser = adminOptional.get();
 
+				log.info("File Upload request step before aws s3");
+
+
 				amazonS3Service.putObjectOnS3(inputStream, folderWithFileName.toString(), file.getSize(),
 						file.getContentType(), CannedAccessControlList.BucketOwnerFullControl, patient, adminUser,
 						file.getOriginalFilename(), uploadedFileType);
