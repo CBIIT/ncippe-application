@@ -412,13 +412,16 @@ public class UserServiceImpl implements UserService {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
 			participant.setLastRevisedDate(LocalDateTime.now());
 		}
+		log.info("Participant details after updating the status to INITIATED",participant.getParticipantId());
 
 		Code portalAccountStatusCode = codeRepository.findByCodeName(PortalAccountStatus.ACCT_INITIATED.name());
 		participant.setPortalAccountStatus(portalAccountStatusCode);
 
 		participantOptional = Optional.of(userRepository.save(participant));
+		log.info("Participant details after updating the status to INITIATED {}", participantOptional.get().toString());
 
-		if(!participant.getEmail().isEmpty() && participant.getEmail() != null){
+		if(participant.getEmail() != null && !participant.getEmail().isEmpty()){
+			log.info("inside participant check line 424");
 			raiseInvitedParticipationAuditEvent(patientId, uuid, participant.getEmail(), participant.getFirstName(),
 					participant.getLastName());
 			
