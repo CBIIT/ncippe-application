@@ -285,9 +285,6 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 			String originalFileName, String uploadedFileType) throws ApiException {
 		putObjectOnS3(applicationDataBucket, inputStream, s3DestinationFolderKey, contentLength, contentType,
 				accessControl);
-		
-		logger.info("inside aws s3 putObjectOnS3 method step1 ");
-
 
 		// If the file been uploaded is a test report and the user has opted for email
 		// notification, then send a confirmation email to the Admin/User uploading the
@@ -300,7 +297,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 		}
 
 		String fileSource = "Mocha";
-		sendEmailAfterFileUpload(patient, uploadedFileType);
+		if(StringUtils.isNotBlank(patient.getEmail())){
+			sendEmailAfterFileUpload(patient, uploadedFileType);
+		}
 
 		URL newUrl = getResourceUrl(applicationDataBucket, s3DestinationFolderKey);
 		try {
@@ -371,27 +370,19 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 	 * @param patientId
 	 */
 	private void sendEmailAfterFileUpload(Participant patient, String actionFor) {
-
-		logger.info("inside aws s3 in method sendEmailAfterFileUpload, with actionFor ", StringUtils.isNotBlank(actionFor)?actionFor: "null value");
-
 		if (StringUtils.isNotBlank(actionFor)
 				&& FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType().equalsIgnoreCase(actionFor)
 				&& patient.isAllowEmailNotification()) {
-					logger.info("inside aws s3 in method when actionFor is NOT null value line 380 ");
 			// Send email to Patient only
 			emailLogService.sendEmailToPatientAfterUploadingEconsent(patient.getEmail(), patient.getFirstName(),
 					patient.getPreferredLanguage());
 		} else {
 			// Special case to allow reports to be uploaded without email being set for
 			// patients
-
-			logger.info("inside aws s3 in method when actionFor is null value line 387 ");
 			if (patient.isAllowEmailNotification() && StringUtils.isNotBlank(patient.getEmail())) {
 				emailLogService.sendEmailToPatientAfterUploadingReport(patient.getEmail(), patient.getFirstName(),
 						patient.getPreferredLanguage());
 			}
-
-			logger.info("inside aws s3 in method sendEmailAfterFileUpload line 390 ");
 			/* Fetch email Ids for CRC and Providers */
 			sendEmailsToAssociatedProvidersAndCRC(patient);
 
