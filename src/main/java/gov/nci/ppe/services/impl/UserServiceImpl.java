@@ -996,17 +996,17 @@ public class UserServiceImpl implements UserService {
 			// Send Notification to Patient & Providers
 			emailService.sendEmailToInvitePatient(newEmail, pa.getFirstName(),
 					pa.getPreferredLanguage());
-			if (pa.getProviders() != null) {
-				for (Provider provider : pa.getProviders()) {
-					if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
-						emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
-								provider.getPreferredLanguage());
-					}
-					notificationService.notifyProviderWhenPatientIsAdded(pa.getFullName(), provider.getUserId(),
-							pa.getPatientId());
+			// if (pa.getProviders() != null) {
+			// 	for (Provider provider : pa.getProviders()) {
+			// 		if (provider.isAllowEmailNotification() && StringUtils.isNotBlank(provider.getEmail())) {
+			// 			emailService.sendEmailToProviderOnPatientInvitation(provider.getEmail(), provider.getFirstName(),
+			// 					provider.getPreferredLanguage());
+			// 		}
+			// 		notificationService.notifyProviderWhenPatientIsAdded(pa.getFullName(), provider.getUserId(),
+			// 				pa.getPatientId());
 
-				}
-			}
+			// 	}
+			// }
 		}
 		return Optional.of(pa);
 	}
