@@ -2,6 +2,7 @@ package gov.nci.ppe;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.boot.SpringApplication;
@@ -37,9 +38,9 @@ public class NcippeApplication {
 	public Docket api() throws FileNotFoundException, IOException, XmlPullParserException {
         System.out.println("MHL TEST 000");
 		return new Docket(DocumentationType.SWAGGER_2).select()
-				.apis(RequestHandlerSelectors.basePackage("gov.nci.ppe.controller")).paths(PathSelectors.any())
-				.build().apiInfo(new ApiInfo("NCI PPE Api Documentation", "Documentation automatically generated", null,
-						null, new Contact("PublicisSapient", null, null), null, null));
+		.apis(RequestHandlerSelectors.basePackage("gov.nci.ppe.controller")).paths(PathSelectors.any())
+		.build().apiInfo(new ApiInfo("NCI PPE Api Documentation", "Documentation automatically generated", "1.0",
+				null, new Contact("", "", ""), null, null,  Collections.emptyList()));
 
 	}
 
