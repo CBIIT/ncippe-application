@@ -107,7 +107,7 @@ public class CommonConstants {
 		}
 	}
 
-	public static final String HEADER_UUID = "sm_user";
-	public static final String HEADER_EMAIL = "user_email";
+	public static final String HEADER_UUID = "uuid";
+	public static final String HEADER_EMAIL = "email";
 	public static final String UNAUTHORIZED_ACCESS = "{\n\"error\" : \"Not authorized to access the requested data \"\n}";
 }
