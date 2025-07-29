@@ -263,9 +263,10 @@ public class UserController {
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
 		//String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		// assuming only close own account (with uuid)
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
-		if (!authService.authorize(requestingUserUUID, userUUID)) {
+		if (!authService.authorize(userUUID, userUUID)) {
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
 					HttpStatus.UNAUTHORIZED);
@@ -292,7 +293,7 @@ public class UserController {
 	@ApiOperation(value = "Participant withdraws from the Biobank program")
 	@PostMapping(value = "/api/v1/withdraw-user-participation", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> withdrawParticipationByParticipant(HttpServletRequest request,
-			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,@RequestParam(value = "requestingUserUUID", required = false) String updatedByUserUUID,
+			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,@RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
 			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO,
 			Locale locale) throws JsonProcessingException {
 
@@ -351,7 +352,7 @@ public class UserController {
 	@PostMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
 			@ApiParam(value = "Patient Id of the participant", required = true)
-			@RequestParam(value = "patientId", required = true) String patientId, @RequestParam(value = "requestingUserUUID", required = false) String updatedByUserUUID,
+			@RequestParam(value = "patientId", required = true) String patientId, @RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
 			Locale locale) throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -400,11 +401,11 @@ public class UserController {
 		patientId = StringUtils.stripToEmpty(patientId);
 		firstName = StringUtils.stripToEmpty(firstName);
 		lastName = StringUtils.stripToEmpty(lastName);
-		if(StringUtils.stripToEmpty(emailId).isBlank()) {
-			System.out.println(" empty email " + StringUtils.stripToEmpty(emailId));
-		}else {
-			System.out.println(" non-empty email " + StringUtils.stripToEmpty(emailId));
-		}
+//		if(StringUtils.stripToEmpty(emailId).isBlank()) {
+//			System.out.println(" empty email " + StringUtils.stripToEmpty(emailId));
+//		}else {
+//			System.out.println(" non-empty email " + StringUtils.stripToEmpty(emailId));
+//		}
 		emailId = (StringUtils.stripToEmpty(emailId)).isBlank()?null:StringUtils.stripToEmpty(emailId);
 
 		LanguageOption preferredLang = null;
@@ -595,12 +596,12 @@ public class UserController {
 	@PostMapping(value = UrlConstants.URL_USER_UPDATE_EMAIL, produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> updateParticipantEmail(HttpServletRequest request,
 			@ApiParam(value = "Patient Id of the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_PATIENT_ID, required = true) String patientId,
-			@ApiParam(value = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email,
+			@ApiParam(value = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email, @RequestParam(value = "requestingUserUUID", required = true) String requestingUserUUID,
 			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		//String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 		
 		Optional<User> userOptional = userService.findByPatientIdAndPortalAccountStatus(patientId, PortalAccountStatus.names());
 		if (!userOptional.isPresent()) {

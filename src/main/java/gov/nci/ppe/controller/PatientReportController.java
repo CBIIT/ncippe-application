@@ -99,13 +99,13 @@ public class PatientReportController {
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Patient Report uploaded"),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
 			@ApiResponse(code = 400, message = "Uploaded File is empty") })
-	public ResponseEntity<String> handleFileUpload(
+	public ResponseEntity<String> handleFileUpload( @RequestParam(value = "uuid", required = true) String requestingUserUUID,
 			@ApiParam(value = "Patient file to Upload", required = true) @RequestParam(value = "reportFile", required = true) MultipartFile file,
 			@ApiParam(value = "Patient ID of the Patient whose file is to be uploaded", required = true) @RequestParam(value = "patientId", required = true) String patientId,
 			@ApiParam(value = "Uploaded File type", required = true, allowableValues = "PPE_FILETYPE_BIOMARKER_REPORT, PPE_FILETYPE_ECONSENT_FORM") @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
 			HttpServletRequest req, Locale locale) {
 
-		String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
+		//String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
 		log.info("File Upload request for patient id={} for file type {} filename ={} by {}", patientId,
 				uploadedFileType, file.getOriginalFilename(), requestingUserUUID);
 
@@ -126,7 +126,7 @@ public class PatientReportController {
 				Participant patient = (Participant) patientOptional.get();
 
 				/* Get Admin details */
-				Optional<User> adminOptional = userService.findByUuid(req.getHeader(CommonConstants.HEADER_UUID));
+				Optional<User> adminOptional = userService.findByUuid(requestingUserUUID);
 				User adminUser = adminOptional.get();
 
 				amazonS3Service.putObjectOnS3(inputStream, folderWithFileName.toString(), file.getSize(),
