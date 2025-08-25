@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dozermapper.core.Mapper;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -134,7 +135,7 @@ public class PatientReportController {
 						file.getOriginalFilename(), uploadedFileType);
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_SUCCESS,
-								new Object[] { file.getOriginalFilename(), patientId }, locale));
+								new Object[] { StringEscapeUtils.escapeHtml4(file.getOriginalFilename()), patientId }, locale));
 
 			} catch (Exception exception) {
 				log.error(exception.getMessage());
@@ -144,7 +145,7 @@ public class PatientReportController {
 		} else {
 			log.error(" The file upload process failed as the file you are uploading is empty.");
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageSource.getMessage(
-					HttpResponseConstants.UPLOADED_FILE_EMPTY, new Object[] { file.getOriginalFilename() }, locale));
+					HttpResponseConstants.UPLOADED_FILE_EMPTY, new Object[] { StringEscapeUtils.escapeHtml4(file.getOriginalFilename() ) }, locale));
 		}
 	}
 
@@ -200,7 +201,7 @@ public class PatientReportController {
 			} catch (FileNotFoundException fileNotFndEx) {
 				log.error("FILENOTFOUND Error Message : {}", fileNotFndEx.getMessage());
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource.getMessage(
-						HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
+						HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { StringEscapeUtils.escapeHtml4(reportGUID ) }, locale));
 			}
 		}
 
@@ -225,7 +226,7 @@ public class PatientReportController {
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);
 		if (rptOptional.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageSource
-					.getMessage(HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { reportGUID }, locale));
+					.getMessage(HttpResponseConstants.FILE_DOWNLOAD_NOT_FOUND, new Object[] { StringEscapeUtils.escapeHtml4 ( reportGUID ) }, locale));
 		}
 		String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
 		Optional<User> usrOptional = userService.findByUuid(requestingUserUUID);

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,7 +135,7 @@ public class NotificationController {
 			}
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND_FOR_USER,
-							new Object[] { userOptional.get().getFullName() }, locale));
+							new Object[] { StringEscapeUtils.escapeHtml4 (userOptional.get().getFullName()) }, locale));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
@@ -183,7 +184,7 @@ public class NotificationController {
 			}
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders).body(messageSource
-				.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { notificationId }, locale));
+				.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { StringEscapeUtils.escapeHtml4 (notificationId) }, locale));
 	}
 
 	/**
@@ -233,7 +234,7 @@ public class NotificationController {
 			}
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND_FOR_USER,
-							new Object[] { userOptional.get().getFullName() }, locale));
+							new Object[] { StringEscapeUtils.escapeHtml4( userOptional.get().getFullName() ) }, locale));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
@@ -295,7 +296,7 @@ public class NotificationController {
 			}
 
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders).body(messageSource
-					.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { notificationId }, locale));
+					.getMessage(HttpResponseConstants.NOTIFICATION_NOT_FOUND, new Object[] { StringEscapeUtils.escapeHtml4 (notificationId ) }, locale));
 		}
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 				.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));

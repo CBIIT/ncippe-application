@@ -1,6 +1,7 @@
 package gov.nci.ppe.controller;
 
 import java.util.stream.Collectors;
+import org.springframework.web.util.HtmlUtils;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,11 @@ public class HealthCheckController {
 	public ResponseEntity<String> multiValue(@RequestHeader MultiValueMap<String, String> headers) {
 		StringBuilder headerString = new StringBuilder();
 		headers.forEach((key, value) -> {
-			headerString
-					.append(String.format("Header '%s' = %s%n", key, value.stream().collect(Collectors.joining("|"))));
+			String escapedKey = HtmlUtils.htmlEscape(key);
+			String escapedValues = value.stream()
+					.map(HtmlUtils::htmlEscape)
+					.collect(Collectors.joining("|"));
+			headerString.append(String.format("Header '%s' = %s%n", escapedKey, escapedValues));
             System.out.println("MHL headerString: " + headerString.toString());
 		});
 
