@@ -135,7 +135,7 @@ public class PatientReportController {
 						file.getOriginalFilename(), uploadedFileType);
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(messageSource.getMessage(HttpResponseConstants.FILE_UPLOAD_SUCCESS,
-								new Object[] { StringEscapeUtils.escapeHtml4(file.getOriginalFilename()), patientId }, locale));
+								new Object[] { StringEscapeUtils.escapeHtml4(file.getOriginalFilename()), StringEscapeUtils.escapeHtml4(patientId ) }, locale));
 
 			} catch (Exception exception) {
 				log.error(exception.getMessage());
