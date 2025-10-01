@@ -19,11 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -362,20 +358,20 @@ public class NotificationController {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	@GetMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
+	@GetMapping(value = UrlConstants.URL_NOTIFICATIONS,  produces = {
 			MediaType.APPLICATION_JSON_VALUE })
 	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
 	@ApiResponses(value = {
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
 			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
-	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, Locale locale)
+	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, @RequestParam(value = "uuid", required = true) String requestingUserUUID, Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		// Obtain the User record from the database to check if they are registered
-		String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
+		//String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
 		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
 		if (requesterOpt.isEmpty()) {
