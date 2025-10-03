@@ -556,7 +556,7 @@ public class UserController {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 		Optional<User> userOptional = Optional.empty();
-		System.out.println(" line 565 uuid " + uuid);
+		//System.out.println(" line 565 uuid " + uuid);
 
 		if (StringUtils.isNotBlank(uuid)) {
 			userOptional = userService.findByUuidAndPortalAccountStatus(uuid, PortalAccountStatus.names());

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -170,16 +171,33 @@ public class UserServiceImpl implements UserService {
 	 */
 	private Set<Participant> updateAssociatedPatientRecordsForCRCandProvider(Set<Participant> associatedPatients,
 			User viewingUser) {
-		associatedPatients.forEach(patient -> {
-			patient.getNotifications().clear();
-			patient.getReports().forEach(report -> {
-				if (report.getFileType().getCodeName()
-						.equalsIgnoreCase(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType())
-						&& !report.getViewedBy().contains(viewingUser)) {
-					patient.setHasNewReports(true);
-				}
-			});
-		});
+        for (Participant patient : associatedPatients) {
+            patient.getNotifications().clear();
+
+            boolean hasNew =
+                    patient.getReports().stream().anyMatch(report ->
+                            report != null
+                                    && report.getFileType() != null
+                                    && report.getFileType().getCodeName() != null
+                                    && report.getFileType().getCodeName()
+                                    .equalsIgnoreCase(FileType.PPE_FILETYPE_BIOMARKER_REPORT.getFileType())
+                                    && report.getViewedBy() != null
+                                    && !report.getViewedBy().contains(viewingUser)
+                    )
+                            || patient.getOtherDocuments().stream().anyMatch(document ->
+                            document != null
+                                    && document.getFileType() != null
+                                    && document.getFileType().getCodeName() != null
+                                    && document.getFileType().getCodeName()
+                                    .equalsIgnoreCase(FileType.PPE_FILETYPE_ECONSENT_FORM.getFileType())
+                                    && document.getViewedBy() != null
+                                    && !document.getViewedBy().contains(viewingUser)
+                    );
+
+           if(hasNew) {
+               patient.setHasNewReports(true);
+           }
+        }
 		return associatedPatients;
 	}
 
