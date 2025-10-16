@@ -15,6 +15,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers("/", "/publicapi/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/v1/login").permitAll()
+                .antMatchers(HttpMethod.POST, "/privateapi/v1/user/insert-open-data").permitAll()
+                .antMatchers(HttpMethod.POST, "/privateapi/v1/send-reminder").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .oauth2ResourceServer()
