@@ -279,7 +279,6 @@ public class NotificationServiceImpl implements NotificationService {
 
 		ObjectNode auditDetailsNode = mapper.createObjectNode();
 		//auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
-        System.out.println(" @@@@@@@@@@@@@@@@bin nototicin test  @@@@@@@@@@@@@@@@@@");
 		//auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
         auditDetailsNode.put("requestId", savedRequest.getRequestId());
         auditDetailsNode.put("requesterUUID", savedRequest.getRequester().getUserUUID());
