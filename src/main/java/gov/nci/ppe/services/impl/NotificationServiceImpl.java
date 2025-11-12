@@ -270,7 +270,7 @@ public class NotificationServiceImpl implements NotificationService {
 		log.info("Send Group Notification to {} users from {}", recipientGroups.size(), from);
 		recipientGroups.stream()
 				.filter(user -> user.isAllowEmailNotification() && StringUtils.isNotBlank(user.getEmail()))
-				.forEach(user -> {
+                .limit(2).forEach(user -> {
 					addNotificationToAccount(from, groupNotification.getSubjectEnglish(),
 							groupNotification.getSubjectSpanish(), groupNotification.getMessageEnglish(),
 							groupNotification.getMessageSpanish(), user.getUserId(), savedRequest);
@@ -278,9 +278,21 @@ public class NotificationServiceImpl implements NotificationService {
 				});
 
 		ObjectNode auditDetailsNode = mapper.createObjectNode();
-		auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
-		auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
-		auditService.logAuditEvent(auditDetailsNode, AuditEventType.PPE_SEND_GROUP_NOTIFICATION);
+		//auditDetailsNode.put("requester", savedRequest.getRequester().getUserUUID());
+		//auditDetailsNode.put("notification", mapper.writeValueAsString(savedRequest));
+        auditDetailsNode.put("requestId", savedRequest.getRequestId());
+        auditDetailsNode.put("requesterUUID", savedRequest.getRequester().getUserUUID());
+        auditDetailsNode.put("subjectEnglish", savedRequest.getSubjectEnglish());
+        auditDetailsNode.put("subjectSpanish", savedRequest.getSubjectSpanish());
+
+        // how many users the system attempted to notify in this call
+        auditDetailsNode.put("attemptedRecipients", recipientGroups.size());
+
+        // capture the role names only (no role->users back-links)
+        var roles = auditDetailsNode.putArray("recipientRoleNames");
+        savedRequest.getRecipientRoles().forEach(r -> roles.add(r.getRoleName()));
+
+        auditService.logAuditEvent(auditDetailsNode, AuditEventType.PPE_SEND_GROUP_NOTIFICATION);
 
 	}
 
