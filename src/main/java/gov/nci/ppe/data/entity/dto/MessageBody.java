@@ -3,8 +3,7 @@ package gov.nci.ppe.data.entity.dto;
 import javax.validation.constraints.NotBlank;
 
 import gov.nci.ppe.constants.ErrorConstants;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -18,13 +17,13 @@ import lombok.Data;
  *
  */
 @Data
-@ApiModel(value = "Message Body structure")
+@Schema(description = "Message Body structure")
 public class MessageBody {
 	@NotBlank(message = ErrorConstants.MISSING_ENGLISH_MESSAGE)
-	@ApiModelProperty(value = "Message Body in english")
+	@Schema(description = "Message Body in english")
 	private String en;
 
 	@NotBlank(message = ErrorConstants.MISSING_SPANISH_MESSAGE)
-	@ApiModelProperty(value = "Message Body in Spanish")
+	@Schema(description = "Message Body in Spanish")
 	private String es;
 }

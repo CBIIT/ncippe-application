@@ -55,10 +55,10 @@ import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.UserService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -96,10 +96,10 @@ public class UserController {
 	
 	private Logger logger = Logger.getLogger(UserController.class.getName());
 
-	@ApiOperation("Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "User data found"),
-			@ApiResponse(code = 409, message = "UUID of User Already in Use"),
-			@ApiResponse(code = 404, message = "User Not Found") })
+	@Operation(summary = "Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "User data found"),
+			@ApiResponse(responseCode = "409", description = "UUID of User Already in Use"),
+			@ApiResponse(responseCode = "404", description = "User Not Found") })
 	@PostMapping(value = "/api/v1/login", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> login(@RequestParam String uuid,
 										@RequestParam String email,
@@ -166,12 +166,12 @@ public class UserController {
 		auditService.logAuditEvent(auditDetail, eventType);
 	}
 
-	@ApiOperation(value = "Returns the User Details for the User with matching uuid, email, or patient id")
+	@Operation(summary = "Returns the User Details for the User with matching uuid, email, or patient id")
 	@GetMapping(value = "/api/v1/user", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> getUser(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
-			@ApiParam(value = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
-			@ApiParam(value = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId, @RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID,
+			@Parameter(description = "Unique Id for the User", required = false) @RequestParam(value = "uuid", required = false) String userUUID,
+			@Parameter(description = "email of the User", required = false) @RequestParam(value = "email", required = false) String email,
+			@Parameter(description = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId, @RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID,
 			Locale locale) throws JsonProcessingException {
 
         System.out.println("MHL userUUID: " + userUUID);
@@ -199,14 +199,14 @@ public class UserController {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	@ApiOperation(value = "update the registered user's email notification preference and phone number.")
+	@Operation(summary = "update the registered user's email notification preference and phone number.")
 	@PostMapping(value = "/api/v1/user/{userGUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> updateUser(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userGUID,
+			@Parameter(description = "Unique Id for the User", required = true) @PathVariable String userGUID,
 			@RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID,
-			@ApiParam(value = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
-			@ApiParam(value = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification,
-			@ApiParam(value = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage,
+			@Parameter(description = "New phone number for the User", required = true) @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
+			@Parameter(description = "Allow Email Notification or not", required = true) @RequestParam(value = "allowEmailNotification", required = true) Boolean allowEmailNotification,
+			@Parameter(description = "Language preferred by the participant", required = false) @RequestParam(value = "preferredLanguage", required = false) String preferredLanguage,
 			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -254,12 +254,12 @@ public class UserController {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "User has been deactivated"),
-			@ApiResponse(code = 401, message = "Bearer token is missing or expired.") })
-	@ApiOperation(value = "Deactivates a particular user in the portal")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "User has been deactivated"),
+			@ApiResponse(responseCode = "401", description = "Bearer token is missing or expired.") })
+	@Operation(summary = "Deactivates a particular user in the portal")
 	@PostMapping(value = "/api/v1/deactivate-user/{userUUID}", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> deActivateUserByGuid(HttpServletRequest request,
-			@ApiParam(value = "Unique Id for the User", required = true) @PathVariable String userUUID, @RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID, Locale locale)
+			@Parameter(description = "Unique Id for the User", required = true) @PathVariable String userUUID, @RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID, Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
 		//String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
@@ -290,11 +290,11 @@ public class UserController {
 	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
-	@ApiOperation(value = "Participant withdraws from the Biobank program")
+	@Operation(summary = "Participant withdraws from the Biobank program")
 	@PostMapping(value = "/api/v1/withdraw-user-participation", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> withdrawParticipationByParticipant(HttpServletRequest request,
-			@ApiParam(value = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,@RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
-			@ApiParam(value = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO,
+			@Parameter(description = "Unique Patient Id assigned to each Patient", required = true) @RequestParam String patientId,@RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
+			@Parameter(description = "List of Questions and their answers for withdrawing from PPE", required = true) @RequestBody List<QuestionAnswerDTO> qsAnsDTO,
 			Locale locale) throws JsonProcessingException {
 
 		patientId = StringUtils.stripToEmpty(patientId);
@@ -348,10 +348,10 @@ public class UserController {
 		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
+	@Operation(summary = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
 	@PostMapping(value = "/api/v1/user/invite-participant-to-portal", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> inviteParticipant(HttpServletRequest request,
-			@ApiParam(value = "Patient Id of the participant", required = true)
+			@Parameter(description = "Patient Id of the participant", required = true)
 			@RequestParam(value = "patientId", required = true) String patientId, @RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
 			Locale locale) throws JsonProcessingException {
 
@@ -382,19 +382,19 @@ public class UserController {
 		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
+	@Operation(summary = "CRC will invite a new Patient added from OPEN to participate in the portal by filling in the patient's name and email")
 	@PostMapping(value = "/api/v1/user/enter-new-participant-details", produces = { MediaType.APPLICATION_JSON_VALUE })
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "User invited to PPE Portal"),
-			@ApiResponse(code = 401, message = "Not Authorized"),
-			@ApiResponse(code = 409, message = "User has already been activated with a different UUID."),
-			@ApiResponse(code = 404, message = "User not found"),
-			@ApiResponse(code = 406, message = "Language Not Supported") })
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "User invited to PPE Portal"),
+			@ApiResponse(responseCode = "401", description = "Not Authorized"),
+			@ApiResponse(responseCode = "409", description = "User has already been activated with a different UUID."),
+			@ApiResponse(responseCode = "404", description = "User not found"),
+			@ApiResponse(responseCode = "406", description = "Language Not Supported") })
 	public ResponseEntity<String> enterUserDetails(HttpServletRequest request, @RequestParam(value = "updatedByUser", required = false) String updatedByUserUUID,
-			@ApiParam(value = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
-			@ApiParam(value = "First name of the participant", required = true) @RequestParam(value = "firstName", required = true) String firstName,
-			@ApiParam(value = "Last name of the participant", required = true) @RequestParam(value = "lastName", required = true) String lastName,
-			@ApiParam(value = "Email Id for the participant", required = true) @RequestParam(value = "emailId", required = true) String emailId,
-			@ApiParam(value = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
+			@Parameter(description = "Patient Id of the participant", required = true) @RequestParam(value = "patientId", required = true) String patientId,
+			@Parameter(description = "First name of the participant", required = true) @RequestParam(value = "firstName", required = true) String firstName,
+			@Parameter(description = "Last name of the participant", required = true) @RequestParam(value = "lastName", required = true) String lastName,
+			@Parameter(description = "Email Id for the participant", required = true) @RequestParam(value = "emailId", required = true) String emailId,
+			@Parameter(description = "Language preferred by the participant", required = true) @RequestParam(value = "preferredLanguage", required = true) String preferredLanguage,
 			Locale locale) throws JsonProcessingException {
 		//String updatedByUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
 
@@ -587,16 +587,16 @@ public class UserController {
 		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
 
-	@ApiOperation(value = "CRC updates an existing participant's email by supplying the Patient Id and the new email")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Participant Email updated"),
-			@ApiResponse(code = 403, message = "CRC Not Authorized to alter the participant's email."),
-			@ApiResponse(code = 409, message = "User has already been activated. Cannot change email."),
-			@ApiResponse(code = 404, message = "User not found"),
-			@ApiResponse(code = 406, message = "Language Not Supported") })
+	@Operation(summary = "CRC updates an existing participant's email by supplying the Patient Id and the new email")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Participant Email updated"),
+			@ApiResponse(responseCode = "403", description = "CRC Not Authorized to alter the participant's email."),
+			@ApiResponse(responseCode = "409", description = "User has already been activated. Cannot change email."),
+			@ApiResponse(responseCode = "404", description = "User not found"),
+			@ApiResponse(responseCode = "406", description = "Language Not Supported") })
 	@PostMapping(value = UrlConstants.URL_USER_UPDATE_EMAIL, produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> updateParticipantEmail(HttpServletRequest request,
-			@ApiParam(value = "Patient Id of the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_PATIENT_ID, required = true) String patientId,
-			@ApiParam(value = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email, @RequestParam(value = "requestingUserUUID", required = true) String requestingUserUUID,
+			@Parameter(description = "Patient Id of the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_PATIENT_ID, required = true) String patientId,
+			@Parameter(description = "New email for the Participant", required = true) @RequestParam(value = UrlConstants.REQ_PARAM_EMAIL, required = true) String email, @RequestParam(value = "requestingUserUUID", required = true) String requestingUserUUID,
 			Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

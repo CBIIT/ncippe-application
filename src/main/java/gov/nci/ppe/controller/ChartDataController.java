@@ -21,7 +21,7 @@ import gov.nci.ppe.data.entity.ProjectSummary;
 import gov.nci.ppe.data.entity.dto.AgeDemographicsDataDTO;
 import gov.nci.ppe.data.entity.dto.ChartDataDTO;
 import gov.nci.ppe.data.entity.dto.ProjectSummaryDTO;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -108,7 +108,7 @@ public class ChartDataController {
     public ChartDataController() {
     }
 
-    @ApiOperation(value = "Method to return data for charts")
+    @Operation(summary = "Method to return data for charts")
     @GetMapping(UrlConstants.URL_CHART_DATA) // publicapi/v1/chartData 
     public ResponseEntity<String> getAllChartData() throws JsonProcessingException {
     	

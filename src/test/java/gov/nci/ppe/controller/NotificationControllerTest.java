@@ -40,10 +40,11 @@ import gov.nci.ppe.data.entity.dto.MessageBody;
 import gov.nci.ppe.data.entity.dto.SubjectDto;
 import gov.nci.ppe.services.impl.NotificationServiceImpl;
 import gov.nci.ppe.services.impl.UserServiceImpl;
+import org.springframework.security.test.context.support.WithMockUser;
 
 /**
  * Unit Test class for {@link NotificationController}.
- * 
+ *
  * @author PublicisSapient
  * @version 2.4;
  * @since 2021-05-17
@@ -51,6 +52,7 @@ import gov.nci.ppe.services.impl.UserServiceImpl;
 
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = { NotificationController.class })
+@WithMockUser
 public class NotificationControllerTest {
 
 	@MockBean

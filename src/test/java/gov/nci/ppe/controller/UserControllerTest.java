@@ -38,10 +38,11 @@ import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.UserService;
 import lombok.SneakyThrows;
+import org.springframework.security.test.context.support.WithMockUser;
 
 /**
  * Unit Test class for {@link UserController}
- * 
+ *
  * @author PublicisSapient
  *
  * @version 2.6
@@ -50,6 +51,7 @@ import lombok.SneakyThrows;
  */
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = UserController.class)
+@WithMockUser
 public class UserControllerTest {
 
 	@MockBean(name = "dozerBean")
@@ -100,8 +102,9 @@ public class UserControllerTest {
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
 			mockMvc.perform(
 					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
-							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+							.param("requestingUserUUID", requestingUserUUID)
+							.contentType(MediaType.TEXT_PLAIN_VALUE))
 					.andExpect(status().isOk()).andExpect(jsonPath("$.uuid", is(targetUserUUID)));
 		} catch (Exception ex) {
 			fail(ex.getMessage());
@@ -118,8 +121,9 @@ public class UserControllerTest {
 		try {
 			mockMvc.perform(
 					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
-							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+							.param("requestingUserUUID", requestingUserUUID)
+							.contentType(MediaType.TEXT_PLAIN_VALUE))
 					.andExpect(status().isForbidden());
 			verify(mockAuthorizationService).authorize(requestingUserUUID, pa);
 		} catch (Exception ex) {
@@ -139,8 +143,9 @@ public class UserControllerTest {
 			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
 			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
-					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-					.header(CommonConstants.HEADER_UUID, requestingUserUUID)).andExpect(status().isConflict());
+					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+					.param("requestingUserUUID", requestingUserUUID)
+					.contentType(MediaType.TEXT_PLAIN_VALUE)).andExpect(status().isConflict());
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}

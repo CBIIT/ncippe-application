@@ -38,11 +38,11 @@ import gov.nci.ppe.data.entity.dto.GroupNotificationRequestDto;
 import gov.nci.ppe.data.entity.dto.PortalNotificationDTO;
 import gov.nci.ppe.services.NotificationService;
 import gov.nci.ppe.services.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 /**
  * Controller class for Notification related actions.
@@ -52,7 +52,7 @@ import io.swagger.annotations.ApiResponses;
  * @since 2019-08-20
  */
 
-@Api
+@Tag(name = "NotificationController")
 @RestController
 public class NotificationController {
 
@@ -87,13 +87,13 @@ public class NotificationController {
 	 *                 retrieved
 	 * @return List of notification objects
 	 */
-	@ApiOperation(value = "Retrieves all notifications for the specified User")
-	@ApiResponses(value = {
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_OK, message = "All available User notifications fetched"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_UNAUTHORIZED, message = "Not authorized to view messages for other users") })
+	@Operation(summary = "Retrieves all notifications for the specified User")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "All available User notifications fetched"),
+			@ApiResponse(responseCode = "401", description = "Not authorized to view messages for other users") })
 	@GetMapping(value = "/api/v1/user/{userGUID}/notifications", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getAllNotificationsForUser(HttpServletRequest request,
-			@ApiParam(value = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
+			@Parameter(description = "Unique ID of the User whose notifications are to be retrieved", required = true) @PathVariable String userGUID,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -146,11 +146,11 @@ public class NotificationController {
 	 * @param notificationId - Unique ID of the Notification to retrieve
 	 * @return the Notification object
 	 */
-	@ApiOperation(value = "Retrieve the notification for the given user with the specified notification id")
+	@Operation(summary = "Retrieve the notification for the given user with the specified notification id")
 	@GetMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getNotificationForNotificationId(HttpServletRequest request,
-			@ApiParam(value = "Unique ID of the User whose notification is to be retrieved", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
+			@Parameter(description = "Unique ID of the User whose notification is to be retrieved", required = true) @PathVariable String userGUID,
+			@Parameter(description = "Unique ID of the Notification to retrieve", required = true) @PathVariable String notificationId,
 			Locale locale) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -191,10 +191,10 @@ public class NotificationController {
 	 * @param locale
 	 * @return List of User Notifications with Read indicator set
 	 */
-	@ApiOperation(value = "Mark all notifications as read for a given user")
+	@Operation(summary = "Mark all notifications as read for a given user")
 	@PostMapping(value = "/api/v1/user/{userGUID}/notifications/mark-as-read")
 	public ResponseEntity<String> updateAllNotificationsForUserAsReadByUserGUID(HttpServletRequest request,
-			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
+			@Parameter(description = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
 			Locale locale) {
 
 		HttpHeaders httpHeaders = createHeader();
@@ -252,11 +252,11 @@ public class NotificationController {
 	 * @param locale
 	 * @return
 	 */
-	@ApiOperation(value = "Mark an individual notification as read for a given user")
+	@Operation(summary = "Mark an individual notification as read for a given user")
 	@PostMapping(value = "/api/v1/user/{userGUID}/notification/{notificationId}/mark-as-read")
 	public ResponseEntity<String> updateNotificationAsReadByNotificationId(HttpServletRequest request,
-			@ApiParam(value = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
-			@ApiParam(value = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId,
+			@Parameter(description = "Unique ID of the User whose notifications are to be marked as read", required = true) @PathVariable String userGUID,
+			@Parameter(description = "Unique ID of the Notification to be marked as read", required = true) @PathVariable String notificationId,
 			Locale locale) {
 
 		HttpHeaders httpHeaders = createHeader();
@@ -306,16 +306,16 @@ public class NotificationController {
 	 * @return
 	 * @throws IOException
 	 */
-	@ApiOperation(value = "Send message to all users of specified type(s)")
-	@ApiResponses(value = {
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_CREATED, message = "Message succesfully sent"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
+	@Operation(summary = "Send message to all users of specified type(s)")
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "Message succesfully sent"),
+			@ApiResponse(responseCode = "404", description = "Requesting User not found"),
+			@ApiResponse(responseCode = "400", description = "Invalid Request"),
+			@ApiResponse(responseCode = "403", description = "Not Authorized to send messages") })
 	@PostMapping(value = UrlConstants.URL_NOTIFICATIONS, consumes = { MediaType.TEXT_PLAIN_VALUE }, produces = {
 			MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> sendNotification(HttpServletRequest request,
-			@ApiParam(value = "Details of Message to be sent", required = true, allowMultiple = false) @RequestBody String message,
+			@Parameter(description = "Details of Message to be sent", required = true) @RequestBody String message,
 			Locale locale) throws IOException {
 		HttpHeaders httpHeaders = createHeader();
 
@@ -360,11 +360,11 @@ public class NotificationController {
 	 */
 	@GetMapping(value = UrlConstants.URL_NOTIFICATIONS,  produces = {
 			MediaType.APPLICATION_JSON_VALUE })
-	@ApiOperation(value = "Get all bulk notification send requests issued by the invoker")
-	@ApiResponses(value = {
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_NOT_FOUND, message = "Requesting User not found"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_BAD_REQUEST, message = "Invalid Request"),
-			@ApiResponse(code = org.apache.http.HttpStatus.SC_FORBIDDEN, message = "Not Authorized to send messages") })
+	@Operation(summary = "Get all bulk notification send requests issued by the invoker")
+	@ApiResponses({
+			@ApiResponse(responseCode = "404", description = "Requesting User not found"),
+			@ApiResponse(responseCode = "400", description = "Invalid Request"),
+			@ApiResponse(responseCode = "403", description = "Not Authorized to send messages") })
 	public ResponseEntity<String> getNotificationSendHistory(HttpServletRequest request, @RequestParam(value = "uuid", required = true) String requestingUserUUID, Locale locale)
 			throws JsonProcessingException {
 		HttpHeaders httpHeaders = createHeader();
