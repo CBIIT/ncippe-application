@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +39,6 @@ import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
 import gov.nci.ppe.services.UserService;
 import lombok.SneakyThrows;
-import org.springframework.security.test.context.support.WithMockUser;
 
 /**
  * Unit Test class for {@link UserController}
@@ -51,7 +51,6 @@ import org.springframework.security.test.context.support.WithMockUser;
  */
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = UserController.class)
-@WithMockUser
 public class UserControllerTest {
 
 	@MockBean(name = "dozerBean")
@@ -101,7 +100,7 @@ public class UserControllerTest {
 		try {
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
 			mockMvc.perform(
-					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
 							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
 							.param("requestingUserUUID", requestingUserUUID)
 							.contentType(MediaType.TEXT_PLAIN_VALUE))
@@ -120,7 +119,7 @@ public class UserControllerTest {
 		when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(false);
 		try {
 			mockMvc.perform(
-					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
 							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
 							.param("requestingUserUUID", requestingUserUUID)
 							.contentType(MediaType.TEXT_PLAIN_VALUE))
@@ -142,7 +141,7 @@ public class UserControllerTest {
 			when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(true);
 			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
-			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
+			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
 					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
 					.param("requestingUserUUID", requestingUserUUID)
 					.contentType(MediaType.TEXT_PLAIN_VALUE)).andExpect(status().isConflict());

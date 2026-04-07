@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,7 +41,6 @@ import gov.nci.ppe.data.entity.dto.MessageBody;
 import gov.nci.ppe.data.entity.dto.SubjectDto;
 import gov.nci.ppe.services.impl.NotificationServiceImpl;
 import gov.nci.ppe.services.impl.UserServiceImpl;
-import org.springframework.security.test.context.support.WithMockUser;
 
 /**
  * Unit Test class for {@link NotificationController}.
@@ -52,7 +52,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = { NotificationController.class })
-@WithMockUser
 public class NotificationControllerTest {
 
 	@MockBean
@@ -81,7 +80,7 @@ public class NotificationControllerTest {
 		when(mockMessageSource.getMessage(eq(HttpResponseConstants.NO_USER_FOUND_MSG), any(), any()))
 				.thenReturn("No User Found");
 		try {
-			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).contentType(MediaType.TEXT_PLAIN_VALUE)
+			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).with(jwt()).contentType(MediaType.TEXT_PLAIN_VALUE)
 					.content(request).header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isNotFound());
 			verify(mockUserService).findByUuid(requestingUserUUID);
@@ -103,7 +102,7 @@ public class NotificationControllerTest {
 		when(mockMessageSource.getMessage(eq(HttpResponseConstants.UNAUTHORIZED_ACCESS), any(), any()))
 				.thenReturn("Not Authorized");
 		try {
-			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).contentType(MediaType.TEXT_PLAIN_VALUE)
+			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).with(jwt()).contentType(MediaType.TEXT_PLAIN_VALUE)
 					.content(request).header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isForbidden());
 			verify(mockUserService).findByUuid(requestingUserUUID);
@@ -139,7 +138,7 @@ public class NotificationControllerTest {
 			when(mockDozerBeanMapper.map(any(GroupNotificationRequestDto.class), eq(GroupNotificationRequest.class)))
 					.thenReturn(request);
 			ArgumentCaptor<GroupNotificationRequest> captor = ArgumentCaptor.forClass(GroupNotificationRequest.class);
-			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).contentType(MediaType.TEXT_PLAIN_VALUE)
+			mockMvc.perform(post(UrlConstants.URL_NOTIFICATIONS).with(jwt()).contentType(MediaType.TEXT_PLAIN_VALUE)
 					.content(requestString).header(CommonConstants.HEADER_UUID, requestingUserUUID))
 					.andExpect(status().isCreated());
 			verify(mockUserService).findByUuid(anyString());
