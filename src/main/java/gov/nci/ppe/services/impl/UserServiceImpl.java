@@ -12,8 +12,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +44,7 @@ import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.exception.BusinessConstraintViolationException;
+import gov.nci.ppe.exception.UuidConflictException;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
@@ -1062,6 +1065,66 @@ public class UserServiceImpl implements UserService {
 			auditService.logAuditEvent(auditDetail, AuditEventType.PPE_EMAIL_MODIFIED);
 		} catch (JsonProcessingException e) {
 			log.warn(e.getMessage());
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional
+	public Optional<User> loginUser(String uuid, String email) {
+		List<String> activeStatusList = List.of(PortalAccountStatus.ACCT_ACTIVE.name());
+		Optional<User> userOptional = findByUuidAndPortalAccountStatus(uuid, activeStatusList);
+
+		if (userOptional.isEmpty()) {
+			userOptional = activateUser(email, uuid);
+			if (userOptional.isEmpty()) {
+				return Optional.empty();
+			}
+			if (!userOptional.get().getUserUUID().equalsIgnoreCase(uuid)) {
+				throw new UuidConflictException(uuid);
+			}
+		}
+
+		userOptional = synchronizeUserEmailWithLogin(userOptional.get(), uuid, email);
+		User user = userOptional.get();
+		initializeLazyCollections(user);
+		return Optional.of(user);
+	}
+
+	private void initializeLazyCollections(User user) {
+		Hibernate.initialize(user.getNotifications());
+		if (user instanceof Participant participant) {
+			Hibernate.initialize(participant.getReports());
+			Hibernate.initialize(participant.getOtherDocuments());
+			Hibernate.initialize(participant.getQuestionAnswers());
+			Hibernate.initialize(participant.getCrcsSet());
+			Hibernate.initialize(participant.getProviders());
+			participant.getCrcsSet().forEach(crc -> Hibernate.initialize(crc.getNotifications()));
+			participant.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
+		} else if (user instanceof Provider provider) {
+			Hibernate.initialize(provider.getPatients());
+			provider.getPatients().forEach(patient -> {
+				Hibernate.initialize(patient.getNotifications());
+				Hibernate.initialize(patient.getReports());
+				Hibernate.initialize(patient.getOtherDocuments());
+				Hibernate.initialize(patient.getQuestionAnswers());
+				Hibernate.initialize(patient.getCrcsSet());
+				Hibernate.initialize(patient.getProviders());
+				patient.getCrcsSet().forEach(crc -> Hibernate.initialize(crc.getNotifications()));
+			});
+		} else if (user instanceof CRC crc) {
+			Hibernate.initialize(crc.getPatients());
+			crc.getPatients().forEach(patient -> {
+				Hibernate.initialize(patient.getNotifications());
+				Hibernate.initialize(patient.getReports());
+				Hibernate.initialize(patient.getOtherDocuments());
+				Hibernate.initialize(patient.getQuestionAnswers());
+				Hibernate.initialize(patient.getCrcsSet());
+				Hibernate.initialize(patient.getProviders());
+				patient.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
+			});
 		}
 	}
 
