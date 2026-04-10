@@ -15,6 +15,7 @@ import gov.nci.ppe.data.entity.QuestionAnswer;
 import gov.nci.ppe.data.entity.Role;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.exception.BusinessConstraintViolationException;
+import gov.nci.ppe.exception.UuidConflictException;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 
 /**
@@ -261,11 +262,24 @@ public interface UserService {
 	/**
 	 * Checks that the UUID and Email provided by login.gov matches the the User
 	 * record and updates if needed.
-	 * 
+	 *
 	 * @param user     - the User record to update
 	 * @param uuid     - Unique Identifier received from login.gov
 	 * @param newEmail - email received from login.gov
 	 * @return - the updated User record.
 	 */
 	public Optional<User> synchronizeUserEmailWithLogin(User user, String uuid, String newEmail);
+
+	/**
+	 * Performs the full login flow in a single transaction: looks up the user by UUID
+	 * or activates them by email, syncs the email if it changed, and initializes all
+	 * lazy collections needed for Dozer mapping.
+	 *
+	 * @param uuid  - UUID from login.gov
+	 * @param email - email from login.gov
+	 * @return Optional containing the initialized User, or empty if not found
+	 * @throws UuidConflictException if the email maps to a user already activated
+	 *         with a different UUID
+	 */
+	public Optional<User> loginUser(String uuid, String email);
 }
