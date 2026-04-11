@@ -51,6 +51,7 @@ import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.QuestionAnswerDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
 import gov.nci.ppe.exception.BusinessConstraintViolationException;
+import gov.nci.ppe.exception.UuidConflictException;
 import gov.nci.ppe.services.AuditService;
 import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.CodeService;
@@ -105,53 +106,32 @@ public class UserController {
 										@RequestParam String email,
 										@RequestBody String idToken, Locale locale) throws JsonProcessingException {
 
-		//String uuid = request.getHeader(CommonConstants.HEADER_UUID);
-		//String email = request.getHeader(CommonConstants.HEADER_EMAIL);
-
-		System.out.println("Received Login request with uuid { " + uuid + " } and email { " +  email + " }");
-
-		logger.info("Received Login request with uuid { " + uuid + " } and email { " +  email + " }");
+		logger.info("Received Login request with uuid { " + uuid + " } and email { " + email + " }");
 		raiseLoginAuditEvent(uuid, email, "Attempt to Login", AuditEventType.PPE_LOGIN_ATTEMPT);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-		List<String> accountStatusList = new ArrayList<>();
-		accountStatusList.add(PortalAccountStatus.ACCT_ACTIVE.name());
 
-		Optional<User> userOptional = userService.findByUuidAndPortalAccountStatus(uuid, accountStatusList);
-		if (userOptional.isEmpty()) {
-			System.out.println("Start User Activated --- " + uuid);
-			userOptional = userService.activateUser(email, uuid);
-
-			System.out.println("User Activated Successfully");
-
-			if (!userOptional.isPresent()) {
-				logger.info( "Did not find user with " + email + " and " + uuid);
-
-				raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
-
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
-			}
-
-			User user = userOptional.get();
-			if (!user.getUserUUID().equalsIgnoreCase(uuid)) {
-				logger.severe("Did not find user with " + email + " and " + uuid);
-				raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
-						AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
-				return ResponseEntity.status(HttpStatus.CONFLICT)
-						.body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
-			}
+		Optional<User> userOptional;
+		try {
+			userOptional = userService.loginUser(uuid, email);
+		} catch (UuidConflictException e) {
+			logger.severe("Login conflict — UUID already in use: " + uuid);
+			raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
+					AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body(messageSource.getMessage(HttpResponseConstants.USER_UUID_ALREADY_USED_MSG, null, locale));
 		}
 
-		System.out.println("Did not find user with " + email + " and " + uuid);
-
-		userOptional = userService.synchronizeUserEmailWithLogin(userOptional.get(), uuid, email);
+		if (userOptional.isEmpty()) {
+			logger.info("Did not find user with email " + email);
+			raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+		}
 
 		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
-
 		String userInJsonFormat = convertUserToJSON(userOptional.get());
-        System.out.println("MHL userInJsonFormat: " + userInJsonFormat);
 		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
 	}
