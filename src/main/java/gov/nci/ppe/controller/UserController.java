@@ -106,7 +106,7 @@ public class UserController {
 										@RequestParam String email,
 										@RequestBody String idToken, Locale locale) throws JsonProcessingException {
 
-		logger.info("Received Login request with uuid { " + uuid + " } and email { " + email + " }");
+		logger.info("Received login request");
 		raiseLoginAuditEvent(uuid, email, "Attempt to Login", AuditEventType.PPE_LOGIN_ATTEMPT);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
@@ -116,7 +116,7 @@ public class UserController {
 		try {
 			userOptional = userService.loginUser(uuid, email);
 		} catch (UuidConflictException e) {
-			logger.severe("Login conflict — UUID already in use: " + uuid);
+			logger.severe("Login conflict: UUID already in use");
 			raiseLoginAuditEvent(uuid, email, "User already activated with different UUID",
 					AuditEventType.PPE_LOGIN_EMAIL_UUID_CONFLICT);
 			return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -124,7 +124,7 @@ public class UserController {
 		}
 
 		if (userOptional.isEmpty()) {
-			logger.info("Did not find user with email " + email);
+			logger.info("Login failed: user not found");
 			raiseLoginAuditEvent(uuid, email, "User Not Found", AuditEventType.PPE_LOGIN_USER_NOT_FOUND);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
