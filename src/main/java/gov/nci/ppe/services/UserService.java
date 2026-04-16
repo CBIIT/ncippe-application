@@ -282,4 +282,14 @@ public interface UserService {
 	 *         with a different UUID
 	 */
 	public Optional<User> loginUser(String uuid, String email);
+
+	/**
+	 * Re-loads the user in a read-only transaction and initializes lazy associations
+	 * needed for Dozer mapping and JSON views when {@code spring.jpa.open-in-view}
+	 * is disabled.
+	 *
+	 * @param candidate user resolved outside a web-layer transaction (may be detached)
+	 * @return managed user with collections initialized, or empty if the row no longer exists
+	 */
+	public Optional<User> prepareUserForDetailSerialization(Optional<User> candidate);
 }

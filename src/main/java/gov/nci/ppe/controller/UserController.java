@@ -131,7 +131,7 @@ public class UserController {
 		}
 
 		raiseLoginAuditEvent(uuid, email, "Login Successful", AuditEventType.PPE_LOGIN_SUCCESS);
-		String userInJsonFormat = convertUserToJSON(userOptional.get());
+		String userInJsonFormat = marshalUserToJson(userOptional.get());
 		return new ResponseEntity<>(userInJsonFormat, httpHeaders, HttpStatus.OK);
 
 	}
@@ -441,14 +441,21 @@ public class UserController {
 	}
 
 	/**
-	 * Convert User or its subclass into its corresponding DTO Object before
-	 * creating a JSON string
-	 * 
-	 * @param user
-	 * @return Returns a JSON format string
-	 * @throws JsonProcessingException
+	 * Converts a user loaded outside a service transaction (e.g. after a read-only
+	 * find) into JSON. Re-loads and initializes lazy associations when open-in-view
+	 * is disabled.
 	 */
 	private String convertUserToJSON(User user) throws JsonProcessingException {
+		User ready = userService.prepareUserForDetailSerialization(Optional.of(user))
+				.orElseThrow(() -> new IllegalStateException("User not found during serialization prep"));
+		return marshalUserToJson(ready);
+	}
+
+	/**
+	 * Marshals an already-initialized user (e.g. from {@link UserService#loginUser})
+	 * to JSON without an extra round trip.
+	 */
+	private String marshalUserToJson(User user) throws JsonProcessingException {
 		UserDTO userDTO = convertUserDTO(user);
 
 		mapper.registerSubtypes(new NamedType(ParticipantDTO.class, "ParticipantDTO"),

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -482,6 +483,47 @@ public class UserServiceTest {
 
 			assertThrows(UuidConflictException.class,
 					() -> userService.loginUser(LOGIN_UUID, LOGIN_EMAIL));
+		}
+	}
+
+	@Nested
+	@DisplayName("prepareUserForDetailSerialization()")
+	class TestPrepareUserForDetailSerialization {
+
+		@Test
+		@DisplayName("returns empty when input is empty")
+		void empty_returnsEmpty() {
+			assertFalse(userService.prepareUserForDetailSerialization(Optional.empty()).isPresent());
+		}
+
+		@Test
+		@DisplayName("returns same user when userId is null without hitting repository")
+		void nullUserId_returnsCandidate() {
+			User u = new User();
+			Optional<User> result = userService.prepareUserForDetailSerialization(Optional.of(u));
+			assertTrue(result.isPresent());
+			assertSame(u, result.get());
+			verify(userRepository, never()).findById(any());
+		}
+
+		@Test
+		@DisplayName("reloads managed user by id and returns repository instance")
+		void reloadsById() {
+			User detached = new User();
+			detached.setUserId(42L);
+			Role role = new Role();
+			role.setRoleName(PPERole.ROLE_PPE_CONTENT_EDITOR.name());
+			detached.setRole(role);
+			User managed = new User();
+			managed.setUserId(42L);
+			managed.setRole(role);
+			when(userRepository.findById(42L)).thenReturn(Optional.of(managed));
+
+			Optional<User> result = userService.prepareUserForDetailSerialization(Optional.of(detached));
+
+			assertTrue(result.isPresent());
+			assertSame(managed, result.get());
+			verify(userRepository).findById(42L);
 		}
 	}
 

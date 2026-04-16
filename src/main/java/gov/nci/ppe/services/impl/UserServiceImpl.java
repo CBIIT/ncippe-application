@@ -1093,6 +1093,29 @@ public class UserServiceImpl implements UserService {
 		return Optional.of(user);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<User> prepareUserForDetailSerialization(Optional<User> candidate) {
+		if (candidate.isEmpty()) {
+			return candidate;
+		}
+		Long userId = candidate.get().getUserId();
+		if (userId == null) {
+			return candidate;
+		}
+		Optional<User> reloaded = userRepository.findById(userId);
+		if (reloaded.isEmpty()) {
+			return Optional.empty();
+		}
+		User user = reloaded.get();
+		updateAssociatedPatientRecords(Optional.of(user));
+		initializeLazyCollections(user);
+		return Optional.of(user);
+	}
+
 	private void initializeLazyCollections(User user) {
 		Hibernate.initialize(user.getNotifications());
 		if (user instanceof Participant participant) {
@@ -1113,6 +1136,7 @@ public class UserServiceImpl implements UserService {
 				Hibernate.initialize(patient.getCrcsSet());
 				Hibernate.initialize(patient.getProviders());
 				patient.getCrcsSet().forEach(crc -> Hibernate.initialize(crc.getNotifications()));
+				patient.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
 			});
 		} else if (user instanceof CRC crc) {
 			Hibernate.initialize(crc.getPatients());
@@ -1123,6 +1147,7 @@ public class UserServiceImpl implements UserService {
 				Hibernate.initialize(patient.getQuestionAnswers());
 				Hibernate.initialize(patient.getCrcsSet());
 				Hibernate.initialize(patient.getProviders());
+				patient.getCrcsSet().forEach(c -> Hibernate.initialize(c.getNotifications()));
 				patient.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
 			});
 		}

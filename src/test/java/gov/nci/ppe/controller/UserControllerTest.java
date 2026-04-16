@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -70,6 +72,12 @@ public class UserControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@BeforeEach
+	void stubPrepareUserForSerialization() {
+		lenient().when(mockUserService.prepareUserForDetailSerialization(any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+	}
 
 	private final String requestingUserUUID = UUID.randomUUID().toString();
 	private final String targetUserUUID = UUID.randomUUID().toString();
