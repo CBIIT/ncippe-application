@@ -94,7 +94,7 @@ public class UserController {
 	private MessageSource messageSource;
 
 	private ObjectMapper mapper = new ObjectMapper();
-	
+
 	private Logger logger = Logger.getLogger(UserController.class.getName());
 
 	@Operation(summary = "Returns the data about the logged in user. If this is the users first time logging in, it will update the database with the users UUID and activate the account")
@@ -154,13 +154,6 @@ public class UserController {
 			@Parameter(description = "Patient ID", required = false) @RequestParam(value = "patientId", required = false) String patientId, @RequestParam(value = "requestingUserUUID", required = false) String requestingUserUUID,
 			Locale locale) throws JsonProcessingException {
 
-        System.out.println("MHL userUUID: " + userUUID);
-        System.out.println("MHL email: " + email);
-        System.out.println("MHL patientId: " + patientId);
-        logger.info("MHL userUUID: " + userUUID);
-        logger.info("MHL email: " +  email);
-        logger.info("MHL patientId: " + patientId);
-
 		userUUID = StringUtils.stripToEmpty(userUUID);
 
 		email = StringUtils.stripToEmpty(email);
@@ -192,8 +185,6 @@ public class UserController {
 		httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
 		//String requestingUserUUID = request.getHeader(CommonConstants.HEADER_UUID);
-        System.out.println("MHL requestingUserUUID: " + requestingUserUUID);
-
         if (!authService.authorize(requestingUserUUID, userGUID)) {
 			return new ResponseEntity<>(
 					messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale), httpHeaders,
@@ -560,17 +551,20 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
 		}
+		// Reload + initialize lazy collections while a session exists (open-in-view is off).
+		// Required before authorize() (e.g. Participant.crcsSet) and before JSON mapping.
+		userOptional = userService.prepareUserForDetailSerialization(userOptional);
+		if (!userOptional.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).headers(httpHeaders)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+		}
 		User user = userOptional.get();
-		System.out.println(" line 582 user id" + user.getUserId());
-
-		logger.info("MHL fetchUser requestingUserUUID: " + requestingUserUUID);
-		logger.info("MHL fetchUser user:\n " + user.getUserUUID() + "\n");
 		if (!authService.authorize(requestingUserUUID, user)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).headers(httpHeaders)
 					.body(messageSource.getMessage(HttpResponseConstants.UNAUTHORIZED_ACCESS, null, locale));
 		}
 
-		String userJson = convertUserToJSON(user);
+		String userJson = marshalUserToJson(user);
 		return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 	}
 

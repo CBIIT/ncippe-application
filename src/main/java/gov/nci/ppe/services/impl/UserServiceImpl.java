@@ -124,6 +124,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Optional<User> findByUuid(String userGuid) {
 		Optional<User> optionalUser = userRepository.findByUserUUID(userGuid);
 		return updateAssociatedPatientRecords(optionalUser);
@@ -159,6 +160,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<User> findUserById(Long userId) {
 		return userRepository.findById(userId);
 	}
@@ -230,6 +232,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Optional<User> findByUuidAndPortalAccountStatus(String userGuid, List<String> accountStatusList) {
 		List<Code> accountStatusCodeList = convertToCode(accountStatusList);
 		Optional<User> optionalUser = userRepository.findByUserUUIDAndPortalAccountStatusIn(userGuid,
@@ -304,6 +307,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> findByEmailAndPortalAccountStatus(String email, List<String> validAccountStatusList) {
 		List<Code> accountStatusCodeList = convertToCode(validAccountStatusList);
 		Optional<User> optionalUser = userRepository.findByEmailAndPortalAccountStatusIn(email, accountStatusCodeList);
@@ -322,6 +326,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<User> findActiveParticipantByPatientId(String patientId) {
 		return participantRepository.findByPatientIdAndIsActiveBiobankParticipantTrue(patientId);
 	}
@@ -1118,39 +1123,47 @@ public class UserServiceImpl implements UserService {
 
 	private void initializeLazyCollections(User user) {
 		Hibernate.initialize(user.getNotifications());
+		Set<Long> visitedParticipantIds = new HashSet<>();
 		if (user instanceof Participant participant) {
-			Hibernate.initialize(participant.getReports());
-			Hibernate.initialize(participant.getOtherDocuments());
-			Hibernate.initialize(participant.getQuestionAnswers());
-			Hibernate.initialize(participant.getCrcsSet());
-			Hibernate.initialize(participant.getProviders());
-			participant.getCrcsSet().forEach(crc -> Hibernate.initialize(crc.getNotifications()));
-			participant.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
+			initializeNestedParticipantCollections(participant, visitedParticipantIds);
 		} else if (user instanceof Provider provider) {
 			Hibernate.initialize(provider.getPatients());
-			provider.getPatients().forEach(patient -> {
-				Hibernate.initialize(patient.getNotifications());
-				Hibernate.initialize(patient.getReports());
-				Hibernate.initialize(patient.getOtherDocuments());
-				Hibernate.initialize(patient.getQuestionAnswers());
-				Hibernate.initialize(patient.getCrcsSet());
-				Hibernate.initialize(patient.getProviders());
-				patient.getCrcsSet().forEach(crc -> Hibernate.initialize(crc.getNotifications()));
-				patient.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
-			});
+			provider.getPatients()
+					.forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		} else if (user instanceof CRC crc) {
 			Hibernate.initialize(crc.getPatients());
-			crc.getPatients().forEach(patient -> {
-				Hibernate.initialize(patient.getNotifications());
-				Hibernate.initialize(patient.getReports());
-				Hibernate.initialize(patient.getOtherDocuments());
-				Hibernate.initialize(patient.getQuestionAnswers());
-				Hibernate.initialize(patient.getCrcsSet());
-				Hibernate.initialize(patient.getProviders());
-				patient.getCrcsSet().forEach(c -> Hibernate.initialize(c.getNotifications()));
-				patient.getProviders().forEach(p -> Hibernate.initialize(p.getNotifications()));
-			});
+			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		}
+	}
+
+	/**
+	 * Eagerly loads lazy associations on a {@link Participant} (and nested CRC/Provider graphs) so
+	 * Dozer can map outside a Hibernate session ({@code spring.jpa.open-in-view=false}).
+	 * {@code visitedParticipantIds} prevents infinite recursion on cyclic associations.
+	 */
+	private void initializeNestedParticipantCollections(Participant participant, Set<Long> visitedParticipantIds) {
+		if (participant == null || participant.getUserId() == null
+				|| !visitedParticipantIds.add(participant.getUserId())) {
+			return;
+		}
+		Hibernate.initialize(participant.getNotifications());
+		Hibernate.initialize(participant.getReports());
+		participant.getReports().forEach(report -> Hibernate.initialize(report.getViewedBy()));
+		Hibernate.initialize(participant.getOtherDocuments());
+		participant.getOtherDocuments().forEach(doc -> Hibernate.initialize(doc.getViewedBy()));
+		Hibernate.initialize(participant.getQuestionAnswers());
+		Hibernate.initialize(participant.getCrcsSet());
+		Hibernate.initialize(participant.getProviders());
+		participant.getCrcsSet().forEach(crc -> {
+			Hibernate.initialize(crc.getNotifications());
+			Hibernate.initialize(crc.getPatients());
+			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		});
+		participant.getProviders().forEach(provider -> {
+			Hibernate.initialize(provider.getNotifications());
+			Hibernate.initialize(provider.getPatients());
+			provider.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		});
 	}
 
 }
