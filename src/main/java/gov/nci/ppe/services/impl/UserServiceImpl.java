@@ -423,6 +423,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
@@ -431,8 +432,9 @@ public class UserServiceImpl implements UserService {
 
 		Participant participant = (Participant) participantOptional.get();
 
-		/* Get the UserId for CRC */
-		Optional<User> crcOptional = findByUuid(uuid);
+		/* Last-revised user: only need CRC id; avoid findByUuid() here (self-invocation skips @Transactional and
+		 * updateAssociatedPatientRecords would touch lazy CRC.patients without a session). */
+		Optional<User> crcOptional = userRepository.findByUserUUID(uuid);
 		if (crcOptional.isPresent()) {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
 			participant.setLastRevisedDate(LocalDateTime.now());
