@@ -30,6 +30,7 @@ import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.FileMetadataRepository;
+import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.impl.FileServiceImpl;
 
 @ActiveProfiles("unittest")
@@ -44,6 +45,9 @@ public class FileServiceTest {
 
 	@Mock
 	private FileMetadataRepository mockFileMetadataRepo;
+
+	@Mock
+	private UserRepository mockUserRepository;
 
 	@BeforeEach
 	public void initMocks() {
@@ -68,13 +72,18 @@ public class FileServiceTest {
 	@Test
 	public void testMarkReportAsViewed() {
 		FileMetadata fileMetadata = new FileMetadata();
+		fileMetadata.setFileMetadataId(42L);
 		User user = new User();
 		user.setUserId(1L);
+		Mockito.when(mockFileMetadataRepo.findById(42L)).thenReturn(Optional.of(fileMetadata));
+		Mockito.when(mockUserRepository.findById(1L)).thenReturn(Optional.of(user));
 		Mockito.when(mockFileMetadataRepo.save(fileMetadata)).thenReturn(fileMetadata);
 
 		FileMetadata result = fileService.markReportAsViewed(fileMetadata, user);
 
 		assertNotNull(result);
+		Mockito.verify(mockFileMetadataRepo).findById(42L);
+		Mockito.verify(mockUserRepository).findById(1L);
 		Mockito.verify(mockFileMetadataRepo).save(fileMetadata);
 		assertTrue(result.getViewedBy().contains(user));
 	}

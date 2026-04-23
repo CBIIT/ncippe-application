@@ -5,14 +5,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import gov.nci.ppe.data.entity.Code;
 import gov.nci.ppe.data.entity.FileMetadata;
 import gov.nci.ppe.data.entity.Participant;
 import gov.nci.ppe.data.entity.User;
 import gov.nci.ppe.data.repository.FileMetadataRepository;
+import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.services.FileService;
 
 /**
@@ -28,6 +31,9 @@ public class FileServiceImpl implements FileService {
 
 	@Autowired
 	FileMetadataRepository fileMetadataRepo;
+
+	@Autowired
+	UserRepository userRepository;
 
 	/**
 	 * {@inheritDoc}
@@ -52,19 +58,41 @@ public class FileServiceImpl implements FileService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<FileMetadata> getFileByFileGUID(String fileGUID) {
-		return fileMetadataRepo.findByFileGUID(fileGUID);
+		return fileMetadataRepo.findByFileGUID(fileGUID).map(fm -> {
+			if (fm.getFileType() != null) {
+				Hibernate.initialize(fm.getFileType());
+			}
+			if (fm.getParticipant() != null) {
+				Hibernate.initialize(fm.getParticipant());
+			}
+			return fm;
+		});
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public FileMetadata markReportAsViewed(FileMetadata fileMetadata, User user) {
-		if (!fileMetadata.getViewedBy().contains(user)) {
-			fileMetadata.getViewedBy().add(user);
+		FileMetadata managed = fileMetadataRepo.findById(fileMetadata.getFileMetadataId())
+				.orElseThrow(() -> new IllegalArgumentException("FileMetadata not found"));
+		User managedViewer = userRepository.findById(user.getUserId())
+				.orElseThrow(() -> new IllegalArgumentException("User not found"));
+		if (!managed.getViewedBy().contains(managedViewer)) {
+			managed.getViewedBy().add(managedViewer);
 		}
-		return fileMetadataRepo.save(fileMetadata);
+		FileMetadata saved = fileMetadataRepo.save(managed);
+		if (saved.getFileType() != null) {
+			Hibernate.initialize(saved.getFileType());
+		}
+		if (saved.getParticipant() != null) {
+			Hibernate.initialize(saved.getParticipant());
+		}
+		Hibernate.initialize(saved.getViewedBy());
+		return saved;
 	}
 
 	/**

@@ -443,7 +443,9 @@ public class UserServiceImpl implements UserService {
 		participant.setPortalAccountStatus(portalAccountStatusCode);
 
 		participantOptional = Optional.of(userRepository.save(participant));
-		log.info("Participant details after updating the status to INITIATED {}", participantOptional.get().toString());
+		Participant savedParticipant = (Participant) participantOptional.get();
+		log.info("Participant after status INITIATED: patientId={}, userId={}",
+				savedParticipant.getPatientId(), savedParticipant.getUserId());
 
 		if(participant.getEmail() != null && !participant.getEmail().isEmpty()){
 			log.info("inside participant check line 424");
@@ -568,6 +570,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO) {
 
 		raiseOpenInsertAuditEvent(openResponseDTO);
@@ -835,7 +838,8 @@ public class UserServiceImpl implements UserService {
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
 		provider.setPreferredLanguage(LanguageOption.ENGLISH);
-		log.info("Provider with Basic Details is {}", provider.toString());
+		log.info("Provider with basic details: openCtepID={}, email={}, firstName={}, lastName={}",
+				provider.getOpenCtepID(), provider.getEmail(), provider.getFirstName(), provider.getLastName());
 		return provider;
 	}
 
@@ -935,6 +939,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public void generateUnreadReportReminderNotification(int daysUnread) {
 		LocalDate today = LocalDate.now();
 

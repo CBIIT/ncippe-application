@@ -2,6 +2,7 @@ package gov.nci.ppe.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,9 +73,14 @@ public class PrivateApiController {
 		logger.info("Initiate Insert from Open");
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
 
+		List<User> usersForJson = new ArrayList<>(newUsersList.size());
+		for (User u : newUsersList) {
+			usersForJson.add(userService.prepareUserForDetailSerialization(Optional.of(u)).orElse(u));
+		}
+
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-		String jsonFormat = convertUsersToJSON(newUsersList);
+		String jsonFormat = convertUsersToJSON(usersForJson);
 		logger.info("OPEN Insertion complete");
         // System.out.println("MHL convertUsersToJSON: " + jsonFormat);
 
