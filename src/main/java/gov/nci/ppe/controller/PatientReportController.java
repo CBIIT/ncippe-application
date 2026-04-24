@@ -96,7 +96,7 @@ public class PatientReportController {
 	 *         success response if file has been stored successfully
 	 */
 	@PostMapping(value = "/api/patientReport")
-	@Operation(summary = "Uploads a File andd associates it with the participant")
+	@Operation(summary = "Uploads a File and associates it with the participant")
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Patient Report uploaded"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
 			@ApiResponse(responseCode = "400", description = "Uploaded File is empty") })

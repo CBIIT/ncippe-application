@@ -308,7 +308,7 @@ public class NotificationController {
 	 */
 	@Operation(summary = "Send message to all users of specified type(s)")
 	@ApiResponses({
-			@ApiResponse(responseCode = "201", description = "Message succesfully sent"),
+			@ApiResponse(responseCode = "201", description = "Message successfully sent"),
 			@ApiResponse(responseCode = "404", description = "Requesting User not found"),
 			@ApiResponse(responseCode = "400", description = "Invalid Request"),
 			@ApiResponse(responseCode = "403", description = "Not Authorized to send messages") })

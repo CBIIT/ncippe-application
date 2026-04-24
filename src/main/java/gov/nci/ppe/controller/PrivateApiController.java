@@ -65,7 +65,7 @@ public class PrivateApiController {
 	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
-	@Operation(summary = "Insert the patient details from OPEN if it doesn't exisit in PPE")
+	@Operation(summary = "Insert the patient details from OPEN if it doesn't exist in PPE")
 	@PostMapping(value = "/privateapi/v1/user/insert-open-data", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> insertDataFromOpen(
 			@Parameter(description = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
