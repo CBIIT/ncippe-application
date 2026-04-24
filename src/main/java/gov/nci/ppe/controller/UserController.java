@@ -244,6 +244,10 @@ public class UserController {
 		}
 
 		Optional<User> userOptional = userService.deactivateUserPortalAccountStatus(userUUID);
+		if (!userOptional.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+		}
 		String jsonFormat = convertUserToJSON(userOptional.get());
 		return new ResponseEntity<>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
@@ -599,6 +603,10 @@ public class UserController {
 		}
 		try {
 			Optional<User> updatedUserOpt = userService.updatePatientEmail(patientId, email, requestingUserUUID);
+			if (!updatedUserOpt.isPresent()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(messageSource.getMessage(HttpResponseConstants.NO_USER_FOUND_MSG, null, locale));
+			}
 			String userJson = convertUserToJSON(updatedUserOpt.get());
 			return new ResponseEntity<>(userJson, httpHeaders, HttpStatus.OK);
 		} catch (BusinessConstraintViolationException ex) {

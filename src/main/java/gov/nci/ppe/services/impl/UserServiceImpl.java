@@ -272,6 +272,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> deactivateUserPortalAccountStatus(String userUUID) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userUUID);
 		if (!userOptional.isPresent()) {

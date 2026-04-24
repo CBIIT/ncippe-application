@@ -14,14 +14,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.net.URI;
-import java.util.Base64;
-import java.util.Enumeration;
 import java.util.Map;
-import java.util.Optional;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api")
 public class LogoutController {
+
+    private static final Logger logger = Logger.getLogger(LogoutController.class.getName());
 
     @Value("${spring.security.oauth2.client.registration.logingov.client-id}")
     private String clientId;
@@ -45,17 +45,7 @@ public class LogoutController {
 
     @PostMapping("/logout-sts")
     public ResponseEntity<Void> logoutSTS(@RequestBody Map<String, String> body, HttpServletRequest request) {
-        // --- Debugging Incoming Request Headers ---
-        System.out.println("--- Incoming Request Headers for /api/logout/full ---");
-        // retrieve the id_token from the request body
         String idToken = body.get("id_token");
-
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            System.out.println(headerName + ": " + request.getHeader(headerName));
-        }
-        System.out.println("------------------------------------------------------");
 
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -65,17 +55,7 @@ public class LogoutController {
         // --- Back-Channel Logout to OIDC Provider (secure, server-side) ---
         HttpHeaders oidcHeaders = new HttpHeaders();
         oidcHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        String credentials = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
-        System.out.println("credentials: " + credentials);
-        //oidcHeaders.setBasicAuth(credentials);
         oidcHeaders.setBasicAuth(clientId, clientSecret);
-
-//        Enumeration<String> oidcheaderNames = (Enumeration<String>) oidcHeaders;
-//        while (oidcheaderNames.hasMoreElements()) {
-//            String oidcheaderName = oidcheaderNames.nextElement();
-//            System.out.println(oidcheaderName );
-//        }
-//        System.out.println("------------------------------------------------------");
 
         MultiValueMap<String, String> oidcForm = new LinkedMultiValueMap<>();
         if (idToken != null) {
@@ -85,25 +65,11 @@ public class LogoutController {
         HttpEntity<MultiValueMap<String, String>> oidcRequest = new HttpEntity<>(oidcForm, oidcHeaders);
 
         try {
-            // This is the explicit call to the oidcEndSessionEndpoint
-            restTemplate.exchange(
-                    logoutUrl,
-                    HttpMethod.POST,
-                    oidcRequest,
-                    String.class
-            );
-            System.out.println("Back-channel OIDC logout call successful.");
+            restTemplate.exchange(logoutUrl, HttpMethod.POST, oidcRequest, String.class);
+            logger.info("Back-channel OIDC logout call successful.");
         } catch (Exception e) {
-            System.err.println("Error during back-channel OIDC logout: " + e.getMessage());
-            // Log the error but continue with the front-channel logout
+            logger.warning("Error during back-channel OIDC logout: " + e.getMessage());
         }
-
-        // --- Placeholder for making the back-channel POST call ---
-        // You would use RestTemplate or WebClient here to make the call.
-        // For example:
-        // HttpEntity<MultiValueMap<String, String>> oidcRequest = new HttpEntity<>(oidcForm, oidcHeaders);
-        // restTemplate.exchange(oidcEndSessionEndpoint, HttpMethod.POST, oidcRequest, String.class);
-        // We'll assume this call is successful.
 
         // --- Front-Channel Logout to SiteMinder (triggers browser redirect) ---
         String ssoLogoutTarget = UriComponentsBuilder.fromUriString(postLogoutSMSessionUrl)
@@ -115,43 +81,6 @@ public class LogoutController {
         redirectHeaders.setLocation(URI.create(ssoLogoutTarget));
 
         return new ResponseEntity<>(redirectHeaders, HttpStatus.FOUND);
-
-//        String idToken = body.get("id_token");
-//        if (idToken == null || idToken.isBlank()) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//        headers.setBasicAuth(clientId, clientSecret);
-//
-//        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-//        form.add("id_token", idToken);
-//
-//        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(form, headers);
-//
-//        try {
-//            ResponseEntity<String> stsResponse = restTemplate.exchange(
-//                    logoutUrl,
-//                    HttpMethod.POST,
-//                    requestEntity,
-//                    String.class
-//            );
-//
-//            // Always redirect to the frontend's signout landing page
-////            HttpHeaders redirectHeaders = new HttpHeaders();
-////            String finalRedirectUri = UriComponentsBuilder.fromUriString(postLogoutRedirectUri)
-////                    .queryParam("post_logout", "true")
-////                    .build()
-////                    .toUriString();
-////            redirectHeaders.setLocation(URI.create(finalRedirectUri ));
-////            return new ResponseEntity<>(redirectHeaders, HttpStatus.FOUND);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-//        return ResponseEntity.ok().build();
     }
 }
 
