@@ -329,7 +329,13 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(readOnly = true)
 	public Optional<User> findActiveParticipantByPatientId(String patientId) {
-		return participantRepository.findByPatientIdAndIsActiveBiobankParticipantTrue(patientId);
+		Optional<User> result = participantRepository.findByPatientIdAndIsActiveBiobankParticipantTrue(patientId);
+		result.ifPresent(u -> {
+			Participant p = (Participant) u;
+			Hibernate.initialize(p.getProviders());
+			Hibernate.initialize(p.getCrcsSet());
+		});
+		return result;
 	}
 
 	/**
@@ -342,7 +348,7 @@ public class UserServiceImpl implements UserService {
 		Participant withdrawnPatient = (Participant) userOptional.get();
 		Set<CRC> crcforPatientSet = withdrawnPatient.getCrcsSet();
 		StringBuilder questionAnswers = new StringBuilder();
-		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
+		qsAnsList.forEach(qs -> {
 			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
 					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
