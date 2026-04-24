@@ -30,12 +30,14 @@ public class WebSecurityConfig {
 	@Bean
 	@Profile("!local-no-auth")
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		// Spring Boot 2.7 → Spring Security 5.7: authorizeHttpRequests().requestMatchers(String...)
+		// is not available (RequestMatcher-only overload). Use antMatchers until Spring Boot 3 / Security 6.
 		http.cors().and().csrf().disable()
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/", "/publicapi/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
-						.requestMatchers(HttpMethod.POST, "/privateapi/v1/user/insert-open-data").permitAll()
-						.requestMatchers(HttpMethod.POST, "/privateapi/v1/send-reminder").permitAll()
+						.antMatchers("/", "/publicapi/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+						.antMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
+						.antMatchers(HttpMethod.POST, "/privateapi/v1/user/insert-open-data").permitAll()
+						.antMatchers(HttpMethod.POST, "/privateapi/v1/send-reminder").permitAll()
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt());
 		return http.build();
