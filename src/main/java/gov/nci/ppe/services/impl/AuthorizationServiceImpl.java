@@ -128,6 +128,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	 * 
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public boolean authorize(String requestingUserUUID, String targetUUID) {
 		Optional<User> targetUserOptional = userService.findByUuid(targetUUID);
 		if (targetUserOptional.isEmpty()) {

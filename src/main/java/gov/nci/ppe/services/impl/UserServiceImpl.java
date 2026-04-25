@@ -346,7 +346,7 @@ public class UserServiceImpl implements UserService {
 			List<QuestionAnswer> qsAnsList) {
 		Optional<User> userOptional = withdrawParticipationFromBiobankProgram(patient, qsAnsList);
 		Participant withdrawnPatient = (Participant) userOptional.get();
-		Set<CRC> crcforPatientSet = withdrawnPatient.getCrcsSet();
+		Set<CRC> crcforPatientSet = patient.getCrcsSet();
 		StringBuilder questionAnswers = new StringBuilder();
 		qsAnsList.forEach(qs -> {
 			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
@@ -1141,11 +1141,9 @@ public class UserServiceImpl implements UserService {
 		if (user instanceof Participant participant) {
 			initializeNestedParticipantCollections(participant, visitedParticipantIds);
 		} else if (user instanceof Provider provider) {
-			Hibernate.initialize(provider.getPatients());
 			provider.getPatients()
 					.forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		} else if (user instanceof CRC crc) {
-			Hibernate.initialize(crc.getPatients());
 			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		}
 	}
@@ -1161,21 +1159,15 @@ public class UserServiceImpl implements UserService {
 			return;
 		}
 		Hibernate.initialize(participant.getNotifications());
-		Hibernate.initialize(participant.getReports());
 		participant.getReports().forEach(report -> Hibernate.initialize(report.getViewedBy()));
-		Hibernate.initialize(participant.getOtherDocuments());
 		participant.getOtherDocuments().forEach(doc -> Hibernate.initialize(doc.getViewedBy()));
 		Hibernate.initialize(participant.getQuestionAnswers());
-		Hibernate.initialize(participant.getCrcsSet());
-		Hibernate.initialize(participant.getProviders());
 		participant.getCrcsSet().forEach(crc -> {
 			Hibernate.initialize(crc.getNotifications());
-			Hibernate.initialize(crc.getPatients());
 			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		});
 		participant.getProviders().forEach(provider -> {
 			Hibernate.initialize(provider.getNotifications());
-			Hibernate.initialize(provider.getPatients());
 			provider.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
 		});
 	}
