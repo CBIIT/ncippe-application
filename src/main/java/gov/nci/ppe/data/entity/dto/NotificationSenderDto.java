@@ -1,7 +1,6 @@
 package gov.nci.ppe.data.entity.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -15,18 +14,18 @@ import lombok.Data;
  *
  */
 @Data
-@ApiModel(value = "Sender of the Notification")
+@Schema(description = "Sender of the Notification")
 public class NotificationSenderDto {
 
-	@ApiModelProperty(value = "Sender UUID")
+	@Schema(description = "Sender UUID")
 	private String userUUID;
 
-	@ApiModelProperty(value = "First name of sender")
+	@Schema(description = "First name of sender")
 	private String firstName;
 
-	@ApiModelProperty(value = "Last name of sender")
+	@Schema(description = "Last name of sender")
 	private String lastName;
 
-	@ApiModelProperty(value = "Email of sender")
+	@Schema(description = "Email of sender")
 	private String email;
 }

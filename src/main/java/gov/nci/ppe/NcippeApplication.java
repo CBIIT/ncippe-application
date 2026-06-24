@@ -1,34 +1,23 @@
 package gov.nci.ppe;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collections;
-
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
-
 import org.springframework.web.client.RestTemplate;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 
 /**
- * 
+ *
  * @author debsarka0
  *
  */
 @SpringBootApplication
 @Configuration
-@EnableSwagger2
 public class NcippeApplication {
 
 	public static void main(String[] args) {
@@ -36,19 +25,17 @@ public class NcippeApplication {
 	}
 
 	@Bean
-	public Docket api() throws FileNotFoundException, IOException, XmlPullParserException {
-        System.out.println("MHL TEST 000");
-		return new Docket(DocumentationType.SWAGGER_2).select()
-		.apis(RequestHandlerSelectors.basePackage("gov.nci.ppe.controller")).paths(PathSelectors.any())
-		.build().apiInfo(new ApiInfo("NCI PPE Api Documentation", "Documentation automatically generated", "1.0",
-				null, new Contact("", "", ""), null, null,  Collections.emptyList()));
-
+	public OpenAPI ncippeOpenAPI() {
+		return new OpenAPI()
+			.info(new Info()
+				.title("NCI PPE API Documentation")
+				.description("Documentation automatically generated")
+				.version("1.0"));
 	}
 
 	@Bean
 	public MessageSource messageSource() {
-        System.out.println("MHL TEST 001");
-        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
 		messageSource.setBasenames("messages/errors/error", "messages/emails/email");
 		return messageSource;
 	}

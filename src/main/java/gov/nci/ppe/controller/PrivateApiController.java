@@ -2,6 +2,7 @@ package gov.nci.ppe.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +39,8 @@ import gov.nci.ppe.data.entity.dto.ProviderDTO;
 import gov.nci.ppe.data.entity.dto.UserDTO;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.services.UserService;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 public class PrivateApiController {
@@ -64,19 +65,24 @@ public class PrivateApiController {
 	 * @return - HTTP Response with appropriate message.
 	 * @throws JsonProcessingException
 	 */
-	@ApiOperation(value = "Insert the patient details from OPEN if it doesn't exisit in PPE")
+	@Operation(summary = "Insert the patient details from OPEN if it doesn't exist in PPE")
 	@PostMapping(value = "/privateapi/v1/user/insert-open-data", produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<String> insertDataFromOpen(
-			@ApiParam(value = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
+			@Parameter(description = "JSON Response from OPEN containing patient details", required = true) @RequestBody OpenResponseDTO openResponseDTO)
 			throws JsonProcessingException {
 		logger.info("Initiate Insert from Open");
 		List<User> newUsersList = userService.insertDataFetchedFromOpen(openResponseDTO);
 
+		List<User> usersForJson = new ArrayList<>(newUsersList.size());
+		for (User u : newUsersList) {
+			usersForJson.add(userService.prepareUserForDetailSerialization(Optional.of(u)).orElse(u));
+		}
+
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-		String jsonFormat = convertUsersToJSON(newUsersList);
+		String jsonFormat = convertUsersToJSON(usersForJson);
 		logger.info("OPEN Insertion complete");
-        System.out.println("MHL convertUsersToJSON: " + jsonFormat);
+        // System.out.println("MHL convertUsersToJSON: " + jsonFormat);
 
         return new ResponseEntity<String>(jsonFormat, httpHeaders, HttpStatus.OK);
 	}
@@ -89,10 +95,10 @@ public class PrivateApiController {
 	 * 
 	 * @return
 	 */
-	@ApiOperation(value = "Generate System Notification and Email to remind Users who have not read a Biomarker report for the specified number of days.")
+	@Operation(summary = "Generate System Notification and Email to remind Users who have not read a Biomarker report for the specified number of days.")
 	@PostMapping(value = "/privateapi/v1/send-reminder", produces = { MediaType.TEXT_PLAIN_VALUE })
 	public ResponseEntity<String> generateUnreadReportReminderNotification(
-			@ApiParam(value = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
+			@Parameter(description = "Number of days passed since unread report was generated.") @RequestParam(value = "daysUnread", required = true) int daysUnread) {
 		logger.info("Unread Report Reminder for " + daysUnread + " days.");
 		userService.generateUnreadReportReminderNotification(daysUnread);
 		return ResponseEntity.ok().body(messageSource.getMessage(HttpResponseConstants.NOTIFICATION_GENERATED, null,

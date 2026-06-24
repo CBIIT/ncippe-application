@@ -12,8 +12,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +44,7 @@ import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.exception.BusinessConstraintViolationException;
+import gov.nci.ppe.exception.UuidConflictException;
 import gov.nci.ppe.open.data.entity.dto.OpenResponseDTO;
 import gov.nci.ppe.open.data.entity.dto.UserEnrollmentDataDTO;
 import gov.nci.ppe.services.AuditService;
@@ -121,6 +124,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Optional<User> findByUuid(String userGuid) {
 		Optional<User> optionalUser = userRepository.findByUserUUID(userGuid);
 		return updateAssociatedPatientRecords(optionalUser);
@@ -156,6 +160,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<User> findUserById(Long userId) {
 		return userRepository.findById(userId);
 	}
@@ -227,6 +232,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Optional<User> findByUuidAndPortalAccountStatus(String userGuid, List<String> accountStatusList) {
 		List<Code> accountStatusCodeList = convertToCode(accountStatusList);
 		Optional<User> optionalUser = userRepository.findByUserUUIDAndPortalAccountStatusIn(userGuid,
@@ -266,6 +272,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> deactivateUserPortalAccountStatus(String userUUID) {
 		Optional<User> userOptional = userRepository.findByUserUUID(userUUID);
 		if (!userOptional.isPresent()) {
@@ -301,6 +308,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> findByEmailAndPortalAccountStatus(String email, List<String> validAccountStatusList) {
 		List<Code> accountStatusCodeList = convertToCode(validAccountStatusList);
 		Optional<User> optionalUser = userRepository.findByEmailAndPortalAccountStatusIn(email, accountStatusCodeList);
@@ -319,8 +327,15 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Optional<User> findActiveParticipantByPatientId(String patientId) {
-		return participantRepository.findByPatientIdAndIsActiveBiobankParticipantTrue(patientId);
+		Optional<User> result = participantRepository.findByPatientIdAndIsActiveBiobankParticipantTrue(patientId);
+		result.ifPresent(u -> {
+			Participant p = (Participant) u;
+			Hibernate.initialize(p.getProviders());
+			Hibernate.initialize(p.getCrcsSet());
+		});
+		return result;
 	}
 
 	/**
@@ -331,9 +346,9 @@ public class UserServiceImpl implements UserService {
 			List<QuestionAnswer> qsAnsList) {
 		Optional<User> userOptional = withdrawParticipationFromBiobankProgram(patient, qsAnsList);
 		Participant withdrawnPatient = (Participant) userOptional.get();
-		Set<CRC> crcforPatientSet = withdrawnPatient.getCrcsSet();
+		Set<CRC> crcforPatientSet = patient.getCrcsSet();
 		StringBuilder questionAnswers = new StringBuilder();
-		withdrawnPatient.getQuestionAnswers().forEach(qs -> {
+		qsAnsList.forEach(qs -> {
 			questionAnswers.append("\u2022").append(" ").append(qs.getQuestion()).append(" : ")
 					.append(qs.getAnswer() == null ? "No response provided" : qs.getAnswer()).append("<br/>");
 		});
@@ -415,6 +430,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public Optional<User> invitePatientToPortal(String patientId, String uuid) throws JsonProcessingException {
 		Optional<User> participantOptional = findActiveParticipantByPatientId(patientId);
 		if (participantOptional.isEmpty()) {
@@ -423,8 +439,9 @@ public class UserServiceImpl implements UserService {
 
 		Participant participant = (Participant) participantOptional.get();
 
-		/* Get the UserId for CRC */
-		Optional<User> crcOptional = findByUuid(uuid);
+		/* Last-revised user: only need CRC id; avoid findByUuid() here (self-invocation skips @Transactional and
+		 * updateAssociatedPatientRecords would touch lazy CRC.patients without a session). */
+		Optional<User> crcOptional = userRepository.findByUserUUID(uuid);
 		if (crcOptional.isPresent()) {
 			participant.setLastRevisedUser(crcOptional.get().getUserId());
 			participant.setLastRevisedDate(LocalDateTime.now());
@@ -435,7 +452,9 @@ public class UserServiceImpl implements UserService {
 		participant.setPortalAccountStatus(portalAccountStatusCode);
 
 		participantOptional = Optional.of(userRepository.save(participant));
-		log.info("Participant details after updating the status to INITIATED {}", participantOptional.get().toString());
+		Participant savedParticipant = (Participant) participantOptional.get();
+		log.info("Participant after status INITIATED: patientId={}, userId={}",
+				savedParticipant.getPatientId(), savedParticipant.getUserId());
 
 		if(participant.getEmail() != null && !participant.getEmail().isEmpty()){
 			log.info("inside participant check line 424");
@@ -560,6 +579,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional
 	public List<User> insertDataFetchedFromOpen(OpenResponseDTO openResponseDTO) {
 
 		raiseOpenInsertAuditEvent(openResponseDTO);
@@ -827,7 +847,8 @@ public class UserServiceImpl implements UserService {
 		provider.setPhoneNumber(formatPhoneNumber(phone));
 		provider.setEmail(email);
 		provider.setPreferredLanguage(LanguageOption.ENGLISH);
-		log.info("Provider with Basic Details is {}", provider.toString());
+		log.info("Provider with basic details: openCtepID={}, email={}, firstName={}, lastName={}",
+				provider.getOpenCtepID(), provider.getEmail(), provider.getFirstName(), provider.getLastName());
 		return provider;
 	}
 
@@ -927,6 +948,7 @@ public class UserServiceImpl implements UserService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public void generateUnreadReportReminderNotification(int daysUnread) {
 		LocalDate today = LocalDate.now();
 
@@ -1063,6 +1085,91 @@ public class UserServiceImpl implements UserService {
 		} catch (JsonProcessingException e) {
 			log.warn(e.getMessage());
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional
+	public Optional<User> loginUser(String uuid, String email) {
+		List<String> activeStatusList = List.of(PortalAccountStatus.ACCT_ACTIVE.name());
+		Optional<User> userOptional = findByUuidAndPortalAccountStatus(uuid, activeStatusList);
+
+		if (userOptional.isEmpty()) {
+			userOptional = activateUser(email, uuid);
+			if (userOptional.isEmpty()) {
+				return Optional.empty();
+			}
+			if (!userOptional.get().getUserUUID().equalsIgnoreCase(uuid)) {
+				throw new UuidConflictException(uuid);
+			}
+		}
+
+		userOptional = synchronizeUserEmailWithLogin(userOptional.get(), uuid, email);
+		User user = userOptional.get();
+		initializeLazyCollections(user);
+		return Optional.of(user);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<User> prepareUserForDetailSerialization(Optional<User> candidate) {
+		if (candidate.isEmpty()) {
+			return candidate;
+		}
+		Long userId = candidate.get().getUserId();
+		if (userId == null) {
+			return candidate;
+		}
+		Optional<User> reloaded = userRepository.findById(userId);
+		if (reloaded.isEmpty()) {
+			return Optional.empty();
+		}
+		User user = reloaded.get();
+		updateAssociatedPatientRecords(Optional.of(user));
+		initializeLazyCollections(user);
+		return Optional.of(user);
+	}
+
+	private void initializeLazyCollections(User user) {
+		Hibernate.initialize(user.getNotifications());
+		Set<Long> visitedParticipantIds = new HashSet<>();
+		if (user instanceof Participant participant) {
+			initializeNestedParticipantCollections(participant, visitedParticipantIds);
+		} else if (user instanceof Provider provider) {
+			provider.getPatients()
+					.forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		} else if (user instanceof CRC crc) {
+			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		}
+	}
+
+	/**
+	 * Eagerly loads lazy associations on a {@link Participant} (and nested CRC/Provider graphs) so
+	 * Dozer can map outside a Hibernate session ({@code spring.jpa.open-in-view=false}).
+	 * {@code visitedParticipantIds} prevents infinite recursion on cyclic associations.
+	 */
+	private void initializeNestedParticipantCollections(Participant participant, Set<Long> visitedParticipantIds) {
+		if (participant == null || participant.getUserId() == null
+				|| !visitedParticipantIds.add(participant.getUserId())) {
+			return;
+		}
+		Hibernate.initialize(participant.getNotifications());
+		participant.getReports().forEach(report -> Hibernate.initialize(report.getViewedBy()));
+		participant.getOtherDocuments().forEach(doc -> Hibernate.initialize(doc.getViewedBy()));
+		Hibernate.initialize(participant.getQuestionAnswers());
+		participant.getCrcsSet().forEach(crc -> {
+			Hibernate.initialize(crc.getNotifications());
+			crc.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		});
+		participant.getProviders().forEach(provider -> {
+			Hibernate.initialize(provider.getNotifications());
+			provider.getPatients().forEach(p -> initializeNestedParticipantCollections(p, visitedParticipantIds));
+		});
 	}
 
 }

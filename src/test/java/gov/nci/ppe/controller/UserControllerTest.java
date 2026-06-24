@@ -4,8 +4,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -41,7 +44,7 @@ import lombok.SneakyThrows;
 
 /**
  * Unit Test class for {@link UserController}
- * 
+ *
  * @author PublicisSapient
  *
  * @version 2.6
@@ -69,6 +72,12 @@ public class UserControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@BeforeEach
+	void stubPrepareUserForSerialization() {
+		lenient().when(mockUserService.prepareUserForDetailSerialization(any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+	}
 
 	private final String requestingUserUUID = UUID.randomUUID().toString();
 	private final String targetUserUUID = UUID.randomUUID().toString();
@@ -99,9 +108,10 @@ public class UserControllerTest {
 		try {
 			when(mockDozerBeanMapper.map(any(Participant.class), eq(ParticipantDTO.class))).thenReturn(expectedUser);
 			mockMvc.perform(
-					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
-							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, targetUserUUID)
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+							.param("requestingUserUUID", requestingUserUUID)
+							.contentType(MediaType.TEXT_PLAIN_VALUE))
 					.andExpect(status().isOk()).andExpect(jsonPath("$.uuid", is(targetUserUUID)));
 		} catch (Exception ex) {
 			fail(ex.getMessage());
@@ -117,9 +127,10 @@ public class UserControllerTest {
 		when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(false);
 		try {
 			mockMvc.perform(
-					post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
-							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-							.header(CommonConstants.HEADER_UUID, requestingUserUUID))
+					post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
+							.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+							.param("requestingUserUUID", requestingUserUUID)
+							.contentType(MediaType.TEXT_PLAIN_VALUE))
 					.andExpect(status().isForbidden());
 			verify(mockAuthorizationService).authorize(requestingUserUUID, pa);
 		} catch (Exception ex) {
@@ -138,9 +149,10 @@ public class UserControllerTest {
 			when(mockAuthorizationService.authorize(requestingUserUUID, pa)).thenReturn(true);
 			when(mockUserService.updatePatientEmail(patientId, newEmail, requestingUserUUID))
 					.thenThrow(new BusinessConstraintViolationException("error"));
-			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
-					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail).contentType(MediaType.TEXT_PLAIN_VALUE)
-					.header(CommonConstants.HEADER_UUID, requestingUserUUID)).andExpect(status().isConflict());
+			mockMvc.perform(post(UrlConstants.URL_USER_UPDATE_EMAIL).with(jwt()).param(UrlConstants.REQ_PARAM_PATIENT_ID, patientId)
+					.param(UrlConstants.REQ_PARAM_EMAIL, newEmail)
+					.param("requestingUserUUID", requestingUserUUID)
+					.contentType(MediaType.TEXT_PLAIN_VALUE)).andExpect(status().isConflict());
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}

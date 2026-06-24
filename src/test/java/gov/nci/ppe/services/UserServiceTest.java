@@ -4,10 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,6 +60,7 @@ import gov.nci.ppe.data.repository.QuestionAnswerRepository;
 import gov.nci.ppe.data.repository.RoleRepository;
 import gov.nci.ppe.data.repository.UserRepository;
 import gov.nci.ppe.exception.BusinessConstraintViolationException;
+import gov.nci.ppe.exception.UuidConflictException;
 import gov.nci.ppe.services.impl.UserServiceImpl;
 
 @ActiveProfiles("unittest")
@@ -379,6 +385,146 @@ public class UserServiceTest {
 		assertNotNull(updatedUser);
 		assertEquals(updatedUser.getEmail(), oldEmail);
 		verifyNoMoreInteractions(userRepository);
+	}
+
+	@Nested
+	@DisplayName("loginUser()")
+	class TestLoginUser {
+
+		private static final String LOGIN_UUID = "login-uuid-1234";
+		private static final String LOGIN_EMAIL = "user@example.com";
+		private static final String OTHER_EMAIL = "other@example.com";
+
+		private Code activeCode;
+
+		@BeforeEach
+		void setUpCodes() {
+			activeCode = new Code();
+			activeCode.setCodeName(PortalAccountStatus.ACCT_ACTIVE.name());
+			when(codeRepository.findByCodeNameIn(anyList())).thenReturn(List.of(activeCode));
+		}
+
+		@Test
+		@DisplayName("returns user when found active by UUID, email unchanged")
+		void loginUser_activeUserFound_emailUnchanged() {
+			User user = new User();
+			user.setUserUUID(LOGIN_UUID);
+			user.setEmail(LOGIN_EMAIL);
+			when(userRepository.findByUserUUIDAndPortalAccountStatusIn(eq(LOGIN_UUID), anyList()))
+					.thenReturn(Optional.of(user));
+
+			Optional<User> result = userService.loginUser(LOGIN_UUID, LOGIN_EMAIL);
+
+			assertTrue(result.isPresent());
+			assertEquals(LOGIN_EMAIL, result.get().getEmail());
+			verify(userRepository, never()).save(any());
+		}
+
+		@Test
+		@DisplayName("returns user with updated email when active user found and email changed")
+		void loginUser_activeUserFound_emailChanged() {
+			User user = new User();
+			user.setUserUUID(LOGIN_UUID);
+			user.setEmail(OTHER_EMAIL);
+			when(userRepository.findByUserUUIDAndPortalAccountStatusIn(eq(LOGIN_UUID), anyList()))
+					.thenReturn(Optional.of(user));
+			when(userRepository.save(user)).then(returnsFirstArg());
+
+			Optional<User> result = userService.loginUser(LOGIN_UUID, LOGIN_EMAIL);
+
+			assertTrue(result.isPresent());
+			assertEquals(LOGIN_EMAIL, result.get().getEmail());
+			verify(userRepository).save(user);
+		}
+
+		@Test
+		@DisplayName("activates and returns user when not found by UUID but found by email")
+		void loginUser_notFoundByUuid_activatedByEmail() {
+			User inactiveUser = new User();
+			inactiveUser.setUserUUID(null);
+			inactiveUser.setEmail(LOGIN_EMAIL);
+			when(userRepository.findByUserUUIDAndPortalAccountStatusIn(eq(LOGIN_UUID), anyList()))
+					.thenReturn(Optional.empty());
+			when(userRepository.findByEmail(LOGIN_EMAIL)).thenReturn(Optional.of(inactiveUser));
+			when(codeRepository.findByCodeName(PortalAccountStatus.ACCT_ACTIVE.name()))
+					.thenReturn(activeCode);
+			when(userRepository.save(inactiveUser)).then(returnsFirstArg());
+
+			Optional<User> result = userService.loginUser(LOGIN_UUID, LOGIN_EMAIL);
+
+			assertTrue(result.isPresent());
+			assertEquals(LOGIN_UUID, result.get().getUserUUID());
+		}
+
+		@Test
+		@DisplayName("returns empty when not found by UUID or email")
+		void loginUser_notFoundAnywhere() {
+			when(userRepository.findByUserUUIDAndPortalAccountStatusIn(eq(LOGIN_UUID), anyList()))
+					.thenReturn(Optional.empty());
+			when(userRepository.findByEmail(LOGIN_EMAIL)).thenReturn(Optional.empty());
+
+			Optional<User> result = userService.loginUser(LOGIN_UUID, LOGIN_EMAIL);
+
+			assertFalse(result.isPresent());
+		}
+
+		@Test
+		@DisplayName("throws UuidConflictException when email maps to user with different UUID")
+		void loginUser_emailMapsToUserWithDifferentUuid() {
+			User conflictingUser = new User();
+			conflictingUser.setUserUUID("different-uuid-9999");
+			conflictingUser.setEmail(LOGIN_EMAIL);
+			Code activeStatus = new Code();
+			activeStatus.setCodeName(PortalAccountStatus.ACCT_ACTIVE.name());
+			conflictingUser.setPortalAccountStatus(activeStatus);
+			when(userRepository.findByUserUUIDAndPortalAccountStatusIn(eq(LOGIN_UUID), anyList()))
+					.thenReturn(Optional.empty());
+			when(userRepository.findByEmail(LOGIN_EMAIL)).thenReturn(Optional.of(conflictingUser));
+
+			assertThrows(UuidConflictException.class,
+					() -> userService.loginUser(LOGIN_UUID, LOGIN_EMAIL));
+		}
+	}
+
+	@Nested
+	@DisplayName("prepareUserForDetailSerialization()")
+	class TestPrepareUserForDetailSerialization {
+
+		@Test
+		@DisplayName("returns empty when input is empty")
+		void empty_returnsEmpty() {
+			assertFalse(userService.prepareUserForDetailSerialization(Optional.empty()).isPresent());
+		}
+
+		@Test
+		@DisplayName("returns same user when userId is null without hitting repository")
+		void nullUserId_returnsCandidate() {
+			User u = new User();
+			Optional<User> result = userService.prepareUserForDetailSerialization(Optional.of(u));
+			assertTrue(result.isPresent());
+			assertSame(u, result.get());
+			verify(userRepository, never()).findById(any());
+		}
+
+		@Test
+		@DisplayName("reloads managed user by id and returns repository instance")
+		void reloadsById() {
+			User detached = new User();
+			detached.setUserId(42L);
+			Role role = new Role();
+			role.setRoleName(PPERole.ROLE_PPE_CONTENT_EDITOR.name());
+			detached.setRole(role);
+			User managed = new User();
+			managed.setUserId(42L);
+			managed.setRole(role);
+			when(userRepository.findById(42L)).thenReturn(Optional.of(managed));
+
+			Optional<User> result = userService.prepareUserForDetailSerialization(Optional.of(detached));
+
+			assertTrue(result.isPresent());
+			assertSame(managed, result.get());
+			verify(userRepository).findById(42L);
+		}
 	}
 
 }

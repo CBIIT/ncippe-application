@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,15 +41,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public boolean authorize(String requestingUserUUID, User user) {
-
-		log.info("MHL authorize7 requestingUserUUID: " + requestingUserUUID);
-		log.info("MHL authorize7 user.getUserUUID(): " + user.getUserUUID());
 
 		// Invalid request no username present
 		if (StringUtils.isBlank(requestingUserUUID)) {
 			log.error("No Username present in Request");
-			return false;		
+			return false;
 		}
 		// If the UUID in the requester matches the UUID of the targetUser, always allow
 		if (requestingUserUUID.equalsIgnoreCase(user.getUserUUID())) {
@@ -64,15 +63,25 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 		final String requestingUserRole = requesterOpt.get().getRole().getRoleName();
 
+		// Reload the target within this transaction so lazy collections (crcsSet,
+		// providers) are accessible. The passed-in entity may be detached.
+		// Unactivated patients have a null UUID, so fall back to userId lookup.
+		Optional<User> freshTargetOpt = (user.getUserUUID() != null)
+				? userService.findByUuid(user.getUserUUID())
+				: userService.findUserById(user.getUserId());
+		if (freshTargetOpt.isEmpty()) {
+			log.error("No record found for target user (UUID={}, id={})", user.getUserUUID(), user.getUserId());
+			return false;
+		}
+		User freshTarget = freshTargetOpt.get();
+
 		switch (PPERole.valueOf(requestingUserRole)) {
 
 		case ROLE_PPE_CRC:
-			log.info("MHL 01 ROLE_PPE_CRC user.getUserUUID: " + user.getUserUUID());
-			log.info("MHL 01 ROLE_PPE_CRC user.requestingUserUUID: " + requestingUserUUID);
-			return authorizeCRC((Participant) user, requestingUserUUID);
+			return authorizeCRC((Participant) freshTarget, requestingUserUUID);
 
 		case ROLE_PPE_PROVIDER:
-			return authorizeProvider((Participant) user, requestingUserUUID);
+			return authorizeProvider((Participant) freshTarget, requestingUserUUID);
 
 		case ROLE_PPE_MOCHA_ADMIN:
 			return true;
@@ -108,11 +117,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			AuditEventType.PPE_UNAUTHORIZED_ACCESS);
 			log.error("CRC {} denied access to patient {} ", requestingUserUUID, targetUser.getPatientId());
 			return false;
-		}else {
-			//log.info( "MHL TargetUser UUID: " + targetUser.getCrc().getUserUUID());
-			log.info( "MHL requestingUserUUID UUID: " + requestingUserUUID);
+		} else {
 			return true;
-		} 
+		}
 			
 	}
 
@@ -121,6 +128,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	 * 
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public boolean authorize(String requestingUserUUID, String targetUUID) {
 		Optional<User> targetUserOptional = userService.findByUuid(targetUUID);
 		if (targetUserOptional.isEmpty()) {
@@ -128,18 +136,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return false;
 			
 		} else {
-			log.info("MHL authorize1 requestingUserUUID: " + requestingUserUUID);
-			log.info("MHL authorize1 targetUserOptional.get(): " + targetUserOptional.get());
-
 			return authorize(requestingUserUUID, targetUserOptional.get());
 		}
 	}
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public boolean authorizeFileUpload(String requestingUserUUID, String targetPatientId, String fileType) {
 		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
 		if (requesterOpt.isEmpty()) {
@@ -192,9 +198,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public boolean authorizeFileDownload(String requestingUserUUID, String targetPatientId, String fileType) {
 		Optional<User> requesterOpt = userService.findByUuid(requestingUserUUID);
 		if (requesterOpt.isEmpty()) {

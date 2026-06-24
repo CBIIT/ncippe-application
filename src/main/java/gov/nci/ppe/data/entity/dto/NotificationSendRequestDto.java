@@ -7,8 +7,7 @@ import javax.validation.constraints.NotNull;
 
 import gov.nci.ppe.constants.ErrorConstants;
 import gov.nci.ppe.constants.PPEUserType;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -22,19 +21,19 @@ import lombok.Data;
  *
  */
 
-@ApiModel(value = "Details of Message to be sent out")
+@Schema(description = "Details of Message to be sent out")
 @Data
 public class NotificationSendRequestDto {
 
 	@NotEmpty(message = ErrorConstants.MISSING_NOTIFICATION_AUDIENCES)
-	@ApiModelProperty(value = "List of roles")
+	@Schema(description = "List of roles")
 	private List<PPEUserType> audiences;
 
 	@NotNull(message = ErrorConstants.MISSING_SUBJECT)
-	@ApiModelProperty(value = "Subject of Message")
+	@Schema(description = "Subject of Message")
 	private SubjectDto subject;
 
 	@NotNull(message = ErrorConstants.MISSING_MESSAGE)
-	@ApiModelProperty(value = "Body of the Message")
+	@Schema(description = "Body of the Message")
 	private MessageBody message;
 }

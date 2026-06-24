@@ -2,7 +2,7 @@ package gov.nci.ppe.data.entity.dto;
 
 import java.sql.Timestamp;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -15,7 +15,7 @@ import lombok.Data;
  * @since Mar 14, 2020
  *
  */
-@ApiModel(description = "Portal Notification")
+@Schema(description = "Portal Notification")
 @Data
 public class PortalNotificationDTO {
 

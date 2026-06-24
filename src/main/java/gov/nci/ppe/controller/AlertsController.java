@@ -20,7 +20,7 @@ import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.Alert;
 import gov.nci.ppe.data.entity.dto.AlertDto;
 import gov.nci.ppe.services.AlertsService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Implements a ReST endpoint to return any active alerts
@@ -40,7 +40,7 @@ public class AlertsController {
 		this.dozerBeanMapper = dozerBeanMapper;
 	}
 
-	@ApiOperation(value = "Method to return list of active alerts")
+	@Operation(summary = "Method to return list of active alerts")
 	@GetMapping(value = UrlConstants.URL_ALERTS, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> getAlerts() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();

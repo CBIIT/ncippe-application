@@ -21,7 +21,7 @@ import gov.nci.ppe.constants.UrlConstants;
 import gov.nci.ppe.data.entity.NewsEvent;
 import gov.nci.ppe.data.entity.dto.NewsEventDto;
 import gov.nci.ppe.services.NewsEventsService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Rest Endpoint for returning News and Events
@@ -45,7 +45,7 @@ public class NewsController {
 		this.dozerBeanMapper = dozerBeanMapper;
 	}
 
-	@ApiOperation(value = "Return all unexpired news and events")
+	@Operation(summary = "Return all unexpired news and events")
 	@GetMapping(value = UrlConstants.URL_NEWS_EVENTS)
 	public ResponseEntity<String> getActiveNewsAndEvents() throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();

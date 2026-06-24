@@ -46,10 +46,10 @@ import gov.nci.ppe.services.AuthorizationService;
 import gov.nci.ppe.services.FileService;
 import gov.nci.ppe.services.UserService;
 import gov.nci.ppe.services.impl.ApiException;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -96,14 +96,14 @@ public class PatientReportController {
 	 *         success response if file has been stored successfully
 	 */
 	@PostMapping(value = "/api/patientReport")
-	@ApiOperation(value = "Uploads a File andd associates it with the participant")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "Patient Report uploaded"),
-			@ApiResponse(code = 500, message = "Internal Server Error"),
-			@ApiResponse(code = 400, message = "Uploaded File is empty") })
+	@Operation(summary = "Uploads a File and associates it with the participant")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Patient Report uploaded"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error"),
+			@ApiResponse(responseCode = "400", description = "Uploaded File is empty") })
 	public ResponseEntity<String> handleFileUpload( @RequestParam(value = "uuid", required = true) String requestingUserUUID,
-			@ApiParam(value = "Patient file to Upload", required = true) @RequestParam(value = "reportFile", required = true) MultipartFile file,
-			@ApiParam(value = "Patient ID of the Patient whose file is to be uploaded", required = true) @RequestParam(value = "patientId", required = true) String patientId,
-			@ApiParam(value = "Uploaded File type", required = true, allowableValues = "PPE_FILETYPE_BIOMARKER_REPORT, PPE_FILETYPE_ECONSENT_FORM") @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
+			@Parameter(description = "Patient file to Upload", required = true) @RequestParam(value = "reportFile", required = true) MultipartFile file,
+			@Parameter(description = "Patient ID of the Patient whose file is to be uploaded", required = true) @RequestParam(value = "patientId", required = true) String patientId,
+			@Parameter(description = "Uploaded File type", required = true) @RequestParam(value = "uploadedFileType", required = true) String uploadedFileType,
 			HttpServletRequest req, Locale locale) {
 
 		//String requestingUserUUID = req.getHeader(CommonConstants.HEADER_UUID);
@@ -158,14 +158,14 @@ public class PatientReportController {
 	 *         success response if file has been stored successfully
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@ApiOperation(value = "Returns a stream object to caller containing file requested for")
-	@ApiResponses({ @ApiResponse(code = 200, message = "Report downloaded"),
-			@ApiResponse(code = 400, message = "File GUID Missing"),
-			@ApiResponse(code = 404, message = "Requested File not found"),
-			@ApiResponse(code = 500, message = "Internal Server Error") })
+	@Operation(summary = "Returns a stream object to caller containing file requested for")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Report downloaded"),
+			@ApiResponse(responseCode = "400", description = "File GUID Missing"),
+			@ApiResponse(responseCode = "404", description = "Requested File not found"),
+			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
 	@GetMapping(value = "/api/patientReport/{reportGUID}")
 	public @ResponseBody ResponseEntity fetchParticipantReportAsFile(HttpServletRequest req,
-			@ApiParam(value = "Unique ID of the report to be streamed", required = true) @PathVariable String reportGUID,
+			@Parameter(description = "Unique ID of the report to be streamed", required = true) @PathVariable String reportGUID,
 			Locale locale) {
 
 		if (StringUtils.isAllBlank(reportGUID)) {
@@ -217,10 +217,10 @@ public class PatientReportController {
 	 * @return
 	 * @throws JsonProcessingException
 	 */
-	@ApiOperation(value = "Marks the report as having been viewed by the specified user")
+	@Operation(summary = "Marks the report as having been viewed by the specified user")
 	@PostMapping(value = "/api/patientReport/{reportGUID}/markAsRead")
 	public @ResponseBody ResponseEntity<String> markReportAsViewed(
-			@ApiParam(value = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
+			@Parameter(description = "Unique ID of the report to be marked as read", required = true) @PathVariable String reportGUID,
 			HttpServletRequest req, Locale locale) throws JsonProcessingException {
 
 		Optional<FileMetadata> rptOptional = reportService.getFileByFileGUID(reportGUID);

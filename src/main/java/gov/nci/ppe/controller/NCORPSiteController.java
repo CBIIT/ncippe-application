@@ -23,7 +23,7 @@ import gov.nci.ppe.constants.HttpResponseConstants;
 import gov.nci.ppe.data.entity.NCORPSite;
 import gov.nci.ppe.data.entity.dto.NCORPSiteDTO;
 import gov.nci.ppe.services.NCORPSiteService;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 
 /**
@@ -50,7 +50,7 @@ public class NCORPSiteController {
 	@Qualifier("dozerBean")
 	private Mapper dozerBeanMapper;
 
-	@ApiOperation(value = "Return all the active sites.")
+	@Operation(summary = "Return all the active sites.")
 	@GetMapping(value = "/publicapi/v1/sites")
 	public ResponseEntity<String> getAllActiveSites(Locale locale) throws JsonProcessingException {
 		HttpHeaders httpHeaders = new HttpHeaders();

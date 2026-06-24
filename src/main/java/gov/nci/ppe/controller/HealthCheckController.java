@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import gov.nci.ppe.constants.UrlConstants;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Health Check controller - provides a simple ReST endpoint for Application
@@ -24,7 +24,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 public class HealthCheckController {
 
-	@ApiOperation(value = "Healthcheck operation. Returns Healthy if server is working")
+	@Operation(summary = "Healthcheck operation. Returns Healthy if server is working")
 	@GetMapping(UrlConstants.URL_HEALTHCHECK)
 	public ResponseEntity<String> isHealthy() {
 		return ResponseEntity.ok("Healthy");

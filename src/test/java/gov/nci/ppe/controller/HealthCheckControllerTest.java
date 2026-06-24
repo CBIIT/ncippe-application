@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -14,7 +15,7 @@ import gov.nci.ppe.constants.UrlConstants;
 
 /**
  * Unit Test class for {@link HealthCheckController}.
- * 
+ *
  * @author PublicisSapient
  * @version 2.4;
  * @since 2021-05-17
@@ -22,6 +23,7 @@ import gov.nci.ppe.constants.UrlConstants;
 
 @ActiveProfiles("unittest")
 @WebMvcTest(controllers = HealthCheckController.class)
+@WithMockUser
 public class HealthCheckControllerTest {
 
     @Autowired
